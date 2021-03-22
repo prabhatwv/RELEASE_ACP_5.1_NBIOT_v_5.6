@@ -1,0 +1,1461 @@
+/******************************************************************************/
+
+/******************************************************************************/
+
+module VZW_LTE_IMSLESS_DATA_RETRY_RRC {
+
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CIOT_NASTemplates all;
+  import from CommonDefs all;
+  import from CommonAspDefs all;
+  import from Common4G5G_Templates all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_LoopBack_Templates all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NB_Parameters all;
+  import from EUTRA_Component all;
+  import from EUTRA_NB_SecurityDefinitionsAndExternalFunctions all;
+  import from LoopbackIP all;
+  import from NAS_CommonTemplates all;  
+  import from NBIOT_ASP_SrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CellInfo all;
+ /* import from EUTRA_CellInfoInit all; */
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from EUTRA_Component all;
+  import from NBIOT_ConfigurationSteps all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+  import from NBIOT_LoopBack all;
+  import from NBIOT_NASSteps all;
+  import from NBIOT_Parameters all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_RRC_Common all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_SRB_DRB_Templates all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SysInfo_Templates all;
+   import from NBIOT_Idle_CellReselection all; 
+/*  import from EUTRA_SRB_Templates all;*/
+  import from NBIOT_Timing all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterPtcToMtcDefs all;
+  import from EUTRA_NB_NASSteps all;
+  import from EUTRA_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  import from EUTRA_NB_RRC_Templates all;
+  import from IMS_PTC_CoordMsg all;
+  import from EUTRA_NB_AuxiliaryFunctions all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_ESM_Testcases all;
+  import from UpperTesterCommon all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_COMMON all;
+    
+    function f_TC_2_1_NBIOT() runs on NBIOT_PTC
+  { /* NB-IoT / NAS Security / Handling of null integrity protection and null ciphering algorithms
+       NAS count reset to zero / Security mode command with not matching replayed security capabilities / Provision of IMEISV and IMEI */
+    var charstring v_TcName := "TC_2_1_NBIOT: ";
+    f_NBIOT_Init(c1);
+    
+    // create cell and send out system information
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    
+    log(v_TcName, "Step1: Configure the test equipment to respond to all RRCConnectionRequest
+      messages with an RRCConnectionReject message. Configure the test
+      equipment such that the value for waitTime in the RRCConnectionReject
+      message is 10 seconds."); 
+    
+      
+    log(v_TcName, "Step2: Verify that the device under test (DUT) has an Internet application that will
+    attempt to connect to the Internet PDN as soon as the DUT is powered on and
+    finds service on the LTE network.");
+      
+      
+    
+    
+    f_TC_2_1_Body();
+    
+    // Postamble
+    f_NBIOT_TestBody_Set(false);
+    f_NBIOT_ReleaseAllCells();
+    f_UT_PowerOffUE (UT);
+    
+    
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "TC_2_1_NBIOT Successfully verified the Expected Result : The UE waits at least waitTime " &
+                                                           "seconds between transmissions of RRC connection attempts");
+  }
+     
+    
+  function f_TC_2_1_Body() runs on NBIOT_PTC
+  {  /* RRC Connection Reject Message with waitTime - Initial Attach */
+      
+    var EUTRA_ASN1_RRC_TransactionIdentifier_Type v_RRC_TI := tsc_RRC_TI_Def;
+    var NAS_MSG_Indication_Type v_NasInd_Rxd; 
+    var NAS_AttDetValue_Type v_AttachType;
+    
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    timer t_WaitTime := 10.0;
+    timer t_Timer := 3.0;
+    var template (present) B2_Type v_PNB := '01'B;
+    
+    var integer v_XtdWaitTime := 10;
+    var integer v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+    var template (present) NAS_UL_Message_Type v_AttachReq;
+    var template (omit) RRCConnSetupComplete_AttachWithoutPDN_Type v_AttachWithoutPDN := omit;
+    
+    var template (present) SecurityHeaderType v_AttReqSecurityHeader;
+    var boolean v_WaitForPdnDisConnect := true;
+    var boolean v_WaitForDetach := true;
+    
+    /*var charstring v_TcName := testcasename() & ": ";*/
+      
+    log("TC_2_1_NBIOT RRCCONNECTIONREJECT MESSAGE INITIAL ATTACH");
+   
+      log( "Step3: Powering ON the DUT and allowing it to find LTE service");
+      f_UT_SwitchOnUE(UT, true);
+    
+    
+      log("TC_2_1_NBIOT Step 4:Verify that the DUT attempts to attach to the LTE network and that the network
+          responds to the RRCConnectionRequest message with an
+          RRCConnectionReject message with a waitTime value of 10 seconds.");
+     f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1, cr_EstablishmentCause_NB_Any);
+     
+    
+     SRB.send(cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB));
+      
+    t_WaitTime.start;
+
+    
+    alt
+    {
+      []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB(cr_EstablishmentCause_NB_Any, ?)))
+      {
+        t_WaitTime.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,  "TC_2_1_NBIOT Step5a: UE triggered RRC Conn Req before expiry of 10 seconds waitTime");
+      }
+      []t_WaitTime.timeout
+      {
+      }
+    }
+    log("TC_2_1_NBIOT Step 5: Verify that after 10 seconds, the DUT attempts to attach to the LTE network a
+       second time and that the network responds to the RRCConnectionRequest
+       message with an RRCConnectionReject message with a waitTime value of 10
+        seconds.");
+    t_Timer.start;
+  
+    alt
+    {
+      [] SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_Timer.stop;
+       
+        SRB.send ( cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB));
+            
+        t_WaitTime.start;
+      }
+      []t_Timer.timeout
+      {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_1_NBIOT DUT does not send RRC Conn Req after 10 seconds waitTime");
+      }
+    }
+    log("TC_2_1_NBIOT Step 6: . Re-configure the LTE network emulator to allow the RRC connection setup to
+      succeed.");
+      
+   
+    alt
+    {
+      [] SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_WaitTime.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_1_NBIOT Step7a: UE triggered RRC Conn Req before expiry of 10 seconds waitTime");
+      }
+      []t_WaitTime.timeout
+      {
+        }
+    }
+       t_Timer.start;
+  
+      
+      log("TC_2_1_NBIOT Step 7: After T302 expires, verify that the DUT attempts to establish an RRC connection
+      and that the network accepts the RRC connection. Verify that the DUT attempts
+      to attach to the LTE network and that the network accepts the attach.
+      ");
+     alt {
+      [] SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_Timer.stop; 
+         
+      
+          
+       // f_NBIOT_RRC_ConnectionSetup_Def(eutra_Cell1);
+        f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+        
+          
+        
+      v_AttachReq := cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT);
+          
+         
+      v_NasInd_Rxd := f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),
+                                                           cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                             v_AttachReq,
+                                                                                             v_ESMMessage));
+        
+       //@siclog "Step 5 - 14" siclog@
+       f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NasInd_Rxd); 
+             
+          
+      }
+      [] t_Timer.timeout
+      {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_1_NBIOT DUT does not send RRC Conn Req after expiry of T302 timer");
+      }
+    }
+        
+   }  
+ 
+    
+    function f_TC_2_2_NBIOT() runs on NBIOT_PTC
+  { /* NB-IoT / NAS Security / Handling of null integrity protection and null ciphering algorithms
+       NAS count reset to zero / Security mode command with not matching replayed security capabilities / Provision of IMEISV and IMEI */
+    f_NBIOT_Init(c1);
+    
+    // create cell and send out system information
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE);
+    
+    f_TC_2_2_Body();
+    
+    // Postamble
+    f_NBIOT_TestBody_Set(false);
+    f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+    f_NBIOT_ReleaseAllCells();
+    f_UT_PowerOffUE (UT);
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "TC_2_2_NBIOT Successfully verified the Expected Result");
+   
+  }
+    
+function f_TC_2_2_Body() runs on NBIOT_PTC
+  {
+ 
+    timer t_WaitTime;
+    var float v_RRCRetryTime;
+    var NAS_MSG_Indication_Type v_NasInd_Rxd; 
+    //var NAS_AttDetValue_Type v_AttachReq;
+     var template (present) NAS_UL_Message_Type v_AttachReq;
+    var charstring v_sApn := "vzwadmin";
+    var EPS_BearerIdentity v_EpsBearerId2 := '6'H;
+    var template (omit) EPS_BearerContextStatus v_EpsBearerCtxtStatus;
+    var GutiParameters_Type v_Guti1_Params; 
+    timer t_Procedure_Guard_Timer;
+//    timer t_WaitTime;
+    var default v_AdminApp_pdn := null;
+    var float tsc_GuardProcedureTimer_240 := 240.0;
+    var float tsc_GuardProcedureTimer_60 := 240.0;
+    var integer v_XtdWaitTime := 10;
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    //var B3_Type v_PDNType := f_GetPdnType();
+    var template (present) B2_Type v_PNB := '01'B;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    var integer v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+    var template (omit) RRCConnSetupComplete_AttachWithoutPDN_Type v_AttachWithoutPDN := omit;
+    var GutiParameters_Type v_Guti_Params1;
+    var template DeviceProperties v_DevicePropertiesEMM := cr_DeviceProperties('D'H) ifpresent;
+    var template DeviceProperties v_DevicePropertiesESM := cr_DeviceProperties('C'H) ifpresent;
+      
+      
+      
+      v_Guti_Params1 := f_NBIOT_CellInfo_GetGuti (nbiot_Cell1);
+      
+      
+    log("TC_2_2_NBIOT RRCCONNECTIONREJECT MESSAGE SENDING DATA TO A CONNECTED PDN");
+            
+   
+    v_RRCRetryTime := f_NBIOT_SetTimerToleranceMin (rrcTimer, 10.0);
+      
+   
+    
+    log("TC_2_2_NBIOT Step1: Configure the test equipment so that all attachments and connections are allowed");
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+   
+   
+    
+    log("TC_2_2_NBIOT Step2: Power the DUT on and allow it to find LTE service."); 
+   
+      f_UT_SwitchOnUE(UT, true);
+   
+    
+    log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_240 , "s");
+
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started
+    
+    log("TC_2_2_NBIOT Step3: Verify that the DUT successfully attaches to the LTE network");
+    
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind); 
+    
+    log("TC_2_2_NBIOT Step3: Verified that the DUT successfully attached to the LTE network"); 
+    
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+
+    t_Procedure_Guard_Timer.stop;
+    
+    log("TC_2_2_NBIOT Initiate the test application that can be configured to aggressively attempt to
+        connect to the network using the Admin PDN ",v_sApn); 
+      
+    fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+     
+    log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_240 , "s");
+    //t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240);
+    f_NBIOT_TriggerAdditionalPDN_Modified (nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);
+    
+    log("TC_2_2_NBIOT Step5: Verify that the UE is successful in connecting to the Admin PDN on behalf of the
+     test application. Configure the application to the application idle state.");
+    
+    
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    //t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    log("TC_2_2_NBIOT Step6: Force the DUT to the RRC IDLE state by having the network transmit an RRCConnRelease message");
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step6: DUT moved to RRC IDLE state");
+      
+    log("TC_2_2_NBIOT Step7: Re-configure the test equipment to respond to all RRCConnectionRequest messages with an RRCConnectionReject " &
+                  "message. Configure the test equipment such that the value for waitTime in the RRCConnectionReject message is 10 seconds");
+    log("TC_2_2_NBIOT Step8: Switch the test application to the application transmitting state and set the
+      retransmission timer to 5 seconds.");
+    
+    log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_60 , "s");
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_60);
+      
+    log("TC_2_2_NBIOT Step9: Verify that the DUT attempts to connect to the LTE network and the network responds to the RRCConnectionRequest " &
+                  "message with an RRCConnectionReject message with a waitTime value of 10 seconds");
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step9a: Verified that the DUT attempts to connect to the LTE network");
+    
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    SRB.send ( cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB));
+
+    t_WaitTime.start(v_RRCRetryTime);
+    log("TC_2_2_NBIOT Step9b: Network responds to the RRCConnectionRequest message with an RRCConnectionReject message with a waitTime value of 10 seconds");    
+    log("TC_2_2_NBIOT Successfully Verfied Step9");
+      
+    log("TC_2_2_NBIOT Started a 10 sec timer");    
+    log("TC_2_2_NBIOT Releasing SRBs and DRBs");
+    f_Delay(0.5);
+    f_Delay(0.1);
+    log("TC_2_2_NBIOT ReConfiguring SRBs and DRBs");
+    f_Delay(0.1);
+    
+    log("TC_2_2_NBIOT Waiting for the DUT to connect to the LTE network after 10 sec");
+    alt
+    {
+      [] SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_WaitTime.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_2_NBIOT Step10: UE sent RRC Conn Req before 10 seconds");
+      }
+      []t_WaitTime.timeout
+      {
+        log("TC_2_2_NBIOT 10 seconds timed out. Verified that the DUT did not attempt to connect to the LTE network.");
+        log("TC_2_2_NBIOT Step10: Verify that after 10 seconds, the DUT attempts to attach to the LTE network a second time and that the " &
+                      "network responds to the RRCConnectionRequest message with an RRCConnectionReject message with a waitTime value of 10 seconds");
+      }
+    }
+    
+    log("TC_2_2_NBIOT Waiting for 2nd RRCConnectionRequest");
+
+    log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_60 , "s");
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_60);      
+
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);      
+    log("TC_2_2_NBIOT Step10a: Successfully verified that after 10 seconds, the DUT attempts to attach to the LTE network a second time");
+    
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    SRB.send ( cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB(v_XtdWaitTime)));
+
+     
+   f_Delay(0.5);
+     
+     t_WaitTime.start(v_RRCRetryTime);          
+    log("TC_2_2_NBIOT Step10b: Verified that the network responds to the RRCConnectionRequest message with an RRCConnectionReject message with a " &
+                  "waitTime value of 10 seconds");
+    log("TC_2_2_NBIOT Verified Step10");
+      
+    log("TC_2_2_NBIOT Started a 10 sec timer");   
+    log("TC_2_2_NBIOT Waiting for the DUT to connect to the LTE network after 10 sec");
+    alt
+    {
+      []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_WaitTime.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_2_NBIOT Step11: UE sent RRC Conn Req before 10 seconds");
+      }
+      []t_WaitTime.timeout
+      {
+        log("TC_2_2_NBIOT 10 seconds timed out. Verified that the DUT did not attempt to connect to the LTE network.");
+        log("TC_2_2_NBIOT Step11: Verify that after 10 seconds, the DUT attempts to attach to the LTE network a third time " &
+                      "and that the network responds to the RRCConnectionRequest message with an RRCConnectionReject message " &
+                      "with a waitTime value of 10 seconds");
+      }
+    }      
+   
+    log("TC_2_2_NBIOT Waiting for 3rd RRCConnectionRequest");      
+
+    log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_60 , "s");
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_60);      
+  
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step11a: Successfully verified that after 10 sec, the DUT attempted to attach to the LTE network a third time");
+
+    
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    
+    SRB.send ( cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB(v_XtdWaitTime)));
+    t_WaitTime.start(v_RRCRetryTime);
+    log("TC_2_2_NBIOT Step11b: Responded with an RRC Conn Reject msg with a waitTime of 10 sec");      
+    log("TC_2_2_NBIOT Verified Step11");
+     
+    log("TC_2_2_NBIOT Started a 10 sec timer");
+
+      
+    f_Delay(0.5);
+   
+    log("TC_2_2_NBIOT Waiting for the DUT to connect to the LTE network after 10 sec");
+    log("TC_2_2_NBIOT Step12: Re-configure the LTE network emulator to allow the RRC connection setup to succeed");
+    alt
+    {
+       []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_WaitTime.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC_2_2_NBIOT Step12: UE sent RRC Conn Req before 10 seconds");
+      }
+      []t_WaitTime.timeout
+      {
+        log("TC_2_2_NBIOT 10 seconds timed out. Verified that the DUT did not attempt to connect to the LTE network.");
+        log("TC_2_2_NBIOT Step13: Once the T302 (10 second) timer expires, verify that the UE attempts to connect upon " &
+                      "the next request of the test application with no delay and that the network allows the connection. " &
+                      "Configure the application to the application idle state.");
+      }
+    }
+
+    log("TC_2_2_NBIOT Waiting for 4th RRCConnectionRequest");
+    log("TC_2_2_NBIOT ######## Open internet test application in the DUT to receive Service Request from the DUT");      
+
+     log("TC_2_2_NBIOT: Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_60 , "s");
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_60);      
+      
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step13a: Verified that after 10 seconds, the DUT attempts to attach to the LTE network a second time");
+        
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+       
+    v_AttachReq := cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT);
+    
+
+      v_NasInd_Rxd := f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),
+                                                            cr_NAS_Indication (tsc_SHT_IntegrityProtected,  // @sic R5s170962 sic@
+                                                                   cr_CONTROL_PLANE_SERVICE_REQUEST(?, -, -, -, v_DevicePropertiesEMM)));
+                                                                                          
+     SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_SERVICE_ACCEPT)));
+      
+    
+    log("TC_2_2_NBIOT Step13b: Verified that the network allows the connection and UE successfully connects to the LTE Network");
+    
+    log("TC_2_2_NBIOT Successfully Verified Step13");
+    fl_UT_ApplyCommand(UT, cas_UT_Req(APP_TRANSMIT_STATE_OFF, NO_CNF_REQUIRED,{cs_Ut_Parameter_Common ("ACTIVATE_ADMIN_APN", "0")}));
+    log("TC_2_2_NBIOT Step14: Force the DUT to the RRC IDLE state by having the network transmit an RRCConnectionRelease message");
+    
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step14: DUT moved to RRC IDLE state");
+    
+    log("TC_2_2_NBIOT Step 15: Switch the test application to the application transmitting state. Configure the application to the application idle state. ");
+    
+    log("TC_2_2_NBIOT Step 16: Verify that the UE attempts to connect upon the next request of the test application with no delay and " &
+                  "that the network allows the connection");
+   
+       log("TC_2_2_NBIOT Initiating test application will cause the UE to connect to the ",v_sApn); 
+      
+      fl_UT_ApplyCommand(UT, cas_UT_Req(ACTIVATE_INTERNET_APN, NO_CNF_REQUIRED));
+      t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_60);   
+    log("TC_2_2_NBIOT Waiting for RRCConnectionRequest");
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step16a: Verified that the DUT attempts to connect upon the next request of the test application with no delay");
+
+    //f_Procedure_Guard_Timer();
+    log("TC_2_2_NBIOT: Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+      
+    
+    f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+    log("TC_2_2_NBIOT Step16b: Verified that the network allows the connection");
+      
+         
+      v_AttachReq := cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT);
+           
+      v_NasInd_Rxd := f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, ?),
+                                                            ?);
+      if (ischosen(v_NasInd_Rxd.Pdu.Msg.cONTROL_PLANE_SERVICE_REQUEST ))
+    {
+        log( "TC_2_2_NBIOT Step16b: Received Service Request from device");
+                                      
+     SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_SERVICE_ACCEPT)));
+    }
+      
+      log("TC_2_2_NBIOT DUT connected to the LTE Network");
+
+    log("TC_2_2_NBIOT Successfully Verified Step16");
+    
+  }
+    
+    
+     function f_TC_2_3_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+ {
+    /* Preamble */
+    // Cell init
+    var charstring v_TcName := testcasename() & ": ";
+    var charstring v_appName := " IMS ";
+    f_NBIOT_Init (c1);
+    
+    log(v_TcName, "This test verifies that the UE meets Verizon Wireless requirements for data retry when the network does not respond to the RACH from the UE.");
+    if(pc_IMS == false)
+    {   
+      v_appName := " Internet " ; 
+    }
+    /* Step 1: Configure the test setup so that the device under test (DUT) finds service on a single eNodeB with cell_id (where "cell_id" refers to the "CellIdentity" parameter 
+     * that is broadcast in SIB1) equal to value X1, PLMN id equal to value Y1, and TAI equal to value Z1. */
+    /* Step 2. Verify that the device under test (DUT) has an IMS application that will attempt to connect 
+     * to the IMS PDN as soon as the DUT is powered on and finds service on the LTE network.*/
+    
+    log(v_TcName, "Step1: Configure the test setup so that the DUT finds service on a single eNodeB with cell_id X1 = 1, PLMN id Y1 = ", 
+                  f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_Def))) & ", and TAI Z1 = ", oct2int(tsc_TAC1)); 
+    log(v_TcName, "Configure the test equipment such that the network sets the T3402 timer to 4 minutes in the Attach Accept message");
+    
+    log(v_TcName, "Step2: Verify that the device under test (DUT) has an"&v_appName&"application that will attempt to connect to the IMS PDN as soon as the DUT is powered on and finds service on the LTE network.");
+     
+    
+    f_NBIOT_CellInfo_SetPLMN_Common(nbiot_Cell1, {cs_HPLMN_Def}, -, false);
+    //Cell Config
+    f_NBIOT_CellConfig_Def (nbiot_Cell1, CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    
+    /* Test body */
+   
+    f1_VZ_TC_2_3_NBIOT_Body(TestPlan_Name);
+    f_NBIOT_TestBody_Set(false);
+     
+    /* Postamble */
+    log(v_TcName, "Postamble Execution Start");
+    
+    f_UT_SwitchOffUE (UT, false);
+    //And now remove the cell(s)
+    f_NBIOT_ReleaseAllCells();
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__,v_TcName & " PASSED");
+    log(v_TcName, "Postamble Execution Done");         
+ }
+    
+ function f1_VZ_TC_2_3_NBIOT_Body(charstring TestPlan_Name) runs on NBIOT_PTC
+ {
+
+    template (value) GPRS_Timer v_GT3402 := cs_GprsTimer_tv('17'O, tsc_GprsTimerUnit_1min, '00100'B); /* T3402 Set to 4 min in Attach Accept*/  
+    var template (omit) EMM_Cause v_EMMCause :=cs_EMM_Cause_tv(tsc_Cause_EPSServNotAllowed);
+     var NAS_MSG_Indication_Type v_NAS_Ind, v_NasInd;
+    var integer Rachcount := 0;  
+    var float v_T3411 := 9.5;  /* T3411 timer set to 10s */
+    timer t_T3411;
+    var float v_T3402 := (4.0 * 60.0) - 15.0; /* T3402 set to 4 min(240s) - 3 Seconds tolerance*/
+    timer t_HPLMN_T3402;
+    timer t_RPLMN_T3402;
+    var integer v_loop :=1;        
+    timer t_T300 := f_NBIOT_SetTimerToleranceMin(nonProtocolTimer, 1.0); //1s
+    var float v_T30sec := 30.0;
+    timer t_T30sec;
+    timer t_Procedure_Guard_Timer;
+    var boolean AllowRACHOnHPLMN;
+    var charstring v_TcName := testcasename() & ": ";
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    var float tsc_GuardProcedureTimer_240 := 240.0; 
+     
+    //v_DRB_IdentityList := f_NBIOT_DRB_IdentityList(p_DrbConfigList);
+    AllowRACHOnHPLMN := false; 
+    
+      
+     
+    /* 2. Power the DUT on and allow it to find LTE service. */   
+    log(v_TcName, "Step3: . Power the DUT on and allow it to find LTE service");
+    f_UT_SwitchOnUE(UT, true);
+     
+    /* 4. Verify that the DUT sends an Attach Request and that the network responds with 
+     * an Attach Accept with the T3402 timer set to 4 minutes. */
+    
+   t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started
+
+
+     v_NasInd := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                               cr_EstablishmentCause_NB_Any,
+                                               cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                  cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT),
+                                                                                  v_ESMMessage)); 
+      
+    f_NBIOT_InitialRegistration_Step5_12(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NasInd);
+    
+      
+    f_NBIOT_InitialRegistration_Step13(nbiot_Cell1,
+                                       CONTROL_PLANE,
+                                       v_NasInd,
+                                       pdnTypeAsSupportedByUE,-,-,-,-,-,v_GT3402);
+    f_NBIOT_InitialRegistration_Step14(nbiot_Cell1, CONTROL_PLANE, tsc_EpsDefaultBearerId);
+    log(v_TcName, "Step4: Verified that the DUT sends an Attach Request and that the network responds with an Attach Accept with the T3402 timer set to 4 minutes.");    
+    
+    log(v_TcName, "Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+
+     f_Delay(5.0);
+    /* 5. Configure the test equipment such that the network sends a Detach Request to the DUT 
+     * with "re-attach required" in the Detach Type IE. */
+    log(v_TcName, "Step5 : Configuring the test equipment such that the network sends a Detach Request to the DUT with 're-attach required' in the Detach Type IE.");
+    
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                 tsc_SRB1bis,
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_508_DETACH_REQUEST_MT(cs_DetachType(tsc_DetachMT_ReAttach), omit))));
+    
+    
+    
+    log(v_TcName, "Step6 : Verify that the DUT detaches from the LTE network");
+    /* 6. Verify that the DUT detaches from the LTE network. */   
+    
+    SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                     tsc_SRB1bis,
+                                    cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered, cr_508_DETACH_ACCEPT)));        
+    
+    log(v_TcName, "Step6 : DUT is Detached successfully from the LTE network");
+    
+
+    /* 7. Configure the test equipment such that the network does not respond to RACH attempts from the UE. */
+    /* 8. Verify that the UE sends a RACH request in an attempt to re-attach to the LTE network.*/
+    f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1);
+
+    // Preconfigures SS for RACH response for RAR and contention resolution
+    log(v_TcName, "Step7: Configuring the test equipment such that the network does not respond to RACH attempts from the UE.");
+     log("expected car_NB_RachPreamble_IND: ",car_NB_RachPreamble_IND(nbiot_Cell1));
+   f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);
+   
+    
+ /*     
+    
+    f_Delay(5.0);
+    if (not pc_Automatic_Re_Attach) 
+    { 
+        f_UT_TriggerAttach (UT);
+    }
+*/
+    /* 10. Verify that the UE sends a RACH request message 4 more times with each message separated by 
+     * at least T3411 seconds. */ 
+    log(v_TcName, "Step8: Verifying that the UE sends a RACH request in an attempt to re-attach to the LTE network");
+    log(v_TcName, "Step9: Verify that the LTE network does not respond to the RACH attempt.");
+    /* UE will make 5 RACH attempts in total, therefore a loop of 5 */
+    for(v_loop := 1; v_loop <= 5; v_loop := v_loop+1)
+    {
+        Rachcount := 0;
+        log("expected car_NB_RachPreamble_IND: ",car_NB_RachPreamble_IND(nbiot_Cell1));
+        SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+        
+        log(v_TcName, "First RACH RECEIVED FROM UE on HPLMN for ",v_loop," time");
+        /* UE always sends a series of RACH attempts. Therefor handling it for T300 seconds */                      
+        t_T300.start;
+        
+        alt
+        {
+            []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+                Rachcount := Rachcount + 1;
+                
+                repeat;
+            }
+            []t_T300.timeout
+            {
+                
+            }
+        };
+        if(v_loop == 1){
+            log(v_TcName, "Step10: Verify that the UE sends a RACH request message 4 more times with each message separated by at least T3411 seconds.");
+        }
+        if(v_loop < 5){
+         t_T3411.start ( v_T3411);
+       log(v_TcName, "Received RACH PREAMBLE count ",v_loop," within T300 timer = ",Rachcount); 
+        log(v_TcName, "Step10: starting timer T3411 10 seconds");
+        alt {
+          []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+              t_T3411.stop;
+              log(v_TcName, "Step10: stop timer T3411 10 seconds");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "Step10: UE Triggers unexpected RACH Attempt while T3411 timer is running");
+            }
+          []t_T3411.timeout
+            {
+               /* Every RACH attampt is separated by T3411 seconds, therefore timing out and going back to the for loop */
+               log(v_TcName, "Step10: timer expiry T3411 10 seconds successful");
+            }            
+        };
+        }
+
+    } // End of v_loop
+    
+    /* 11. After the fifth attempt fails, verify that the UE does not make a RACH attempt for 
+     * at least T3402 minutes. */
+     
+    log(v_TcName, "Step11: After the fifth attempt fails, verify that the UE does not make a RACH attempt for at least T3402 minutes");
+  
+    /* Sarting the T3402 timer for HPLMN */
+    t_HPLMN_T3402.start (v_T3402); 
+      alt {
+          []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+              t_HPLMN_T3402.stop;
+              log(v_TcName, "Step11: stop timer T3402 seconds");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "Step11: UE Triggers unexpected RACH Attempt while T3402 timer is running");
+            }
+          []t_HPLMN_T3402.timeout
+            {
+               /* Every RACH attampt is separated by T3411 seconds, therefore timing out and going back to the for loop */
+               log(v_TcName, "Step11: timer expiry T3402 seconds successful");
+            }            
+        };
+    /*12. While the T3402 timer is running, re-configure the network so that the UE finds service on an eNodeB with a 
+     * PLMN id equal to Y2 where Y2 is not equal to Y1. The frequency of the second PLMN shall be the same as the first.
+     * The network should still be configured to not respond to RACH attempts from the UE. */
+       
+   
+    log(v_TcName, "Step12: While the T3402 timer is running, re-configure the network so that the UE finds service on an eNodeB with a PLMN id equal to Y4 = " & f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_311_481)))
+    & " where Y4 is not equal to Y1. The frequency of the second PLMN shall be the same as the first");
+    
+   // f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_NonSuitableOffCellRS_EPRE );
+    f_NBIOT_ReleaseAllCells();
+   
+    log(v_TcName, "Step12: Modifying PLMN to " & f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_311_481))));
+    f_NBIOT_CellInfo_SetPLMN_Common(nbiot_Cell1, {cs_HPLMN_311_481}, -, false);
+   
+    f_NBIOT_CellConfig_Def( nbiot_Cell1, CONTROL_PLANE);
+    f_Delay(2.0);
+    f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);
+    //fl_UT_ApplyCommand(UT, cas_UT_Req(POWER_CYCLE, NO_CNF_REQUIRED));
+    
+    log(v_TcName, "Step12: The network should still be configured to not respond to RACH attempts from the UE"); 
+   
+    /* 13. Verify that the UE sends a RACH request to the LTE network.
+       14. Verify that the LTE network does not respond to the RACH attempt.
+       15. Verify that the UE sends a RACH request message 4 more times with each message 
+           separated by at least T3411 seconds.*/
+    log(v_TcName, "Step13: Waiting for UE to send RACH request to the LTE network");
+    log(v_TcName, "Step14: LTE network does not respond to the RACH attempt");
+    
+    v_loop := 1;
+    /* UE will make 5 RACH attempts in total, therefore a loop of 5 */
+    for(v_loop := 1; v_loop <= 5; v_loop := v_loop+1)
+    {
+        Rachcount := 0;
+        SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+        log(v_TcName, "Step15: RACH RECEIVED FROM UE on RPLMN for ",v_loop," time");
+        
+        t_T300.start;
+        
+        alt
+        {
+           []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+                Rachcount := Rachcount + 1;
+       
+                repeat;
+            }
+            /* UE always sends a series of RACH attempts. Therefore handling it for T300 seconds */                         
+            []t_T300.timeout
+            {
+               
+            }
+            /* There may be a possibility that the HPLMN T3402 timer has elapsed and we should allow RACH on HPLMN */
+            []t_HPLMN_T3402.timeout
+            {
+                AllowRACHOnHPLMN := true;
+                repeat;
+            }
+        };
+        if(v_loop < 5)
+        {
+        log(v_TcName, "Step15: start timer T3411 for 10 seconds");
+        t_T3411.start ( v_T3411);
+        log(v_TcName, "Received RACH PREAMBLE count within T300 timer = ",Rachcount);
+        alt {
+          []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+              t_T3411.stop;
+              log(v_TcName, "Step15: stop timer T3411 10 seconds");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,v_TcName & " Step 15: UE Triggers unexpected RACH Attempt while T3411 timer is running")
+            }
+          []t_T3411.timeout
+            {
+               log(v_TcName, "Step15: T3411 Successful Timeout Detected after #retry ",v_loop);
+            }
+            /* There may be a possibility that the HPLMN T3402 timer has elapsed and we should allow RACH on HPLMN */            
+            []t_HPLMN_T3402.timeout
+            {
+                AllowRACHOnHPLMN := true;
+                repeat;
+            } 
+        };
+        }
+   
+    } // End of v_loop
+    
+    /* 16. After the fifth attempt fails, verify that the UE does not make a RACH attempt 
+     * for at least T3402 minutes. */
+     
+    log(v_TcName, "Step16: After the fifth attempt fails, verify that the UE does not make a RACH attempt for
+        at least T3402 minutes.");
+    t_RPLMN_T3402.start (v_T3402);
+     alt {
+          []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+              t_RPLMN_T3402.stop;
+              log(v_TcName, "Step11: stop timer T3402 seconds");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "Step11: UE Triggers unexpected RACH Attempt while T3402 timer is running");
+            }
+          []t_RPLMN_T3402.timeout
+            {
+               /* Every RACH attampt is separated by T3411 seconds, therefore timing out and going back to the for loop */
+               log(v_TcName, "Step11: timer expiry T3402 seconds successful");
+            }            
+        };
+     
+    /* 17. While the second T3402 timer is running, re-configure the network so that the UE 
+     * again finds service on PLMN Y1. Verify that the UE does not send a series of RACH 
+     * attempts to the network until the expiration of the original T3402 timer. */
+    log(v_TcName, "Step17: Re-configure the network so that the UE again finds service on PLMN Y1 = "& f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_311_480)))); 
+    
+    f_NBIOT_ReleaseAllCells(); 
+   
+    //Configuring the Y1 PLMN
+    
+    f_NBIOT_CellInfo_SetPLMN_Common(nbiot_Cell1, {cs_HPLMN_Def}, -, false);
+    f_NBIOT_CellConfig_Def( nbiot_Cell1, CONTROL_PLANE);
+     
+    f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+ 
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);
+    //fl_UT_ApplyCommand(UT, cas_UT_Req(POWER_CYCLE, NO_CNF_REQUIRED));
+     
+    //log(v_TcName, "Step17: Verifying that the UE does not send a series of RACH attempts to the network until the expiration of the original T3402 timer.");
+    
+    /* HPLMN_T3402 Timer may still be running. If RACH is received at this point, throw an error. Else wait for
+     * HPLMN_T3402 Timer to expire */
+   
+        log("DUT Supports LTE RAT only -- pc_MultiRatSupported is set to false");
+                    
+     if(t_HPLMN_T3402.read > 0.0 and AllowRACHOnHPLMN == false)
+    {
+      alt 
+      {
+         []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+              if (pc_IMS)
+              {
+                  t_HPLMN_T3402.stop;
+                  t_RPLMN_T3402.stop;               
+                  f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,v_TcName & " Step 17: UE Triggers unexpected RACH Attempt while original T3402 timer is running")
+              }
+              else //IMSLESS case
+              {
+                
+                      t_HPLMN_T3402.stop;
+                      t_RPLMN_T3402.stop;               
+                      log("UE Triggers unexpected RACH Attempt while original T3402 timer is running")
+              
+              }
+            }
+            /* After HPLMN_T3402 expiry, UE may take some additional time to trigger RACH. In that case RPLMN_T3402 may
+             * expire and the TC would depict an incorrect failure result. Therefore handling the RPLN_T3402 timeout as well */
+            []t_RPLMN_T3402.timeout{
+            }
+            /* Handling actual timeout of HPLMN_T3402 */
+            []t_HPLMN_T3402.timeout
+            {
+               log(v_TcName, "Step 17: UE did not Trigger RACH while original HPLMN_T3402 timer was running");
+                SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+                log(v_TcName, "Step 17: RACH RECEIVED FROM UE after original expiration HPLMN_T3402 timer");
+                /* UE always sends a series of RACH attempts. Therefore handling it for T300 seconds */
+                t_T300.start;        
+                alt
+                {
+                    []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+                    {
+                        Rachcount := Rachcount + 1;
+            
+                       repeat;
+                     }
+                     /* UE always sends a series of RACH attempts. Therefore handling it for T300 seconds */            
+                     []t_T300.timeout
+                     {
+               
+                     }
+                 }; 
+             } 
+         };
+     }
+     /* If HPLMN_T3402 timer has elapsed */
+     else
+     {
+         log(v_TcName, "Step17: UE did not Trigger RACH while original HPLMN_T3402 timer was running");
+               
+         SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+         log(v_TcName, "Step17: RACH RECEIVED FROM UE after original expiration T3402 timer");
+         /* UE always sends a series of RACH attempts. Therefore handling it for T300 seconds */                
+         t_T300.start;        
+         alt
+         {
+            []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+                Rachcount := Rachcount + 1;
+            
+                repeat;
+            }
+            []t_T300.timeout
+            {
+               
+            }
+         };
+     }
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, disable); 
+ }   
+    
+       function f_TC_2_4_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+ { 
+    var charstring v_TcName := testcasename() & ": ";
+    var charstring v_appName := " IMS ";
+    var template (value) NBIOT_CellInfo_Type  v_CellInfo;
+   
+    f_NBIOT_Init (c1);  // @sic R5s106627 sic@
+    log(v_TcName, "This test verifies that the UE meets Verizon Wireless requirements for data retry when the UE encounters multiple RRC failures.");
+    log(v_TcName, "Step1: Configure the test setup so that the DUT finds service on a single eNodeB with cell_id X1 = 1, PLMN id Y1 = ", 
+                  f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_Def))) & ", and TAI Z1 = ", oct2int(tsc_TAC1)); 
+    log(v_TcName, "Configure the test equipment such that the network sets the T3402 timer to 4 minutes in the Attach Accept message");
+    log(v_TcName, "Configure the test equipment so that connEstFailOffest in SIB2 is set to 0.");
+    v_CellInfo := f_NBIOT_CellInfo_Get(nbiot_Cell1);
+    v_CellInfo.Sysinfo.BCCH_Info.SIs[0].message_.c1.systemInformation_r13.criticalExtensions.systemInformation_r13.sib_TypeAndInfo_r13[0].sib2_r13.radioResourceConfigCommon_r13.rach_ConfigCommon_r13.preambleTransMax_CE_r13 := n3;     
+    v_CellInfo.Sysinfo.BCCH_Info.SIs[0].message_.c1.systemInformation_r13.criticalExtensions.systemInformation_r13.sib_TypeAndInfo_r13[0].sib2_r13.radioResourceConfigCommon_r13.rach_ConfigCommon_r13.connEstFailOffset_r13 := 0;     
+    
+     f_NBIOT_CellInfo_Set(nbiot_Cell1, v_CellInfo);
+    
+    
+    
+     
+    
+    if(pc_IMS == false)
+    {   
+      v_appName := " vzwinternet " ;
+    }
+    f_NBIOT_CellConfig_Def (nbiot_Cell1, CONTROL_PLANE);
+   
+    log(v_TcName, "Step2: Verify that the device under test (DUT) has an"&v_appName&"application that will attempt to connect to the IMS PDN as soon as the DUT is powered on and finds service on the LTE network.");
+     
+    
+    f1_VZ_TC_2_4_NBIOT_Body(TestPlan_Name);
+    f_NBIOT_TestBody_Set(false);
+    
+    log(v_TcName, "Postamble Execution started");
+    f_UT_SwitchOffUE (UT, false);
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    f_NBIOT_ReleaseAllCells();
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName &" PASSED");
+    log(v_TcName, "Postamble Execution Done");      
+ }
+    
+   
+     function f1_VZ_TC_2_4_NBIOT_Body(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+   
+    var NAS_MSG_Indication_Type v_NasInd; //@sic R5-102180 sic@      
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var EUTRA_ASN1_RRC_TransactionIdentifier_Type v_RRC_TI := tsc_RRC_TI_Def;
+    template (value) GPRS_Timer v_GT3402 := cs_GprsTimer_tv('17'O, tsc_GprsTimerUnit_1min, '00100'B); 
+    const integer c_rrcConnRejectTime := 10;
+    const float c_cellBringUpDelay := 5.0;
+    var integer v_loop :=1;
+    var integer Rachcount := 0;
+    var float v_T3411 := 10.0 - 0.5;  
+    timer t_T3411;
+    var float v_T3402 := (4.0 * 60.0); /* T3402 set to 4 min(240s) */
+    timer t_HPLMN_T3402;
+    var float v_reject := 10.0;
+    timer t_reject;
+    var float v_waittimer := 40.0;
+    timer t_waittimer;
+    timer t_T300 := f_NBIOT_SetTimerToleranceMin(nonProtocolTimer, 1.0); //1s
+    timer t_T302 := f_NBIOT_SetTimerToleranceMin (rrcTimer, 10.0); //10s  
+    var boolean AllowRACHOnHPLMN := false; 
+    var charstring v_TcName := testcasename() & ": ";
+    timer t_Procedure_Guard_Timer;
+    timer t_WaitTime := 0.0;
+    var boolean b_LTE_RAT_TimerCheck := false; 
+    var boolean b_Rach_Received := false;
+    var NAS_MSG_Indication_Type v_NAS_Ind_Original_Plmn;
+    var charstring v_UpperCasePattern_apn, v_apnUpper, v_exapn, p_apn;     
+    var DelayForUserPlaneSignalling_Type p_WaitForIMS; 
+    timer t_CellBringUp_timer;
+    var float v_CellBringUp_timer := 15.0;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    var float tsc_GuardProcedureTimer_240 := 240.0; 
+    
+      
+    f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE ); 
+      
+    /*  Power the DUT on and allow it to find LTE service. */  
+    log(v_TcName, "Step3: Power the DUT on and allow it to find LTE service");
+    f_UT_SwitchOnUE(UT, true);
+     
+    /*  Verify that the DUT sends an Attach Request and that the network responds with 
+     * an Attach Accept with the T3402 timer set to 4 minutes. */
+    
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started
+
+    
+    v_NasInd := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                               cr_EstablishmentCause_NB_Any,
+                                               cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                  cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT),
+                                                                                  v_ESMMessage)); 
+      
+    f_NBIOT_InitialRegistration_Step5_12(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NasInd);
+    
+      
+    f_NBIOT_InitialRegistration_Step13(nbiot_Cell1,
+                                       CONTROL_PLANE,
+                                       v_NasInd,
+                                       pdnTypeAsSupportedByUE,-,-,-,-,-,v_GT3402);
+
+    f_NBIOT_InitialRegistration_Step14(nbiot_Cell1, CONTROL_PLANE, tsc_EpsDefaultBearerId);
+
+
+    log(v_TcName, "Step4: Verified that the DUT sends an Attach Request and that the network responds with an Attach Accept with the T3402 timer set to 4 minutes.");    
+    log(v_TcName, "Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+
+    log(v_TcName, "Step4: UE is Attached Successfully with LTE network.");    
+   
+      
+    log(v_TcName, "Step5: Detach Request sent to DUT with 're-attach required' in the Detach Type IE.");  
+    
+
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                 tsc_SRB1bis,
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_508_DETACH_REQUEST_MT(cs_DetachType(tsc_DetachMT_ReAttach), omit))));
+    
+    
+    log(v_TcName, "Step5: Waiting to receive Detach Accept from UE");  
+    /*  Verify that the DUT detaches from the LTE network.*/
+    
+
+     SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                     tsc_SRB1bis,
+                                    cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered, cr_508_DETACH_ACCEPT)));   
+    log(v_TcName, "Step6: Verify that the DUT detaches from the LTE network.");
+
+    /* 7. Configure the test equipment such that the network does not respond to RACH attempts 
+     * from the UE (i.e., ignores the random access preamble). */
+    log(v_TcName, "Step7: Configure the test equipment not to respond to RACH attempts from the UE");
+    f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1);
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);     
+    
+    log(v_TcName, "Step7: Configured SS NOT to respond to RACH attempts");
+    
+    /*
+    8. Verify that the UE sends a RACH request in an attempt to re-attach to the LTE network.
+    9. Verify that the LTE network does not respond to the RACH attempt.
+    10. Verify that after T3411 seconds the DUT attempts to attach to the LTE network a second time and that the LTE network does not respond to the RACH attempt. This is considered Retry #1.
+    11. Verify that after T3411 seconds the DUT attempts to attach to the LTE network a third time and that the network ignores the random access preamble. This is considered Retry #2.
+    12. Verify that after T3411 seconds the DUT attempts to attach to the LTE network a fourth time and that the network ignores the random access preamble. This is considered Retry #3.
+    */
+     //UE will make 4 RACH attempts in total, therefore a loop of 4 
+    log(v_TcName, "Step8: Waiting for RACH attempt from UE in order to re-attach to the LTE network");
+    for(v_loop := 1; v_loop <= 5; v_loop := v_loop+1)
+    {
+        Rachcount := 0;
+        SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+        if (v_loop == 1)
+        {
+            log(v_TcName, "Step9: First RACH RECEIVED FROM UE on HPLMN for. Not responding");
+        }
+        else
+        {
+            log(v_TcName, "Received RACH RECEIVED FROM UE on HPLMN for. Not responding - #retry ", (v_loop - 1));
+        }
+        t_T300.start;
+      
+        alt{
+          []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+          {
+            Rachcount := Rachcount + 1;
+            repeat;
+          }
+          []t_T300.timeout
+          {
+            log(v_TcName, "timer T300 timeout");
+          }
+        }
+        
+        if(v_loop == 1){
+            log(v_TcName, "Step10: Verify that after T3411 seconds the DUT attempts to attach to the LTE, Retry #1");    
+        }
+        if(v_loop == 2){
+                   log(v_TcName, "Step11: Verify that after T3411 seconds the DUT attempts to attach to the LTE, Retry #2");    
+        }
+        if(v_loop == 3){
+                    log(v_TcName, "Step12: Verify that after T3411 seconds the DUT attempts to attach to the LTE, Retry #3");    
+        }
+        if(v_loop < 4)
+        {
+            t_T3411.start ( f_NBIOT_SetTimerToleranceMin( nasTimer, v_T3411 ) );
+            log(v_TcName, "Start timer T3411 10 seconds");
+            alt {
+             [] SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+              {
+                t_T3411.stop;
+                log(v_TcName, "stop timer T3411 10 seconds");
+                f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,v_TcName & "UE Triggers unexpected RACH Attempt while T3411 timer is running");
+              }
+              []t_T3411.timeout
+              {
+                log(v_TcName, "timer expiry T3411 10 seconds");
+                log(v_TcName, "T3411 Successful Timeout Detected after #retry ",v_loop - 1);
+              }            
+            };
+        }
+
+    } // End of v_loop
+  
+
+    /* 13. After the random access procedure fails due to timeout (i.e. UE exceeds preambleTransMax), re-configure the network 
+     * emulator such that the network emulator responds to the RACH and allows the random access procedure to complete. 
+     * Also configure the test equipment to respond to all RRCConnectionRequest messages with an RRCConnectionReject message. 
+     * The value for waitTime in the RRCConnectionReject message shall be set to 10 seconds.
+     */
+   
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, disable);
+    log(v_TcName, "Step13 : . After the random access procedure fails due to timeout (i.e. UE exceeds
+        preambleTransMax), re-configure the network emulator such that the network
+        emulator responds to the RACH and allows the random access procedure to
+        complete. Also configure the test equipment to respond to all
+        RRCConnectionRequest messages with an RRCConnectionReject message.
+        The value for waitTime in the RRCConnectionReject message shall be set to 10
+        seconds.");      
+   
+  
+    /* 14. Verify that the DUT attempts to attach to the LTE network and that the network responds to 
+     * the RRCConnectionRequest message with an RRCConnectionReject message with a waitTime value of 10 seconds.
+     */
+    log(v_TcName, "Step14: Waiting for RRC Connection Request from UE");
+   
+    SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ));
+      
+    log(v_TcName, "Step14: Received RRC Connection request from UE");
+      
+    log(v_TcName, "Step14: Sending RRC Connection reject to UE with wait time of 10 seconds");
+   
+    SRB.send(cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB(c_rrcConnRejectTime)));    
+    
+    t_reject.start(v_reject);
+    log(v_TcName, "Step14: Started UE REJECT TIMER of 10 seconds");
+    f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+    
+      
+    alt{
+      [] SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+        t_reject.stop;
+        log(v_TcName, "Step14: stop UE REJECT TIMER 10 seconds");            
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,"Step14: Unexpected RRC Connection Request received from UE before reject timer timeout");
+      }
+      []t_reject.timeout
+      {
+        log(v_TcName, "Step14: timer expiry UE REJECT TIMER 10 seconds");
+      }
+    }
+    
+    /* 15. Verify that after 10 seconds, the DUT attempts to attach to the LTE network and that the network responds to the RRCConnectionRequest message with an 
+     * RRCConnectionReject message with a waitTime of 10 seconds. */
+    log(v_TcName, "Step15: Waiting for RRC Connection Request from UE");
+
+     t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started
+
+    SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ));
+    log(v_TcName, "Step15: Received RRC Connection request from UE");
+
+    log(v_TcName, "Default Procedure Guard Timer Stopped");
+    t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+
+    log(v_TcName, "Step15: Sending RRC Connection reject to UE with wait time of 10 seconds");
+    SRB.send(cas_NB_SRB0_RrcPdu_REQ(nbiot_Cell1, cs_TimingInfo_Now, cs_RRCConnectionReject_NB(c_rrcConnRejectTime)));    
+
+     t_reject.start (v_reject);
+     f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+    /* 16. While the T302 timer is running, re-configure the network to accept RRCConnectionRequests but to not respond to 
+     * RACH attempts from the UE (i.e., ignores the random access preamble). */    
+   
+    log(v_TcName, "Step16: Configure SS for not to respond RACH coming from UE");
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);
+    alt{
+      []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+      { 
+           log(v_TcName, "Step16: Unexpected RACH RECEIVED from UE");
+           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,v_TcName & " Step16: Unexpected RACH RECEIVED from UE");
+      }
+      []t_reject.timeout
+      {
+        log(v_TcName, "Step16: timer expiry UE REJECT TIMER 10 seconds");
+      }    
+     }
+    log(v_TcName," Step 17. Verify that after T302 expires, the UE sends a RACH request to the LTE network and 
+      that the network ignores the random access preamble. This is considered Retry #4. 
+      The attach counter should now have reached a value of 5.
+     ");
+    
+      
+    
+    Rachcount := 0;      
+    log(v_TcName, "Step17: Waiting for RACH from UE");
+    SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+    log(v_TcName, "Step17: RACH RECEIVED from UE for Retry #4.");  
+    t_T300.start;
+      
+    alt{
+      []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+      {
+        Rachcount := Rachcount + 1;
+        repeat;
+      }
+      []t_T300.timeout
+      {
+        log(v_TcName, "T300 timeout");
+      }
+    };
+      
+    
+    
+    
+        log(v_TcName, "Executing Test Steps for Release 13 or Later UE");
+        
+        /* Step 19.1:After the fourth retry attempt fails, 
+         * verify that the UE sends an attach attempt to the LTE network and 
+         * that the LTE network does not respond to the RACH attempt.
+         */
+         
+        Rachcount := 0;
+        log(v_TcName, "Step19.1: Waiting for RACH Attempt from UE");
+        SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+    
+        t_T300.start;
+        //t_T3411.start ( f_NBIOT_SetTimerToleranceMin( nbiot_Cell1, nasTimer, v_T3411 ) );
+      
+        alt
+        {
+            []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+                Rachcount := Rachcount + 1;
+                repeat;
+            }
+            []t_T300.timeout
+            {
+                log(v_TcName, "T300 timeout");
+            }
+        }
+
+        log(v_TcName, "Step19.1: Received RACH from UE");
+        
+        /* Step19.2: 	While the T3411 timer is running, re-configure the network so that the UE finds service on an eNodeB 
+         * with a PLMN id equal to Y2 where Y2 is not equal to Y1. 
+         * The frequency of the second PLMN shall be the same as the first. 
+         * The network should still be configured to not respond to RACH attempts from the UE.
+         */
+        
+
+        
+            log(v_TcName, "Step19.2: Re-configure the network so that the UE finds service on an eNodeB with a PLMN id equal to Y4 = " & f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_311_481)))
+                        & " where Y4 is not equal to Y1. The frequency of the second PLMN shall be the same as the first");
+        
+        f_NBIOT_ReleaseAllCells();
+        //t_T3411.start (v_T3411);
+       
+            log(v_TcName, "Step19.2: Modifying PLMN to Y4 = 311481. ");
+           f_NBIOT_CellInfo_SetPLMN_Common(nbiot_Cell1, {cs_HPLMN_311_481}, -, false);
+        
+        
+        f_NBIOT_CellConfig_Def( nbiot_Cell1, CONTROL_PLANE);
+        f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+        
+       // t_CellBringUp_timer.start(v_CellBringUp_timer);
+        
+        f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, enable);
+          
+
+        log(v_TcName, "Step19.2: Configure SS for not to respond RACH coming from UE"); 
+        
+        /* Step20: Verify that the UE attempts to attach to the network. */
+        log(v_TcName, "Step19.3: Waiting for RACH from UE for New PLMN Configured");
+        t_T3411.start (v_T3411);
+   
+        alt
+        {   
+            []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+            {
+                log(v_TcName, "Step19.3: RACH RECEIVED FROM UE");  
+                b_Rach_Received := true;
+                
+                /*if((t_CellBringUp_timer.read - t_T3411.read) <= 5.0)
+                {
+                    t_CellBringUp_timer.stop;
+                }*/
+                
+                if(t_T3411.running)
+                {
+                    t_T3411.stop;
+                }
+                
+                t_T300.start;    
+                alt
+                {
+                    []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+                    {
+                        Rachcount := Rachcount + 1;
+                        repeat;
+                    }
+                    []t_T300.timeout
+                    {
+                        log(v_TcName, "Step19.3: T300 timeout");
+                    }
+                }
+            }
+            []t_T3411.timeout
+            {
+                log(v_TcName, "Step19.2: Reconfigured Cell within T3411 timer expiry and waiting for UE to attempt RACH to the Network");
+                repeat;
+            }
+            []t_CellBringUp_timer.timeout
+            {
+                if (b_Rach_Received == false)
+                {
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,v_TcName & "Step19.3: UE did not send RACH on New PLMN");                
+                }
+            }
+        }
+        
+        /* Step19.4: Re-configure the network so that the UE again finds service on PLMN Y1 and 
+         * that accept the attach request from the UE. 
+         * Verify that the UE sends an attach attempt to the network and it is accepted by the network.
+         */
+        log(v_TcName, "Step19.4: Re-configure the network so that the UE again finds service on PLMN Y1 = "& f_ConvertPLMNtoString(f_Asn2Nas_PlmnId(valueof(cs_HPLMN_311_480))));   
+      
+         f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    
+        f_NBIOT_ReleaseAllCells();
+        f_NBIOT_Init (c1);  // @sic R5s106627 sic@
+        log(v_TcName, "Step19.4: Modifying PLMN to HPLMN Y1 = 311480");
+        
+        f_NBIOT_CellInfo_SetPLMN_Common(nbiot_Cell1, {cs_HPLMN_311_480}, -, false);
+        f_NBIOT_CellConfig_Def( nbiot_Cell1, CONTROL_PLANE);
+        f_Delay(2.0);  
+        f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE ); 
+    
+        t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started
+        fl_UT_ApplyCommand(UT, cas_UT_Req(POWER_CYCLE, NO_CNF_REQUIRED));
+        //f_EUTRA_AttachProcedure_ConnectedUpdated(eutra_Cell1, NORMAL, v_AttachType, v_AdditionalUpdateType, v_GT3402 ); // @sic R5s110176 sic@
+        
+      
+        
+      
+        v_NAS_Ind_Original_Plmn := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                               cr_EstablishmentCause_NB_Any,
+                                               cr_NAS_IndicationWithPiggybacking(?,?,?)); 
+        
+        if (isvalue(v_NAS_Ind_Original_Plmn.Pdu.Msg.tRACKING_AREA_UPDATE_REQUEST))
+        {
+            log(testcasename(), "Received TAU Request, Sending TAU Reject");
+          
+
+            SRB.send(cas_NB_SRB1bis_NasPdu_REQ(nbiot_Cell1,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(v_NAS_Ind_Original_Plmn.SecurityProtection.Status, // @sic R5-174501 sic@
+                                                      cs_508_TRACKING_AREA_UPDATE_REJECT(tsc_Cause_TA_NotAllowed))));
+    
+
+        }
+        else if (isvalue(v_NAS_Ind_Original_Plmn.Pdu.Msg.aTTACH_REQUEST))
+        {
+          f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind_Original_Plmn);
+        }
+		        
+        log(v_TcName, "Step19.4: Verified that the DUT sends an Attach Request and that the network responds with an Attach Accept with the T3402 timer set to 4 minutes.");    
+        log(v_TcName, "Default Procedure Guard Timer Stopped");
+        t_Procedure_Guard_Timer.stop; //Guard Procedure Ended
+
+        log(v_TcName, "Step19.4: UE is Attached Successfully with LTE network.");         
+    
+    
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, disable);
+    
+    log(v_TcName, "Step20: Power the device off.");
+}
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+}

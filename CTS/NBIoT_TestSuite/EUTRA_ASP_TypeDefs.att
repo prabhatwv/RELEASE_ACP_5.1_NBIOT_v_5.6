@@ -1,0 +1,9 @@
+module EUTRA_ASP_TypeDefs
+{
+	type SYSTEM_CTRL_REQ with { encode "TCI XML" }
+	type SYSTEM_CTRL_CNF with { encode "TCI XML" }
+    type BcchInfo_Type with { encode "TCI XML" variant "codec change allowed" }
+    type Bcch_BRInfo_Type with { encode "TCI XML" variant "codec change allowed" }
+    type PagingTrigger_Type with { encode "TCI XML" variant "codec change allowed" }
+    type SYSTEM_IND with { encode "TCI XML" }
+} with {}

@@ -1,0 +1,181 @@
+//* @author TestCast XSD converter
+//* @desc Automatically generated from XSD. Do not modify manually.
+module NoTargetNamespace
+{
+	import from XSD all;
+    type TIMS3GPP Ims_3gpp
+    with
+    {
+        variant "element";
+        variant "name as 'ims-3gpp'";
+        variant "form as unqualified"
+    }
+    type XSD.String Type
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type XSD.String Action
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type record TIMS3GPP
+    {
+        XSD.Decimal version,
+        record length (1..infinity) of XSD.String attr optional,
+        union
+        {
+            TAlternativeService alternative_service,
+            XSD.String service_info
+        } choice,
+        record of XSD.String elem_list
+    }
+    with
+    {
+        variant(elem_list[-]) "anyElement";
+        variant(elem_list[-]) "processContents lax";
+        variant(choice.alternative_service, choice.service_info) "form as qualified";
+        variant(choice.service_info) "name as 'service-info'";
+        variant(version) "form as unqualified";
+        variant(attr) "anyAttributes";
+        variant(choice, elem_list) "untagged";
+        variant "name as uncapitalized";
+        variant(choice.alternative_service) "name as 'alternative-service'";
+        variant(version) "attribute"
+    }
+    type record TAlternativeService
+    {
+        record length (1..infinity) of XSD.String attr optional,
+        Type type_,
+        XSD.String reason,
+        record of XSD.String elem_list
+    }
+    with
+    {
+        variant(elem_list[-]) "processContents lax";
+        variant(elem_list[-]) "anyElement";
+        variant(elem_list) "untagged";
+        variant "name as uncapitalized";
+        variant(reason) "form as qualified";
+        variant(attr) "anyAttributes"
+    }
+    type Tstate_and_event_info State_and_event_info
+    with
+    {
+        variant "name as 'state-and-event-info'";
+        variant "form as unqualified";
+        variant "element"
+    }
+    type AnyExtType RemoteLegInfoRequest
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type AnyExtType RemoteLegInfoResponse
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type XSD.AnyType LocalAssertedIdRequest
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type XSD.AnyType DialogIdRequest
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type XSD.AnyURI LocalAssertedId
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type DialogIdType DialogId
+    with
+    {
+        variant "element";
+        variant "form as unqualified";
+        variant "name as uncapitalized"
+    }
+    type enumerated DirectionType
+    {
+        initiator,
+        receiver
+    }
+    with
+    {
+        variant "name as uncapitalized"
+    }
+    type record Tstate_and_event_info
+    {
+        record length (1..infinity) of XSD.String attr optional,
+        XSD.String state_info optional,
+        DirectionType direction optional,
+        XSD.String event optional,
+        AnyExtType anyExt optional,
+        record of XSD.String elem_list
+    }
+    with
+    {
+        variant "name as 'Tstate-and-event-info'";
+        variant(attr, elem_list[-]) "processContents lax";
+        variant(elem_list) "untagged";
+        variant(state_info) "name as 'state-info'";
+        variant(elem_list[-]) "anyElement except unqualified";
+        variant(anyExt, direction, event, state_info) "form as qualified";
+        variant(attr) "anyAttributes"
+    }
+    type record AnyExtType
+    {
+        record of XSD.String elem_list
+    }
+    with
+    {
+        variant(elem_list[-]) "processContents lax";
+        variant(elem_list) "untagged";
+        variant "name as uncapitalized";
+        variant(elem_list[-]) "anyElement"
+    }
+    type record DialogIdType
+    {
+        XSD.String call_id optional,
+        XSD.String local_tag optional,
+        XSD.String remote_tag optional,
+        record length (1..infinity) of XSD.String attr optional,
+        record of XSD.String elem_list
+    }
+    with
+    {
+        variant(elem_list[-]) "anyElement";
+        variant(attr, elem_list[-]) "processContents lax";
+        variant(call_id, local_tag, remote_tag) "form as unqualified";
+        variant(attr) "anyAttributes";
+        variant(elem_list) "untagged";
+        variant(local_tag) "name as 'local-tag'";
+        variant "name as uncapitalized";
+        variant(call_id) "name as 'call-id'";
+        variant(remote_tag) "name as 'remote-tag'";
+        variant(call_id, local_tag, remote_tag) "attribute"
+    }
+}
+with
+{
+	encode "XML";
+	variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'"
+}

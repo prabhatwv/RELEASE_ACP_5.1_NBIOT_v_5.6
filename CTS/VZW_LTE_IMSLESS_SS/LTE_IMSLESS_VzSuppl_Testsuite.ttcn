@@ -1,0 +1,766 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module LTE_IMSLESS_VzSuppl_Testsuite 
+{
+  import from NBIOT_Component all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from EUTRA_Component all;
+  import from EPS_NAS_Constants all;
+  import from NAS_CommonTemplates all;
+  import from NBIOT_36523_SelectionExpressions all;
+  import from NBIOT_ESM_Testcases all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_Idle_CellReselection all;
+  import from NBIOT_Idle_CellSelection all;
+  import from NBIOT_MAC_Testcases all;
+  import from NBIOT_NAS_Attach all;
+  import from NBIOT_NAS_Authentication_Security all;
+  import from NBIOT_NAS_Detach all;
+  import from NBIOT_NAS_ServiceReq all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from NBIOT_PDCP_Testcases all;
+  import from NBIOT_RLC_Testcases all;
+  import from NBIOT_RRC_ControlPlane all;
+  import from NBIOT_RRC_MultiCarrier all;
+  import from NBIOT_RRC_Paging all;
+  import from NBIOT_RRC_UserPlane all;
+  import from Parameters all;
+  import from IMSLESS_SS_ESM_TESTCASES all;
+    
+    
+   testcase TC_VZ_SUPLCONFIMSLESS_2_1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_1_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_SUPLCONFIMSLESS_2_2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_2_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+     testcase TC_VZ_SUPLCONFIMSLESS_2_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(800);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_3_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+      testcase TC_VZ_SUPLCONFIMSLESS_2_4() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_4_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+      testcase TC_VZ_SUPLCONFIMSLESS_2_5() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_5_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+      testcase TC_VZ_SUPLCONFIMSLESS_2_6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_6_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+ testcase TC_VZ_SUPLCONFIMSLESS_2_8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_8_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_SUPLCONFIMSLESS_2_9() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_9_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+     testcase TC_VZ_SUPLCONFIMSLESS_2_10() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_10_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+      testcase TC_VZ_SUPLCONFIMSLESS_2_11() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_11_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+      testcase TC_VZ_SUPLCONFIMSLESS_2_12() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_12_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+      testcase TC_VZ_SUPLCONFIMSLESS_2_16() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_16_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+testcase TC_VZ_SUPLCONFIMSLESS_2_17() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_17_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_SUPLCONFIMSLESS_2_18() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_18_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+     testcase TC_VZ_SUPLCONFIMSLESS_2_19() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_19_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+      testcase TC_VZ_SUPLCONFIMSLESS_2_20() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_20_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+      testcase TC_VZ_SUPLCONFIMSLESS_2_21() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_21_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+      testcase TC_VZ_SUPLCONFIMSLESS_2_22() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_22_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+ testcase TC_VZ_SUPLCONFIMSLESS_2_23() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_23_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_SUPLCONFIMSLESS_2_24() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_24_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+     testcase TC_VZ_SUPLCONFIMSLESS_2_25() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_25_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+      testcase TC_VZ_SUPLCONFIMSLESS_2_27_Test1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_27_Test1(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+     testcase TC_VZ_SUPLCONFIMSLESS_2_27_Test2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_27_Test2(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+      testcase TC_VZ_SUPLCONFIMSLESS_2_28() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_28_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_29() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_29_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+      testcase TC_VZ_SUPLCONFIMSLESS_2_30() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_30_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_31() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_31_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_32() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_32_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_33() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_33_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_34() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_34_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_37() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_37_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_38() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_38_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_39() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_39_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_40() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_40_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_41() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_41_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_42() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_42_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_43() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_43_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_48() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_48_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+   testcase TC_VZ_SUPLCONFIMSLESS_2_49() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_SUPLCONFIMSLESS_TC_2_49_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+   control {  
+          
+       { execute(TC_VZ_SUPLCONFIMSLESS_2_1());  
+         execute(TC_VZ_SUPLCONFIMSLESS_2_3()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_4());
+         execute(TC_VZ_SUPLCONFIMSLESS_2_5()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_8()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_12()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_16());   
+         execute(TC_VZ_SUPLCONFIMSLESS_2_17()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_18()); 
+         execute(TC_VZ_SUPLCONFIMSLESS_2_20());
+         execute(TC_VZ_SUPLCONFIMSLESS_2_22());
+         execute(TC_VZ_SUPLCONFIMSLESS_2_25());
+         execute(TC_VZ_SUPLCONFIMSLESS_2_27_Test1());
+         execute(TC_VZ_SUPLCONFIMSLESS_2_27_Test2());  
+       }    
+    }
+}

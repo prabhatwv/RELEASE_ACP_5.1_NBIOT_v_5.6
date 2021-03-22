@@ -1,0 +1,10 @@
+module NR_PDCP_TypeDefs
+{
+	//type NR_PDCP_PDU_Type with {}
+	//type NR_PDCP_PDUList_Type with {}
+    type NR_PDCP_SDU_Type with { encode override "NR_PDCP_SDU_Type" }
+	type NR_PDCP_SDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+    
+    type NR_PDCP_PDU_Type with { encode override "NR_PDCP_PDU_Type" }
+	type NR_PDCP_PDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+} with {}

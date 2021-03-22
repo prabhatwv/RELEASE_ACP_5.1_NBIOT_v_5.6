@@ -1,0 +1,7 @@
+module IP_ASP_TypeDefs
+{
+	type DRBMUX_CONFIG_REQ with { encode "TCI XML" }
+	type DRBMUX_COMMON_IND_CNF with { encode "TCI XML" }
+	type IP_SOCKET_REQ with { encode "TCI XML" }
+	type IP_SOCKET_IND with { encode "TCI XML" }
+} with {}

@@ -1,0 +1,2393 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module VZW_LTE_IMSLESS_DATA_RETRY_TESTCASES 
+{
+  import from NBIOT_Component all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from EUTRA_Component all;
+  import from EPS_NAS_Constants all;
+  import from NAS_CommonTemplates all;
+  import from NBIOT_36523_SelectionExpressions all;
+  import from NBIOT_ESM_Testcases all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_Idle_CellReselection all;
+  import from NBIOT_Idle_CellSelection all;
+  import from NBIOT_MAC_Testcases all;
+  import from NBIOT_NAS_Attach all;
+  import from NBIOT_NAS_Authentication_Security all;
+  import from NBIOT_NAS_Detach all;
+  import from NBIOT_NAS_ServiceReq all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from NBIOT_PDCP_Testcases all;
+  import from NBIOT_RLC_Testcases all;
+  import from NBIOT_RRC_ControlPlane all;
+  import from NBIOT_RRC_MultiCarrier all;
+  import from NBIOT_RRC_Paging all;
+  import from NBIOT_RRC_UserPlane all;
+  import from Parameters all;
+  import from NAS_CommonTypeDefs all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_RRC all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_NAS all;
+    
+   testcase TC_VZ_DATARETRYIMSLESS_2_1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(360);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_2_1_NBIOT());
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+  
+  testcase TC_VZ_DATARETRYIMSLESS_2_2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3600);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_2_2_NBIOT());
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+   testcase TC_VZ_DATARETRYIMSLESS_2_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_2_3_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+     testcase TC_VZ_DATARETRYIMSLESS_2_4() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_2_4_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_3_1_Test1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_3_1_NBIOT_Test(px_INTERNET_APN,__MODULE__,true));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+  testcase TC_VZ_DATARETRYIMSLESS_3_1_Test2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_3_1_NBIOT_Test(px_INTERNET_APN,__MODULE__,false));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+   testcase TC_VZ_DATARETRYIMSLESS_3_2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_3_2_NBIOT(px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_3_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_3_3_IMSLESS_NBIOT(px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+  testcase TC_VZ_DATARETRYIMSLESS_3_4() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_3_4_IMSLESS_NBIOT(px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_4_1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(800);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_1_NBIOT());
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+
+     testcase TC_VZ_DATARETRYIMSLESS_4_2_Code3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_2_NBIOT_Code3(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_DATARETRYIMSLESS_4_2_Code6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_2_NBIOT_Code6(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+     testcase TC_VZ_DATARETRYIMSLESS_4_2_Code7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_2_NBIOT_Code7(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    testcase TC_VZ_DATARETRYIMSLESS_4_2_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_2_NBIOT_Code8(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_3_Code11() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_3_NBIOT_Code11(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_3_Code14() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_3_NBIOT_Code14(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_4_4_Code12() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_4_NBIOT_Code12(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    testcase TC_VZ_DATARETRYIMSLESS_4_4_Code13() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_4_NBIOT_Code13(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    testcase TC_VZ_DATARETRYIMSLESS_4_4_Code15() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1200);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_4_NBIOT_Code15(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+  testcase TC_VZ_DATARETRYIMSLESS_4_5_Code17() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(900);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_5_NBIOT_Code17(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+      testcase TC_VZ_DATARETRYIMSLESS_4_6_Code22() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3800);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_6_NBIOT_Code22(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(1800);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_7_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_8_Code95() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_8_NBIOT(tsc_EmmCause_SemanticallyIncorrect, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_8_Code96() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_8_NBIOT(tsc_EmmCause_InvalidMandatoryInformation, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_8_Code97() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(900);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_8_NBIOT(tsc_EmmCause_MessageTypeNonExistentOrNotImplemented, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_8_Code99() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(900);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_8_NBIOT(tsc_EmmCause_IENonExistentOrNotImplemented, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_8_Code111() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(900);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_4_8_NBIOT(tsc_EmmCause_ProtocolErrorUnspecified, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_9_Test1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(176400);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_4_9_NBIOT( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_9_Test2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(176400);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_4_9_NBIOT( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_10_Code3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_10_NBIOT_Tests(tsc_EmmCause_IllegalUe, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_10_Code6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_10_NBIOT_Tests(tsc_EmmCause_IllegalMe, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+       testcase TC_VZ_DATARETRYIMSLESS_4_10_Code7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_10_NBIOT_Tests(tsc_Cause_EPSServNotAllowed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+       testcase TC_VZ_DATARETRYIMSLESS_4_10_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_10_NBIOT_Tests(tsc_Cause_EPSandNonEPSServNotAllowed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_11_Code3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_11_NBIOT_Tests(tsc_EmmCause_IllegalUe, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_11_Code6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_11_NBIOT_Tests(tsc_EmmCause_IllegalMe, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_4_11_Code7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_11_NBIOT_Tests(tsc_Cause_EPSServNotAllowed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+        testcase TC_VZ_DATARETRYIMSLESS_4_11_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_4_11_NBIOT_Tests(tsc_Cause_EPSandNonEPSServNotAllowed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_4_12_Code14() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(90000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_4_12_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_4_13() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(174600);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_4_13_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_5_1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_1_IMSLESS_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_5_2_Code12() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_02_IMSLESS_NBIOT(__MODULE__,tsc_Cause_TA_NotAllowed));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    
+   testcase TC_VZ_DATARETRYIMSLESS_5_2_Code13() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_02_IMSLESS_NBIOT(__MODULE__,tsc_Cause_Roaming_NotAllowed));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_2_Code15() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_02_IMSLESS_NBIOT(__MODULE__,tsc_Cause_NoSuitableCells));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+    testcase TC_VZ_DATARETRYIMSLESS_5_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_3_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+   testcase TC_VZ_DATARETRYIMSLESS_5_4_Code17() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_5_4(__MODULE__, tsc_EmmCause_NetworkFailure));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    
+   testcase TC_VZ_DATARETRYIMSLESS_5_5_Code12() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_05_Code12_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+   testcase TC_VZ_DATARETRYIMSLESS_5_5_Code13() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_05_Code13_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_5_Code15() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_05_Code15_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_6_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_7_Code17() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_07_Code17_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_8_Code22() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_8_IMSLESS_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+  
+    
+    
+       testcase TC_VZ_DATARETRYIMSLESS_5_10_Code22() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_5_10_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    
+       testcase TC_VZ_DATARETRYIMSLESS_5_12_Code3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_12_NBIOT_Tests((tsc_EmmCause_IllegalUe),__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+      testcase TC_VZ_DATARETRYIMSLESS_5_12_Code6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_12_NBIOT_Tests((tsc_EmmCause_IllegalMe),__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+          testcase TC_VZ_DATARETRYIMSLESS_5_12_Code7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_12_NBIOT_Tests((tsc_Cause_EPSServNotAllowed),__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+          testcase TC_VZ_DATARETRYIMSLESS_5_12_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(2500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_12_NBIOT_Tests((tsc_Cause_EPSandNonEPSServNotAllowed),__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_5_13_Code3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_13_NBIOT_Tests(tsc_EmmCause_IllegalUe,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_5_13_Code6() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_13_NBIOT_Tests(tsc_EmmCause_IllegalMe,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_5_13_Code7() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_13_NBIOT_Tests(tsc_Cause_EPSServNotAllowed,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_5_13_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_5_13_NBIOT_Tests(tsc_Cause_EPSandNonEPSServNotAllowed,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+  
+     testcase TC_VZ_DATARETRYIMSLESS_6_1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_1_NBIOT(px_INTERNET_APN, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5400);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_2_NBIOT(px_INTERNET_APN, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5400);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_3_NBIOT(px_INTERNET_APN, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_4_Code26() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_InsufficientResources, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_4_Code30() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_RequestRejectedbySGWOrPGW, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+  testcase TC_VZ_DATARETRYIMSLESS_6_4_Code31() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_RequestRejectedunspecified := '00011111'B; //Esm_Cause - 31
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_RequestRejectedunspecified, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_4_Code34() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ServiceOptionTemporarilyOutOfOrder := '00100010'B; // Esm_Cause - 34
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ServiceOptionTemporarilyOutOfOrder, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+   
+   testcase TC_VZ_DATARETRYIMSLESS_6_4_Code38() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_NetworkFailure := '00100110'B; //Esm_Cause - 38
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_NetworkFailure, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_4_Code95() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_95  := '01011111'B; //Esm_Cause - 95
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_95, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+        testcase TC_VZ_DATARETRYIMSLESS_6_4_Code96() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_96  := '01100000'B; //Esm_Cause - 96
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_96, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+       testcase TC_VZ_DATARETRYIMSLESS_6_4_Code97() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_97  := '01100001'B; //Esm_Cause - 97
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_97, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+        testcase TC_VZ_DATARETRYIMSLESS_6_4_Code98() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_98  := '01100010'B; //Esm_Cause - 98
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_98, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+          testcase TC_VZ_DATARETRYIMSLESS_6_4_Code99() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_99  := '01100011'B; //Esm_Cause - 99
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_99, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_4_Code100() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_100 := '01100100'B; //Esm_Cause - 100
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_100, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_4_Code101() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_101 := '01100101'B; //Esm_Cause - 101
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_101, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+      testcase TC_VZ_DATARETRYIMSLESS_6_4_Code111() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_111 := '01101111'B; //Esm_Cause - 111
+
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_4_IMSLESS_NBIOT_Tests(tsc_Cause_ProtocolErrorUnspecified_111, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_5_Code26() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_InsufficientResources, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code30() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_RequestRejectedbySGWOrPGW, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code31() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_RequestRejectedunspecified := '00011111'B; //Esm_Cause - 31
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_RequestRejectedunspecified, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code34() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ServiceOptionTemporarilyOutOfOrder := '00100010'B; // Esm_Cause - 34
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ServiceOptionTemporarilyOutOfOrder, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code38() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_NetworkFailure := '00100110'B; //Esm_Cause - 38
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_NetworkFailure, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_5_Code95() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_95  := '01011111'B; //Esm_Cause - 95
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_95, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code96() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_96  := '01100000'B; //Esm_Cause - 96
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_96, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_5_Code97() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_97  := '01100001'B; //Esm_Cause - 97
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_97, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+         testcase TC_VZ_DATARETRYIMSLESS_6_5_Code98() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_98  := '01100010'B; //Esm_Cause - 98
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_98, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+       testcase TC_VZ_DATARETRYIMSLESS_6_5_Code99() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_99  := '01100011'B; //Esm_Cause - 99
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_99, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+        testcase TC_VZ_DATARETRYIMSLESS_6_5_Code100() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+     const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_100 := '01100100'B; //Esm_Cause - 100
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_100, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_5_Code101() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_101 := '01100101'B; //Esm_Cause - 101
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_101, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_5_Code111() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+      const NAS_CauseValue_Type tsc_Cause_ProtocolErrorUnspecified_111 := '01101111'B; //Esm_Cause - 111
+
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_5_NBIOT(tsc_Cause_ProtocolErrorUnspecified_111, px_INTERNET_APN,__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+   testcase TC_VZ_DATARETRYIMSLESS_6_6_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_Cause_OperatorDeterminedBarring, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_6_Code27() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_Cause_missingOrUnknownApn, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_6_Code29() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_Cause_userAuthenticationFailed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+  
+     testcase TC_VZ_DATARETRYIMSLESS_6_6_Code32() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_Cause_serviceOptionNotSupported, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_6_Code33() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_Cause_requestedServiceOptionNotSubscribed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_6_Code112() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3500);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_6_6_IMSLESS_NBIOT(tsc_EmmCause_ApnRestrictionValueIncompatibleWithActiveEpsBearerContext, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+  
+      testcase TC_VZ_DATARETRYIMSLESS_6_7_Code8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_Cause_OperatorDeterminedBarring, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_7_Code27() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_Cause_missingOrUnknownApn, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+  
+       testcase TC_VZ_DATARETRYIMSLESS_6_7_Code29() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_Cause_userAuthenticationFailed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+       testcase TC_VZ_DATARETRYIMSLESS_6_7_Code32() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_Cause_serviceOptionNotSupported, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+       testcase TC_VZ_DATARETRYIMSLESS_6_7_Code33() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_Cause_requestedServiceOptionNotSubscribed, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    testcase TC_VZ_DATARETRYIMSLESS_6_7_Code112() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_6_7_NBIOT(tsc_EmmCause_ApnRestrictionValueIncompatibleWithActiveEpsBearerContext, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+   
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_8() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3600);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_6_8_NBIOT( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_9() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(800);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_6_9_NBIOT( px_INTERNET_APN, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+      testcase TC_VZ_DATARETRYIMSLESS_6_10() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3600);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_IMSLess_TC_6_10_NBIOT( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_11() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3600);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_11( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_13_Test1() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_13_Test1( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }   
+    
+    testcase TC_VZ_DATARETRYIMSLESS_6_13_Test2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_13_Test2( __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+    
+   testcase TC_VZ_DATARETRYIMSLESS_6_14() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_InsufficientResources := '00011010'B; // Esm_Cause - 26
+
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_14_NBIOT_Tests(tsc_Cause_InsufficientResources, __MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_15_Code26() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_InsufficientResources := '00011010'B; // Esm_Cause - 26
+
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_15( __MODULE__, tsc_ESM_Cause26_InsufficientResources));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }  
+    
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_6_15_Code27() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+    const NAS_CauseValue_Type tsc_Cause_InsufficientResources := '00011010'B; // Esm_Cause - 26
+
+    timer t_GuardTimer := int2float(5000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_VZ_DATARETRYIMSLESS_6_15( __MODULE__, tsc_Cause_missingOrUnknownApn));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  } 
+    
+    
+     testcase TC_VZ_DATARETRYIMSLESS_7_1() runs on MTC_NBIOT system SYSTEM_NBIOT 
+  {
+     var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+    log(testcasename()," Guard Timer value is 360 seconds");
+    v_NBIOT.start(f_VZ_TC_7_1_IMSLESS_NBIOT(px_INTERNET_APN, __MODULE__));
+    
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+     testcase TC_VZ_DATARETRYIMSLESS_7_2() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_VZ_TC_7_2_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+   
+    testcase TC_VZ_DATARETRYIMSLESS_7_3() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / Control Plane CIoT EPS optimisation for EPS services
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+  
+    v_NBIOT.start(f_TC_7_3_IMSLESS_NBIOT(__MODULE__));
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      control {  
+       { execute(TC_VZ_DATARETRYIMSLESS_2_1()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_2_2()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_2_3()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_2_4()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_3_1_Test1()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_3_1_Test2()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_3_2()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_3_3()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_3_4()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_1()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_2_Code3()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_2_Code6()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_2_Code7()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_2_Code8()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_3_Code11()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_3_Code14()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_4_Code12()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_4_Code13()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_4_Code15()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_5_Code17()); } 
+       { execute(TC_VZ_DATARETRYIMSLESS_4_6_Code22()); } 
+       { execute(TC_VZ_DATARETRYIMSLESS_4_7()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_4_8_Code95()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_4_8_Code96()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_4_8_Code97()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_4_8_Code99()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_4_8_Code111()); } 
+       { execute(TC_VZ_DATARETRYIMSLESS_4_9_Test1()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_9_Test2()); }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_10_Code3());  }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_10_Code6()); }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_10_Code7());}
+       { execute(TC_VZ_DATARETRYIMSLESS_4_10_Code8());  }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_11_Code3());  }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_11_Code6());  }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_11_Code7());  }
+       {  execute(TC_VZ_DATARETRYIMSLESS_4_11_Code8());  }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_12_Code14());  }
+       { execute(TC_VZ_DATARETRYIMSLESS_4_13()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_1()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_2_Code12()); } 
+       { execute(TC_VZ_DATARETRYIMSLESS_5_2_Code13()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_2_Code15()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_5_3()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_4_Code17()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_5_Code12()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_5_Code13()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_5_Code15()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_6()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_7_Code17()); }  
+       { execute(TC_VZ_DATARETRYIMSLESS_5_8_Code22()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_10_Code22()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_12_Code3()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_12_Code6()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_12_Code7()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_12_Code8()); }
+       { execute(TC_VZ_DATARETRYIMSLESS_5_13_Code3()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_5_13_Code6()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_5_13_Code7()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_5_13_Code8()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_1()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_2()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_3()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code26()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code30()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code31()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code34()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code38()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code95()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code96()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code97()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code98()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code99()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code100()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code101()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_4_Code111()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code26()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code30()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code31()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code34()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code38()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code95()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code96()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code97()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code98()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code99()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code100()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code101()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_5_Code111()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code8()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code27()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code29()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code32()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code33()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_6_Code112()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code8()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code27()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code29()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code32()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code33()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_7_Code112()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_8()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_9()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_10()); }  
+        { execute(TC_VZ_DATARETRYIMSLESS_6_11()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_13_Test1()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_13_Test2()); } 
+        { execute(TC_VZ_DATARETRYIMSLESS_6_14());      }
+        { execute(TC_VZ_DATARETRYIMSLESS_6_15_Code26());}
+        { execute(TC_VZ_DATARETRYIMSLESS_6_15_Code27());}
+        { execute(TC_VZ_DATARETRYIMSLESS_7_1()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_7_2()); }
+        { execute(TC_VZ_DATARETRYIMSLESS_7_3()); }
+         
+      
+       
+    
+         
+          
+         
+          
+          
+      }
+         
+}

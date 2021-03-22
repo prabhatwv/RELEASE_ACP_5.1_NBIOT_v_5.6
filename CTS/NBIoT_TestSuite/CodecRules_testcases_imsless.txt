@@ -1,0 +1,29 @@
+NoLenField
+{
+	        Length = "none"
+}
+
+BitPacking extends NoLenField
+{
+	        Alignment = "none"
+}
+
+Int8
+{
+	        Length = "8 bit"
+}
+
+Int16
+{
+	        Length = "16 bit"
+}
+
+Int32
+{
+	        Length = "32 bit"
+}
+
+Align4 extends Int32
+{
+	        Alignment = "4"
+}

@@ -1,0 +1,12 @@
+module NR_ASP_DrbDefs
+{
+	type NR_DRB_COMMON_REQ with { encode "TCI XML" /*variant "codec change allowed"*/ }
+	type NR_DRB_COMMON_IND with {  encode "TCI XML" /*variant "codec change allowed"*/}
+    
+        
+    type NR_RLC_SDU_Type with { encode override "NR_RLC_SDU_Type" }
+	type NR_RLC_SDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+    
+    type NR_RLC_PDU_Type with { encode override "NR_RLC_PDU_Type" }
+	type NR_RLC_PDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+} with {}

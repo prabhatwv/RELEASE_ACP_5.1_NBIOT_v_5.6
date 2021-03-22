@@ -1,0 +1,163 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module VZW_LTE_IOT_GSMA 
+{
+  import from NBIOT_Component all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from EUTRA_Component all;
+  import from EPS_NAS_Constants all;
+  import from NAS_CommonTemplates all;
+  import from NBIOT_36523_SelectionExpressions all;
+  import from NBIOT_ESM_Testcases all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_Idle_CellReselection all;
+  import from NBIOT_Idle_CellSelection all;
+  import from NBIOT_MAC_Testcases all;
+  import from NBIOT_NAS_Attach all;
+  import from NBIOT_NAS_Authentication_Security all;
+  import from NBIOT_NAS_Detach all;
+  import from NBIOT_NAS_ServiceReq all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from NBIOT_PDCP_Testcases all;
+  import from NBIOT_RLC_Testcases all;
+  import from NBIOT_RRC_ControlPlane all;
+  import from NBIOT_RRC_MultiCarrier all;
+  import from NBIOT_RRC_Paging all;
+  import from NBIOT_RRC_UserPlane all;
+  import from Parameters all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_RRC all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_NAS all;
+  import from VZ_LTE_CommonParameters all;
+  import from  VZW_LTE_IOT_GSMA_TESTCASES all;
+    
+    function f_VZ_Guard_Timer_Calculation () runs on MTC_NBIOT system SYSTEM_NBIOT return float
+    {
+        var float p_delay := 0.0;
+        var integer v_Back_off_Itr_Cntr := 0;
+        if(px_Execute_Test1)
+        {
+            //Relevant for test 1 only    
+            while ( v_Back_off_Itr_Cntr < px_Max_Backoff_Itr_Counter) {
+                
+                p_delay := p_delay + int2float((px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr] + 
+                          ((hex2int(px_IMSI_Def)) mod px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr])));
+                v_Back_off_Itr_Cntr := v_Back_off_Itr_Cntr + 1;   
+            }
+        }
+        else
+        {
+            p_delay := p_delay + px_Device_Monitor_Timer;
+        }
+        
+        /* Back off Timer + Start Timer + Basic Guard Timer */
+        p_delay := (p_delay + int2float(tsc_StartTimer_val) + 360.0);
+        
+        return p_delay;
+    }
+    
+    
+    testcase TC_VZ_IOT_TS35_5_1_TC_008g() runs on MTC_NBIOT system SYSTEM_NBIOT {
+    // @purpose
+    //   NB-IoT / GSMA 
+    var NBIOT_PTC        v_NBIOT      := null;
+    var EUTRA_PTC        v_EUTRA      := null;
+  
+    timer t_GuardTimer := int2float(3000);
+  
+    v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+  
+    f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+        
+    v_NBIOT.start(f_TC_VZ_IOT_5_2_2_5_Test2_NBIOT());
+  
+    t_GuardTimer.start;
+  
+    f_MTC_MainLoop_NBIOT(t_GuardTimer);
+  }
+    
+    testcase TC_VZ_IOT_TS35_5_1_TC_001() runs on MTC_NBIOT system SYSTEM_NBIOT {
+        
+      var NBIOT_PTC    v_NBIOT      := null;
+      var EUTRA_PTC    v_EUTRA       := null;
+     
+      timer t_GuardTimer := f_VZ_Guard_Timer_Calculation();
+        
+      v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+        
+      f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+        
+      v_NBIOT.start(f_TC_VZ_IOT_5_2_2_5_Test2_NBIOT());
+    
+        
+      t_GuardTimer.start;
+        
+      f_MTC_MainLoop_NBIOT(t_GuardTimer);
+    
+    }
+    
+    testcase TC_VZ_IOT_TS35_5_1_TC_008h() runs on MTC_NBIOT system SYSTEM_NBIOT {
+        
+      var NBIOT_PTC    v_NBIOT      := null;
+      var EUTRA_PTC    v_EUTRA       := null;
+     
+      timer t_GuardTimer := f_VZ_Guard_Timer_Calculation();
+        
+      v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+        
+      f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+        
+      v_NBIOT.start(f_TC_VZ_IOT_5_2_2_6_NBIOT());
+    
+        
+      t_GuardTimer.start;
+        
+      f_MTC_MainLoop_NBIOT(t_GuardTimer);
+    
+    }
+    
+    testcase TC_VZ_IOT_TS35_5_1_TC_008d() runs on MTC_NBIOT system SYSTEM_NBIOT {
+        
+      var NBIOT_PTC    v_NBIOT      := null;
+      var EUTRA_PTC    v_EUTRA       := null;
+     
+      timer t_GuardTimer := f_VZ_Guard_Timer_Calculation();
+        
+      v_NBIOT :=NBIOT_PTC.create("NBIOT_PTC") alive;
+        
+      f_MTC_ConnectPTCs_NBIOT(system, v_NBIOT, v_EUTRA);
+        
+      v_NBIOT.start(f_TC_VZ_IOT_5_2_2_3_NBIOT());
+    
+        
+      t_GuardTimer.start;
+        
+      f_MTC_MainLoop_NBIOT(t_GuardTimer);
+    
+    }
+    
+    
+    
+    // ----------------------------------------------------------
+    // |                    GSMA Test Cases                     |
+    // ----------------------------------------------------------
+    //
+    
+    control
+	{
+       execute (TC_VZ_IOT_TS35_5_1_TC_008d()); //5.2.2.3
+       execute (TC_VZ_IOT_TS35_5_1_TC_008h()); //5.2.2.6
+       execute (TC_VZ_IOT_TS35_5_1_TC_008g()); //5.2.2.5
+       execute (TC_VZ_IOT_TS35_5_1_TC_001()); //5.3.1*/
+    }
+}

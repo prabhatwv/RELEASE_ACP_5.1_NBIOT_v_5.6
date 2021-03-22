@@ -1,0 +1,1592 @@
+/******************************************************************************/
+
+/******************************************************************************/
+
+module VZW_LTE_IMSLESS_DATA_RETRY_COMMON {
+
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CIOT_NASTemplates all;
+  import from CommonDefs all;
+  import from CommonAspDefs all;
+  import from Common4G5G_Templates all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_LoopBack_Templates all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NB_Parameters all;
+  import from EUTRA_Component all;
+  import from EUTRA_NB_SecurityDefinitionsAndExternalFunctions all;
+  import from LoopbackIP all;
+  import from NAS_CommonTemplates all;  
+  import from NBIOT_ASP_SrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CellInfo all;
+ /* import from EUTRA_CellInfoInit all; */
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from EUTRA_Component all;
+  import from NBIOT_ConfigurationSteps all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+  import from NBIOT_LoopBack all;
+  import from NBIOT_NASSteps all;
+  import from NBIOT_Parameters all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_RRC_Common all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_SRB_DRB_Templates all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SysInfo_Templates all;
+/*  import from EUTRA_SRB_Templates all;*/
+  import from NBIOT_Timing all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterPtcToMtcDefs all;
+  import from EUTRA_NB_NASSteps all;
+ /* import from EUTRA_InitialRegistration all;*/
+  import from EUTRA_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  import from EUTRA_NB_RRC_Templates all;
+  //import from EUTRA_RRC_ASN1_Definitions all;
+/*  import from VZW_LTE_DATA_RETRY_CommonDefs all;  */
+  import from IMS_PTC_CoordMsg all;
+  /*import from VZW_LTE_IMSLESS_DATA_RETRY_CommonDefs all;  */
+  /*import from VZ_LTE_CommonDefs all;*/
+  import from EUTRA_NB_AuxiliaryFunctions all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_ESM_Testcases all;
+ import from UpperTesterCommon all;
+    import from NBIOT_NAS_TrackingArea all;
+    import from NBIOT_ASP_L2DataDefs all;
+    import from NAS_AuxiliaryDefsAndFunctions all;
+ 
+  type enumerated DelayForUserPlaneSignalling_Type { noDelay, waitForIMS, dontWaitForIMS };   /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, POS) */
+
+    
+    
+    function f_NBIOT_CellInfo_SetCellId (NBIOT_CellId_Type p_CellId, NBIOT_CellId_Type sib1_CellId) runs on NBIOT_PTC
+  {
+    var template (value) NBIOT_CellInfo_Type v_CellInfo := f_NBIOT_CellInfo_Get(p_CellId);  
+    var CellIdentities_Type v_CellIds  := fl_NBIOT_InitCellIdentities ( sib1_CellId );
+     //@sic R5-167569 sic@
+    
+    v_CellInfo.Sysinfo.BCCH_Info.SIB1_NB.message_.c1.systemInformationBlockType1_r13.cellAccessRelatedInfo_r13.cellIdentity_r13 := v_CellIds.CellIdentity;
+         
+    f_NBIOT_CellInfo_Set (p_CellId, v_CellInfo);
+  }
+    
+       function f_NBIOT_StopTimer(timer p_Tmr) runs on NBIOT_PTC
+  {
+
+    if(p_Tmr.running)  
+    {
+      p_Tmr.stop;
+    }
+  }
+    
+   function f_NBIOT_InitiatePdnConn(charstring p_StepNo := "", 
+                                   boolean reqPdpContext := true, 
+                                   boolean isInternet := false,
+                                   integer v_TypeActPDN := 1) runs on NBIOT_PTC
+  {
+    
+    if(pc_Provide_Internet_as_second_APN == false)  
+    {  
+      if(pc_IMS == true)
+      {
+        log(p_StepNo, ": Attempting to initiate a connection to the Internet PDN from the DUT.");
+        v_TypeActPDN := 1;
+        if(reqPdpContext == true)
+        {
+          f_UT_RequestPDN (UT, hex2int('6'H), px_INTERNET_APN);
+        }
+      }
+      else
+      {
+        log(p_StepNo, ": Attempting to initiate a connection to the Admin PDN from the DUT.");
+        v_TypeActPDN := 2;
+        if(reqPdpContext == true)
+        {
+          f_UT_RequestPDN(UT, hex2int('2'H), px_ADMIN_APN);
+        }
+      }
+        //AT MMI mapping for additional PDN
+        if(pc_AddActAdditionalPDN_EnableDisable == true)
+        { 
+            fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+        }
+     else
+        {
+            fl_UT_ApplyCommand(UT, cas_UT_Req(ACTIVATE_BEARER, NO_CNF_REQUIRED, cs_PDP_Cid(int2str(hex2int('6'H)))));    
+        }
+    }
+  }
+    
+      template (value) GPRS_Timer2 cs_GprsTimer_v1_T3346(GprsTimerUnit p_Unit,
+                                             B5_Type p_Value) :=
+  { /* @status    APPROVED (IMS, IMS_IRAT, LTE, LTE_A, LTE_IRAT, POS, SSNITZ, UTRAN) */
+    iei  := '5F'O,
+    iel  := '01'O,  
+    unit       := p_Unit,
+    gprsTimerValue := p_Value
+  };  
+    
+    
+  function f_NBIOT_MobileInfo_GetUECapability_AccessStratumRelease() runs on NBIOT_PTC return AccessStratumRelease_NB_r13
+  {
+    return vc_NBIOT_Global.MobileInfo.NBIOT_Capability.accessStratumRelease_r13;
+  }
+    
+  function f_NBIOT_PDN_Connectivity_Reject_IMSLESS ( NAS_CauseValue_Type esm_Reject_Cause,
+                                             charstring p_Apn_string,
+                                             octetstring p_Apn_val,
+                                             EPS_BearerIdentity v_EpsBearerId := '6'H,
+                                             boolean isPrimaryPDN:=false) runs on NBIOT_PTC
+  {
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+     var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+    var charstring v_TcName := testcasename() & ": ";
+    var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+    var template(omit) AccessPointName v_ExpectedAccessPointNameLwrcase := omit;
+    var template(omit) AccessPointName v_ExpectedAccessPointNameUprcase := omit;
+    var boolean b_VzwInternet := false;
+    var boolean b_VzwAdmin := false;   
+ 
+    if(p_Apn_val == tsc_Octet_INTERNET_APN)
+    {
+        b_VzwInternet := true;
+        v_ExpectedAccessPointNameLwrcase := cr_AccessPointName(tsc_Octet_Lower_INTERNET_APN);
+        v_ExpectedAccessPointNameUprcase := cr_AccessPointName(p_Apn_val);        
+    }
+    else if(p_Apn_val == tsc_Octet_ADMIN_APN)
+    {
+        b_VzwAdmin := true;
+        v_ExpectedAccessPointNameLwrcase := cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN);
+        v_ExpectedAccessPointNameUprcase := cr_AccessPointName(p_Apn_val);
+    }
+    
+    // Cause the UE to request connectivity to an additional Internet PDN, in case of primary it will Automatically trigger.
+    if (false == isPrimaryPDN)
+    {
+      timer t_WaitTime := 240.0; // Giving some extra time than 10
+
+       // The UE transmits a PDN CONNECTIVITY REQUEST message as specified to request an additional PDN.
+      t_WaitTime.start;
+      alt 
+      {
+        [b_VzwInternet]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN('001'B, v_ExpectedAccessPointNameUprcase))))-> value v_ReceivedAsp
+        {
+            t_WaitTime.stop;
+        }
+        [b_VzwInternet]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN('001'B, v_ExpectedAccessPointNameLwrcase))))-> value v_ReceivedAsp
+        {
+          t_WaitTime.stop;
+        }
+        [b_VzwAdmin]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN('001'B, v_ExpectedAccessPointNameUprcase))))-> value v_ReceivedAsp
+        {
+          t_WaitTime.stop;
+      }
+        [b_VzwAdmin]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN('001'B, v_ExpectedAccessPointNameLwrcase))))-> value v_ReceivedAsp
+        {
+            t_WaitTime.stop;
+        }
+        []t_WaitTime.timeout
+        {
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__, v_TcName &"PDN Con Req not received within 10 sec");
+        }
+      }
+      log(v_TcName, "UE attempted to re-connect immediately to the additional PDN.");
+    }     
+    else
+    {
+      timer t_WaitTime_10 := 1000.0; // There is 5 sec buffer to receive PDN conection Req
+      // The UE transmits a PDN CONNECTIVITY REQUEST message as specified to request an additional PDN.
+ 
+       t_WaitTime_10.start;
+      alt 
+      {
+        []t_WaitTime_10.timeout
+        {
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__, v_TcName &"PDN Con Req not received upon test application trigger");
+        }
+        []SRB.receive(car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                       cr_PDNConnReqAdditionalPDN((f_GetPdnType(), '101'B, '001'B), *, '001'B)))) -> value v_ReceivedAsp  
+        {
+            if(match(p_Apn_val,tsc_Octet_INTERNET_APN )) {
+                 if(match( v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST.accessPointName.nameValue,tsc_Octet_ADMIN_APN)) {
+                SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                     tsc_SRB1bis,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                    cs_CIOT_ActivateDefEpsBearerContextRequest(tsc_EpsDefaultBearerId2,
+                                                    v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST.procedureTransactionIdentifier,//f_NBIOT_MobileInfo_GetPTI(v_PDNIndex),
+                                                    cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN),
+                                                    f_CIOT_GetPDNAddress2( v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST.pdnType.typeValue, true,-,pdnTypeAsSupportedByUE), 
+                                                    f_GetDefaultExtdProtocolConfigOptions(f_NBIOT_MobileInfo_GetAssignedPdn (0).protocolConfigurationOptions),//omit,
+                                                                                              -,
+                                                                                              -,
+                                                                                              -,
+                                                                                              -, // @sic R5-184093 sic@
+                                                                                              cs_ControlPlaneInd,
+                                                                                              cs_ServingPLMNRateControl(int2oct (10, 2))))));
+      
+      // Step 4a1b3a4
+      SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                        tsc_SRB1bis,
+                                        cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                          cdr_CIOT_ActivateDefEpsBearerContextAccept(tsc_EpsDefaultBearerId2))));
+  
+                 repeat;
+             }
+           }  
+          t_WaitTime_10.stop;
+         }
+        []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {
+              repeat;
+          }
+      
+    
+          [] SRB.receive(car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                cr_PDNConnReqAdditionalPDN(f_GetPdnType(), *, '001'B)))) -> value v_ReceivedAsp{} 
+       
+          
+          
+          
+          
+      }
+    }   
+  
+    v_PDNConnReq := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST;
+    v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+     
+    //  The SS transmits a PDN CONNECTIVITY REJECT message.
+    SRB.send(cas_NB_SRB_NasPdu_REQ ( nbiot_Cell1, v_SrbId,   
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_PdnConnectReject( '0'H, // no EPS bearer assigned
+                                                                     v_PTId_UE,
+                                                                     cs_ESM_Cause_v(esm_Reject_Cause)))));
+      
+    
+  }// f_NBIOT_PDN_Connecitivity_Reject
+    
+    
+     function f_NBIOT_Periodic_TriggerNReject_PDNConnReq_IMSLESS(NAS_CauseValue_Type esm_Reject_Cause, charstring p_Apn_string,
+                                                      octetstring p_Apn_val, EPS_BearerIdentity v_EpsBearerId := '6'H,
+                                                      float p_RetryInterval := 8.0) runs on NBIOT_PTC
+  {
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var NB_SRB_COMMON_IND v_ReceivedAsp; 
+    var integer v_RejectCount := 0;
+    timer t_WaitTime := p_RetryInterval;
+    var template (present) NAS_UL_Message_Type v_PDNConnectivityReq_Expected;
+    timer t_WaitTime_1 := 12.0; // Usually Should be less than 8 but sometimes AT reaches late so kept some extra time
+    var charstring v_TcName := testcasename() & ": ";
+    var template (present) B3_Type v_PDNType := ('001'B, '010'B, '011'B);
+    var template HeaderCompressConfig v_HeaderCompressConfigRX := cr_HeaderCompressConfigAny ifpresent;
+    var template DeviceProperties v_DevicePropertiesESM := cr_DeviceProperties('C'H) ifpresent;
+      
+    t_WaitTime.start;
+    v_PDNConnectivityReq_Expected := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach,
+                                                                      v_PDNType,
+                                                                      cr_AccessPointName (tsc_Octet_Lower_ADMIN_APN),
+                                                                      v_HeaderCompressConfigRX);
+    v_PDNConnectivityReq_Expected.pDN_CONNECTIVITY_REQUEST.procedureTransactionIdentifier := ?;
+    v_PDNConnectivityReq_Expected.pDN_CONNECTIVITY_REQUEST.esmInfoTransferFlag := omit;
+    v_PDNConnectivityReq_Expected.pDN_CONNECTIVITY_REQUEST.deviceProperties := v_DevicePropertiesESM;
+   /* [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, // @sic R5s180192 sic@
+                                        v_SrbId, // @sic R5s180192 sic@
+                                        cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                          cr_PDNConnReqAdditionalPDN(f_GetPdnType(),*))))-> value v_ReceivedAsp  // @sic R5-176884 sic@ 
+   */
+          alt 
+    {
+      []SRB.receive (car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                       v_SrbId,
+                                       cr_NAS_Indication (tsc_SHT_IntegrityProtected_Ciphered,  // @sic R5s170962 sic@
+                                                          v_PDNConnectivityReq_Expected))) -> value v_ReceivedAsp
+      
+      {
+        f_NBIOT_StopTimer(t_WaitTime);
+        f_NBIOT_StopTimer(t_WaitTime_1);
+         v_PDNConnReq := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST;
+        v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+         
+        
+         SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     v_SrbId,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (esm_Reject_Cause))))); 
+        v_RejectCount := v_RejectCount + 1;
+        select(v_RejectCount)
+        {
+          case(1)
+          {
+            log(v_TcName, "Step6: Verified that the network responds to PDN Conn Req by sending a PDN Conn Reject message with an ESM cause code = ", bit2int(esm_Reject_Cause));
+            t_WaitTime.start;
+            repeat;
+          }        
+          case(2)
+          {
+            log(v_TcName, "Step7: Verified that the UE sends a NAS PDN Connectivity Request without delay at the request of the test application " &
+                          "and that the network again responds with a NAS PDN Connectivity Reject message in which the ESM Cause Code = ", bit2int(esm_Reject_Cause),
+                          ". This is considered Retry #1.");
+            t_WaitTime.start;
+            repeat;
+          }
+          case(3)
+          {
+            log(v_TcName, "Step8: Verified that the UE sends a NAS PDN Connectivity Request without delay at the request of the test application " &
+                          "and that the network again responds with a NAS PDN Connectivity Reject message in which the ESM Cause Code = ", bit2int(esm_Reject_Cause),
+                          ". This is considered Retry #2.");
+          }
+          case else
+          { 
+            /* Do Nothing */
+          }
+        }
+      }
+      []t_WaitTime.timeout
+      {
+        if (v_RejectCount == 0)
+        {
+           t_WaitTime.start;
+        }
+        else
+        {
+           t_WaitTime_1.start; 
+        }
+        repeat;
+      }
+      []t_WaitTime_1.timeout
+      {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & ": UE does not trigger PDN Conn Req immediately upon request of the test application");
+      }
+    }
+  
+  }
+    
+   function f_NBIOT_Verify_Test_Application_IMSLESS (float v_Timer_1, 
+                                            float v_Timer_2,
+                                            charstring  p_Apn_string, 
+                                            octetstring p_Apn_val,
+                                            EPS_BearerIdentity v_EpsBearerId := '6'H,
+                                            boolean isPrimaryPDN:=false,
+                                            integer v_TypeActPDN := 1) runs on NBIOT_PTC
+  {
+      timer t_WaitTime := f_NBIOT_SetTimerToleranceMin ( nonProtocolTimer, v_Timer_1);
+      var integer v_ConnReqTime := float2int(v_Timer_1);
+      var charstring v_TcName := testcasename() & ": ";
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var template(omit) AccessPointName v_ExpectedAccessPointNameLwrcase := omit;
+      var template(omit) AccessPointName v_ExpectedAccessPointNameUprcase := omit;
+      var boolean b_VzwInternet := false;
+      var boolean b_VzwAdmin := false; 
+      var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+    
+      if(p_Apn_val == tsc_Octet_INTERNET_APN)
+      {
+        b_VzwInternet := true;
+        v_ExpectedAccessPointNameLwrcase := cr_AccessPointName(tsc_Octet_Lower_INTERNET_APN);
+        v_ExpectedAccessPointNameUprcase := cr_AccessPointName(p_Apn_val);        
+      }
+      else if(p_Apn_val == tsc_Octet_ADMIN_APN)
+      {
+        b_VzwAdmin := true;
+        v_ExpectedAccessPointNameLwrcase := cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN);
+        v_ExpectedAccessPointNameUprcase := cr_AccessPointName(p_Apn_val);
+      }      
+  
+      t_WaitTime.start;  
+      log (v_TcName,"Starting a timer for ", v_ConnReqTime, " seconds"); 
+       if (false == isPrimaryPDN) // INTERNET/ADMIN PDN
+      {
+        alt
+        {
+           
+        [b_VzwInternet]SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, // @sic R5s180192 sic@
+                                       v_SrbId, // @sic R5s180192 sic@
+                                        cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                          cr_PDNConnReqAdditionalPDN((f_GetPdnType(), '001'B), v_ExpectedAccessPointNameUprcase))))-> value v_ReceivedAsp  /* @sic R5-176884 sic@ */
+     
+          {
+            t_WaitTime.stop;
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "UE Triggers Unexpected PDN Request before timer expiry");              
+          }
+          [b_VzwInternet]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN((f_GetPdnType(), '001'B), v_ExpectedAccessPointNameLwrcase))))-> value v_ReceivedAsp
+          {
+            t_WaitTime.stop;
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "UE Triggers Unexpected PDN Request before timer expiry");              
+          }
+          [b_VzwAdmin]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN((f_GetPdnType(), '001'B), v_ExpectedAccessPointNameUprcase))))-> value v_ReceivedAsp
+          {
+            t_WaitTime.stop;
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "UE Triggers Unexpected PDN Request before timer expiry");              
+          }
+          [b_VzwAdmin]SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN((f_GetPdnType(), '001'B), v_ExpectedAccessPointNameLwrcase))))-> value v_ReceivedAsp
+          {
+            t_WaitTime.stop;
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "UE Triggers Unexpected PDN Request before timer expiry");
+          }
+          []t_WaitTime.timeout
+          {
+             log(v_TcName, v_ConnReqTime, " seconds successfully elapsed");
+          }
+        }
+      }
+     
+   }
+      
+    
+    function f_VZ_Rtr_Solicit_Min_Max_Retry(timer t_MinTmr, timer t_MaxTmr,
+                                           charstring p_StepNmbr := "TestStep")runs on NBIOT_PTC   
+  {
+    var charstring v_TcName := testcasename() & ": ";
+     var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+    alt {
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) { // @sic R5s180192 sic@
+                                            repeat; }  
+        
+        []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+         
+        [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                             
+             repeat;
+                                                                }
+        []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) { // @sic R5s180192 sic@
+                                            
+            if(t_MinTmr.running)
+            {
+              /* This means that t_MinTmr did not expire and Router Solicit Msg was received. Therefore fail the TC */
+              t_MaxTmr.stop;
+              t_MinTmr.stop;
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT triggered unexpected Router Solicitation Msg before expiry of Min Timer Value.");
+            }
+            else
+            {
+              /* This means that t_MinTmr expired and Router Solicit Msg was received before t_MaxTmr expiry. 
+               * Therefore proceed further TC */
+              t_MaxTmr.stop;
+              log(v_TcName, p_StepNmbr, ": Received Router Solicit Msg from UE after expiry of Min WaitTime and before expiry of Max WaitTime");
+            }
+                                             
+                                             
+        }
+         []t_MinTmr.timeout
+      {
+        log(v_TcName, p_StepNmbr, ": Successfully verified that the DUT does not trigger any Router Solicit Msg until Min Timer expiry");
+        repeat;
+      }
+      []t_MaxTmr.timeout
+      {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did not trigger Router Solicitation Msg before expiry of Max Timer Value.");
+      }
+      
+      }
+  }
+    
+    
+    function f_VZ_NBIOT_Msg_Retransmit_Retry(float p_Wait := 3.5,
+                                        integer count := 1,
+                                        integer p_MaxRtry := 3,
+                                        charstring p_StepNmbr := "TestStep") runs on NBIOT_PTC
+  {
+      timer t_RtryInterval := p_Wait;
+       timer t_timeout := 240.0;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var octetstring  v_DataReply;
+      var charstring v_TcName := testcasename() & ": ";
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+      t_RtryInterval.start;
+      alt {
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }
+         []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+      
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@                                  
+            t_RtryInterval.stop;
+            log(v_TcName, p_StepNmbr, ": DUT triggered unexpected Router Solicitation Msg before expiry of Router Solicitation Interval of ", p_Wait, " seconds");
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT triggered unexpected Router Solicitation Msg before expiry of Router Solicitation Retry Interval");
+         }
+           []t_RtryInterval.timeout
+         {
+          t_timeout.start;
+          log(v_TcName, p_StepNmbr, ": Waiting to receive Router Solicitation Msg from the DUT");
+          alt{
+             [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+            if (count > p_MaxRtry){
+             log(v_TcName, p_StepNmbr, ": DUT did triggered unexpected extra Router Solicitation Msgs");
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did triggered unexpected extra Router Solicitation Msgs");      
+            }
+            v_DataReply := f_NBIOT_ProcessIPv6Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+         
+            log(v_TcName, "Received Router Solicitation Msg #", count);  
+            count:=count+1;
+            if(count<3){                                     
+              repeat;
+            }
+           }
+           [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { repeat;}// @sic R5s180192 sic@
+             []t_timeout.timeout{
+                 if(count<3){
+                 log(v_TcName, p_StepNmbr, ": DUT did not triggered expexted Router Solicitation Msgs");
+                f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did not triggered expexted Router Solicitation Msgs");      
+                 }
+             }
+              []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+          }
+             
+      }     
+       }
+  }
+    
+    
+    function f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_10(
+                                                 charstring p_StepNmbr := "TestStep",
+                                                 charstring v_TcName,
+                                                 EPS_BearerIdentity p_EpsBearerId
+                                                 ) runs on NBIOT_PTC 
+  {
+       timer t_WaitTime := 240.0;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var octetstring v_DataReply;
+      var integer count := 1;
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+      
+      log(v_TcName, "Waiting to receive Router Solicitation Msg");
+      t_WaitTime.start;
+      alt {
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+              log(v_TcName, "the UE sends IPv6 Router Solicitation messages to the network 
+                            for the Internet PDN and that the network does not respond");
+          }
+      
+          []t_WaitTime.timeout{
+              
+          }
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }
+         []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+      
+  }
+  }
+    
+     function f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_1(
+                                                 charstring p_StepNmbr := "TestStep",
+                                                 charstring v_TcName,
+                                                 EPS_BearerIdentity p_EpsBearerId
+                                                 ) runs on NBIOT_PTC 
+  {
+      timer t_WaitTime := 240.0;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var octetstring v_DataReply;
+      var integer count := 1;
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+      var template (value) UserDataContainer v_DataContainer;
+      var EPS_BearerIdentity v_BearerId;
+      var ProcedureTransactionIdentifier v_PTI;
+    
+      
+      log(v_TcName,p_StepNmbr, "Waiting to receive Router Solicitation Msg");
+      t_WaitTime.start;
+      alt {
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (p_EpsBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+         log(v_TcName, "Received Router Solicitation Msg ");  
+        
+        v_DataReply := f_NBIOT_ProcessIPv6Address_6_1(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+        v_BearerId := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.epsBearerId;
+        v_PTI := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.procedureTransactionIdentifier;
+       
+        v_DataContainer := cs_UserDataContainer(v_DataReply);
+        SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                       tsc_SRB1bis,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_ESM_DATA_TRANSPORT(v_BearerId, v_PTI, v_DataContainer))));
+         log(v_TcName, "Step7: Router Advertisment sent to the DUT with Valid Lifetime = 5 mins, Preferred ",
+                        "Lifetime = 5  mins and Router Lifetime = 4 mins.");  
+    
+        
+            
+      }
+          []t_WaitTime.timeout{
+              
+                     log(v_TcName, p_StepNmbr, ": DUT did not triggered expected Router Solicitation Msg");
+                     f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did not triggered expected Router Solicitation Msg");
+               
+          }
+          []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))-> value v_ReceivedAsp
+          {
+              repeat;
+           }
+         
+  }
+  }
+    
+    
+        function f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_2(
+                                                 charstring p_StepNmbr := "TestStep",
+                                                 charstring v_TcName
+                                                 ) runs on NBIOT_PTC 
+  {
+       timer t_WaitTime := 240.0;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var octetstring v_DataReply;
+      var integer count := 1;
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+      
+      log(v_TcName, "Waiting to receive Router Solicitation Msg");
+      t_WaitTime.start;
+      alt {
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+        if (count > 4){
+            log(v_TcName, p_StepNmbr, ": DUT did triggered unexpected extra Router Solicitation Msgs");
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did triggered unexpected extra Router Solicitation Msgs");      
+        }
+        v_DataReply := f_NBIOT_ProcessIPv6Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+        
+        log(v_TcName, "Received Router Solicitation Msg #", count);  
+         count:=count+1;
+                                                 
+          if(count < 5){
+           
+         repeat;
+          }
+      }
+          []t_WaitTime.timeout{
+               if(count< 3){
+                     log(v_TcName, p_StepNmbr, ": DUT did not triggered expected Router Solicitation Msgs");
+                     f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did not triggered expected Router Solicitation Msgs");
+               }
+          }
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }
+      
+  }
+  }
+    
+    
+    
+    
+    function f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_3(
+                                                 charstring p_StepNmbr := "TestStep",
+                                                 charstring v_TcName
+                                                 ) runs on NBIOT_PTC 
+  {
+       timer t_WaitTime := 70.0;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var octetstring v_DataReply;
+      var integer count := 1;
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+ 
+      
+      log(v_TcName, "Waiting to receive Router Solicitation Msg");
+      t_WaitTime.start;
+      alt {
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+        if (count > 4){
+            log(v_TcName, p_StepNmbr, ": DUT did triggered unexpected extra Router Solicitation Msgs");
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did triggered unexpected extra Router Solicitation Msgs");      
+        }
+        v_DataReply := f_NBIOT_ProcessIPv6Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+        
+        log(v_TcName, "Received Router Solicitation Msg #", count);  
+         count:=count+1;
+         repeat;
+      }
+          []t_WaitTime.timeout{
+               if(count< 3){
+                     log(v_TcName, p_StepNmbr, ": DUT did not triggered expected Router Solicitation Msgs");
+                     f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT did not triggered expected Router Solicitation Msgs");
+               }
+          }
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                     if(match(testcasename(), "TC_VZ_DATARETRYIMSLESS_6_3")){
+                                                                    t_WaitTime.stop;
+             log(v_TcName, p_StepNmbr, ": DUT triggered PDN Disconnect Req. DUT does not remain connected to the Admin PDN");
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & " : DUT triggered PDN Disconnect Req. DUT does not remain connected to the Admin PDN");
+                                                                     }else{repeat;}
+                                                                }
+      
+  }
+  }   
+   
+    function f_VZ_NBIOT_RACH_Ignore_Timeout(charstring p_TimerName, float t_WaitTime, integer p_RachCount := 0) runs on NBIOT_PTC return integer
+{
+	var charstring vTcName := testcasename() & ": ";
+    timer t_RACH_Ignore_Timer := 2.5;
+    var integer i := 0;
+    SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1));
+    p_RachCount := p_RachCount + 1;
+    
+    log(vTcName, p_TimerName, " started for ", t_WaitTime, " seconds");
+    while(p_RachCount <2) {
+    t_RACH_Ignore_Timer.start;
+    alt
+    {
+     []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+      {
+        p_RachCount := p_RachCount + 1;
+         repeat;
+      }
+      []t_RACH_Ignore_Timer.timeout
+      {
+        log(vTcName, p_TimerName, " timeout");
+      }
+    }
+    }
+	return p_RachCount;
+}
+    
+    
+    function f_VZ_NBIOT_Receive_And_Ignore_TAU(integer p_Step_Nmbr, integer p_TAU_Count) runs on NBIOT_PTC return integer
+{
+	var GutiParameters_Type v_Guti1_Params := f_NBIOT_CellInfo_GetGuti(nbiot_Cell1);
+	var NAS_MSG_Indication_Type v_NasInd;
+    var charstring vTcName := testcasename() & ": ";
+    var charstring v_StepNum := "";
+    
+    if (p_Step_Nmbr > 0) // Dont Print Step number for 0
+    {
+        v_StepNum := "Step" & int2str(p_Step_Nmbr);
+    }
+    
+    
+	v_NasInd := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                       cr_EstablishmentCause_NB_Any,
+                                       cr_NAS_Indication(tsc_SHT_IntegrityProtected,
+                                                           cdr_TAU_Request_OldGuti(?,
+                                                                                 f_NBIOT_SecurityKSIasme_Get(),
+                                                                                 cr_DRXparameter_Any ('5C'O) ifpresent, // @sic R5s120210 sic@
+                                                                                 *,
+                                                                                 f_GutiParameters2MobileIdentity(omit, v_Guti1_Params),
+                                                                                 ?)));
+    
+    
+
+
+    if (not isvalue (v_NasInd.Pdu.Msg.tRACKING_AREA_UPDATE_REQUEST))
+    {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, vTcName & "Unexpected NAS message received while waiting for TAU");
+    }
+    else
+    {
+        p_TAU_Count := p_TAU_Count + 1;
+        log(vTcName,"Received TAU attempt = ", p_TAU_Count, " from the DUT");
+        log(vTcName,v_StepNum, ": Verify that the network does not respond to the NAS Tracking Area Update
+             Request message.");
+    }
+    
+  
+	return p_TAU_Count;
+}
+    
+    
+    function f_VZ_NBIOT_TAU_T3430PlusT3411_Timeout(integer p_Step_Nmbr, float t_T3430_WaitTime, float t_T3411_WaitTime) runs on NBIOT_PTC
+{
+    timer t_MinTimer := t_T3430_WaitTime;
+	timer t_MaxTimer := t_T3411_WaitTime;
+	var charstring vTcName := testcasename() & ": ";
+    var charstring v_StepNum := "";
+    
+    if (p_Step_Nmbr > 0) // Dont Print Step number for 0
+    {
+        v_StepNum := "Step" & int2str(p_Step_Nmbr);
+    }
+    
+	t_MinTimer.start;
+    log(vTcName,v_StepNum, ": T3430 timer started for ", float2int(t_T3430_WaitTime), " seconds");
+    alt
+    {
+        []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+       {
+        t_MinTimer.stop;
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, vTcName & "Received unexpected RRC Conn Req from the DUT while T3430 timer is running");
+      }
+      []t_MinTimer.timeout
+      {
+        //after expiry of T3430 timer, start T3411 timer 
+        log(vTcName,v_StepNum, ": T3430 timer successfully timed out");
+        t_MaxTimer.start;
+		log(vTcName,v_StepNum, ": T3411 timer started for ", float2int(t_T3411_WaitTime), " seconds");
+      }
+    }
+    
+    alt
+    {
+        []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+        {
+            t_MaxTimer.stop;
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, vTcName & "Received unexpected RRC Conn Req from the DUT while T3411 timer is running");
+        }
+        []t_MaxTimer.timeout
+        {
+			log(vTcName,v_StepNum, ": T3411 timer successfully timed out");
+        }
+    }
+      f_Delay(1.0);
+      f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+}
+    
+    
+    
+ function f_Rcv_ServiceRequest_AppRetrans_Common_IMSLESS(charstring Step_no,NAS_CauseValue_Type p_CauseValue,
+                               template (omit) GPRS_Timer2 p_T3346 := omit) runs on NBIOT_PTC
+    {
+     timer t_testapp_retry_timer := (10.0); 
+     var NAS_MSG_Indication_Type v_NasInd;
+     var EUTRA_ASN1_RRC_TransactionIdentifier_Type v_RRC_TI := tsc_RRC_TI_Def;
+     var charstring v_TcName := testcasename() & ": ";
+     var EPS_BearerIdentity v_EpsBearerId2 := '6'H;
+     var integer v_CauseValue := bit2int(p_CauseValue); 
+     
+    alt 
+    {
+      []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+          {
+              
+        v_NasInd := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                             cr_EstablishmentCause_NB_Any,
+                                             cr_NAS_Indication(tsc_SHT_IntegrityProtected,
+                                             cr_CONTROL_PLANE_SERVICE_REQUEST(?)));	  
+
+
+         log(v_TcName,Step_no,": Received Control Plane Service Request");
+         log(v_TcName,Step_no,": SS Transmits Service Reject with EMM Cause ",v_CauseValue);
+        
+         SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                 tsc_SRB1bis,
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_508_SERVICE_REJECT(p_CauseValue,-,p_T3346))));
+      
+              f_Delay(1.0);
+         f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 ); 
+      }
+    }
+  }   
+    
+   function f_ServiceReject_check_RRCRequest_AppRetrans_Common(integer Step_no, float v_Timer_1,NAS_CauseValue_Type p_CauseValue,
+                               template (omit) GPRS_Timer2 p_T3346 := omit) runs on NBIOT_PTC
+    {
+        
+     timer t_testapp_retry_timer := (10.0); 
+     var NAS_MSG_Indication_Type v_NasInd;
+      var EUTRA_ASN1_RRC_TransactionIdentifier_Type v_RRC_TI := tsc_RRC_TI_Def;
+     timer t_WaitTime;  
+     var charstring v_TcName := testcasename() & ": ";
+     var EPS_BearerIdentity v_EpsBearerId2 := '6'H;
+     var integer v_CauseValue := bit2int(p_CauseValue); 
+     
+    v_NasInd := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                             cr_EstablishmentCause_NB_Any,
+                                             cr_NAS_Indication(tsc_SHT_IntegrityProtected,
+                                             cr_CONTROL_PLANE_SERVICE_REQUEST(f_NBIOT_SecurityKSIasme_Get())));	  
+
+    log(v_TcName,Step_no,": Received Service Request from UE");    
+      
+    //The SS transmits a SERVICE REJECT message with the EMM cause set to #17 or 22
+    log(v_TcName,Step_no,": SS Transmits Service Reject with EMM Cause ",v_CauseValue);
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                 tsc_SRB1bis,
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_508_SERVICE_REJECT(p_CauseValue,-,p_T3346))));
+        f_Delay(0.5);
+      f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+    t_WaitTime.start(v_Timer_1);
+ 
+    log(v_TcName,"Step",Step_no+1,": Starting ",float2int(v_Timer_1)," seconds timer");
+    if(Step_no == 11)
+    {
+        log(v_TcName,"Step",Step_no+1,": Verify that the UE does not request the connection over the air for the next ",float2int(v_Timer_1/60.0)," minute plus a random time between 0 and 15 seconds");
+    }
+    else
+    {
+        log(v_TcName,"Step",Step_no+1,": Verify that the UE does not request the connection over the air for the next ",float2int(v_Timer_1/60.0)," minutes");        
+    }
+    alt 
+    {
+        []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))
+      {
+          log(v_TcName,Step_no+1,": Stopping ",float2int(v_Timer_1)," seconds timer");
+          t_WaitTime.stop;
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "Step" & int2char(Step_no) & ": UE triggered unexpected RRC Connection Request");
+       }
+       []t_WaitTime.timeout
+       {
+          log(v_TcName,"Step",Step_no+1,": Successful ",float2int(v_Timer_1)," seconds timer expiry");
+       }
+    }
+    }
+  
+    
+    
+     function f_VZ_IMSLess_TC_6_8_RepeatPdnNoRsp(float v_Timer_1, integer stepNum, integer v_Time) runs on NBIOT_PTC
+  {
+    var float v_T3482 := 7.9;
+    var float v_waitTimeDueToTolerance := 10.0; // Tolerance of v_Timer_1 should not be more than 10 sec, if more than change this value as well
+    timer t_T3482;
+    timer t_Timer_1;  
+    timer t_Timer_2;  
+    var integer loopCnt := 1; 
+    var charstring v_TcName := testcasename() & ": ";
+     var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+      
+    log(v_TcName, "Step",stepNum,": Verify that the UE does not request the connection over the air for the next ",v_Time," minutes");  
+    t_Timer_1.start(v_Timer_1);
+
+    alt
+    {
+       []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN)))))
+          {
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName&"Step"&int2str(stepNum)&": UE sent unexpected PDN Request before expiry of timer");
+       }
+          
+       []t_Timer_1.timeout
+       {
+          log(v_TcName,"Step",stepNum,": Verified that UE did not Request for Admin PDN for ",v_Time," minutes.");  
+       }
+    } 
+      
+    log(v_TcName,"Step",stepNum+1,": Once the ",v_Time," minutes timer expires, verify that the UE attempts to connect upon the next request of the test application "& 
+                  "with no delay. Verify that the UE sends another series of five NAS PDN Connectivity Requests, each separated by at least "&
+                  "T3482 seconds, and that the network does not respond to the NAS PDN Connectivity Request messages");    
+
+    log(v_TcName,"Step",stepNum+1,": Waiting for another PDN connection Req for ADMIN. Request#: 1");  
+
+    // Waiting if UE triggers autometically, Otherwise after expiry of 8 sec we will trigger, Note that in 2 min, 8, min and 15 min 
+    //  timer tolerence added is less than 10 sec. because we ned to trigger after expiry of 2, 8 and 15 min.  
+    t_Timer_2.start(180.0);
+      alt{
+        [] t_Timer_2.timeout{}
+      }
+      
+      t_Timer_1.start(v_waitTimeDueToTolerance);
+    alt
+    {
+     []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN)))))
+          {
+          t_Timer_1.stop; 
+       }
+            
+       []t_Timer_1.timeout 
+       {
+          f_NBIOT_InitiatePdnConn("Step"&int2str(stepNum));
+       }
+    } 
+      
+    alt
+    {
+        []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN)))))
+         {
+        }
+              
+    }
+    log(v_TcName,"Step",stepNum+1,": Received PDN connection Req for ADMIN. Not sending any Response from SS.");  
+
+    while(loopCnt < 5) 
+    {
+       t_T3482.start(v_T3482);
+ 
+       alt
+       {
+         []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN)))))
+          {
+             t_T3482.stop;
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName&"Step"&int2str(stepNum+1)&": UE sent unexpected PDN Request before expiry of T3482 timer");
+          }
+                  
+          []t_T3482.timeout
+          {
+             log(v_TcName,"Step",stepNum+1,": UE successfully waited for T3482 time before Sending Another PDN Request");  
+          }
+       }
+        
+       log(v_TcName,"Step",stepNum+1,": Waiting for another PDN connection Req for ADMIN. Request#: ",loopCnt+1);  
+           
+       SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN)))));
+         
+       log(v_TcName,"Step",stepNum+1,": Received PDN connection Req for ADMIN. Not sending any Response from SS.");  
+        
+       loopCnt := loopCnt + 1; 
+    }
+  }
+    
+     function f_Vz_NBIOT_VerifyPdnDisConnect_Internet(NBIOT_CellId_Type p_CellId,
+                                          template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId, 
+                                          EPS_BearerIdentity p_EpsBearerId) runs on NBIOT_PTC
+  {
+     var ProcedureTransactionIdentifier v_EpsTi;
+     var B8_Type v_EsmCauseValue; 
+     var EPS_BearerIdentity v_EpsBearerId := p_EpsBearerId; 
+     var NB_SRB_COMMON_IND v_ReceivedAsp;   
+     var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0101'B}; 
+     var LinkedEpsBearerIdentity linkedEpsBearerId2 := {idValue := '0110'B}; 
+     alt{
+          []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(? ,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))) -> value v_ReceivedAsp{
+          log("Received PDN Disconnect Request for Internet from UE");}  
+         
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {repeat;}
+       
+         []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(? ,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId2)))) -> value v_ReceivedAsp{
+          log("Received PDN Disconnect Request for Admin from UE");repeat;}  
+     }
+     v_EpsTi := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_DISCONNECT_REQUEST.procedureTransactionIdentifier;
+     /* TODO - AS - Check this */
+     v_EsmCauseValue := tsc_ESM_Cause36_RegularDeactivation;      
+    
+     f_NBIOT_DeactivateEPS_BearerContext_CP(nbiot_Cell1, v_EpsBearerId, v_EpsTi, v_EsmCauseValue);
+     log("Internet PDN Successfully Disconnected");            
+  }
+    
+    function f_Vz_NBIOT_VerifyPdnDisConnect(NBIOT_CellId_Type p_CellId,
+                                          template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId, 
+                                          EPS_BearerIdentity p_EpsBearerId) runs on NBIOT_PTC
+  {
+     var ProcedureTransactionIdentifier v_EpsTi;
+     var B8_Type v_EsmCauseValue; 
+     var EPS_BearerIdentity v_EpsBearerId := p_EpsBearerId; 
+     var NB_SRB_COMMON_IND v_ReceivedAsp;   
+     var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B}; 
+     alt{
+          []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(? ,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))) -> value v_ReceivedAsp{
+          log("Received PDN Disconnect Request from UE");}  
+         
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {repeat;}
+       
+     }
+     v_EpsTi := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_DISCONNECT_REQUEST.procedureTransactionIdentifier;
+     /* TODO - AS - Check this */
+     v_EsmCauseValue := tsc_ESM_Cause36_RegularDeactivation;      
+    
+     f_NBIOT_DeactivateEPS_BearerContext_CP(nbiot_Cell1, v_EpsBearerId, v_EpsTi, v_EsmCauseValue);
+     log("PDN Successfully Disconnected");            
+  }
+    
+  
+    
+  function f_NBIOT_HandleReConnectPDN(NBIOT_CellId_Type p_CellId, EPS_BearerIdentity p_EpsBearerId, 
+                                      octetstring p_APN_Value, charstring p_Apn, 
+                                      EUTRA_RRC_STATE_Type p_RRCState := RRC_IDLE,
+                                      boolean p_Emergency := false, float p_timer, 
+                                      PDN_Index_Type p_PdnIndex := PDN_1,
+                                      boolean p_IsExpcPdnReqAftrTmrExpiry := true,
+                                      template (omit) ESM_Cause p_Cause := omit,
+                                      boolean b_SkipTimer := true) runs on NBIOT_PTC
+  { 
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var template (omit) ProtocolConfigOptions v_Pco;
+    var PDN_Address v_PDN_Address2;
+    var NAS_MSG_Indication_Type v_NasInd;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var charstring apn;        
+    var B3_Type v_PDN_RequestType := '001'B;      
+    var template (omit) AccessPointName v_ExpectedAccessPointName := cr_AccessPointName(p_APN_Value);
+    var octetstring v_Received_APN_Value;   
+    timer t_WaitForPdnConnReq := p_timer;      
+    timer t_30Sec := 30.0;
+    var charstring v_UpperCasePattern_apn;
+    var charstring v_apnUpper;  
+    t_WaitForPdnConnReq.start;     
+    if(b_SkipTimer)
+    {
+        t_30Sec.start;
+    }
+    
+    alt
+    {
+        
+          []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  cr_AccessPointName_Any, v_PDN_RequestType ))))-> value v_ReceivedAsp 
+   
+      {
+        if ((p_IsExpcPdnReqAftrTmrExpiry) and (t_WaitForPdnConnReq.running))
+        {
+           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, testcasename() & ": PDN Conn Req received before specified time expiry");
+        }
+        else
+        {
+          v_NasInd := v_ReceivedAsp.Signalling.Nas[0];
+          v_PDNConnReq := v_NasInd.Pdu.Msg.pDN_CONNECTIVITY_REQUEST;
+          if(v_PDNConnReq.pdnType.typeValue == tsc_PdnType_IPv4v6 or v_PDNConnReq.pdnType.typeValue == tsc_PdnType_IPv6)
+          {
+            log(testcasename(), ": Received PDN Conn Req from the DUT for ipv4v6 or ipv6");
+            t_WaitForPdnConnReq.stop;
+            if(b_SkipTimer)
+            {
+                f_NBIOT_StopTimer(t_30Sec);
+            }          
+          }
+          else
+          {
+            log("Dropping Pdn Conn Req for ipV4 only");   
+            repeat;   
+          }
+        }
+      }
+      []t_WaitForPdnConnReq.timeout
+      {
+        if (p_IsExpcPdnReqAftrTmrExpiry)
+        {
+            repeat;
+        }
+        else
+        {
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, testcasename() & ": PDN Conn Req not received from UE within specifid time");
+        }
+      }
+      [b_SkipTimer]t_30Sec.timeout
+      {
+        log(testcasename(), ": Forcing DUT to trigger PDN Conn Req");          
+        f_UT_RequestAdditionalPDNConnectivity(UT, hex2int(p_EpsBearerId), p_Apn); 
+        repeat;
+      }
+    }
+   
+    v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+    v_Pco := v_PDNConnReq.protocolConfigurationOptions; 
+   
+    v_Received_APN_Value := v_PDNConnReq.accessPointName.nameValue; 
+      
+    v_UpperCasePattern_apn := f_StringToUpper(oct2char(v_Received_APN_Value));
+    v_apnUpper := f_StringToUpper(oct2char(p_APN_Value)); 
+      
+    if(v_apnUpper != v_UpperCasePattern_apn)
+    {
+      log("Expected APN Value is: ",substr(v_apnUpper,1,(lengthof(v_apnUpper)-1))," Received APN Value is: ",substr(v_UpperCasePattern_apn,1,(lengthof(v_UpperCasePattern_apn)-1))); //###
+       f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__, testcasename() & ": Invalid APN received");
+    } 
+          
+   
+        v_PDN_Address2 := f_NBIOT_GetPDNAddress_IMSLess(f_CheckPCOforIPallocationViaNas (v_Pco), p_PdnIndex, 1);
+        
+     
+         
+     SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                     tsc_SRB1bis,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                    cs_CIOT_ActivateDefEpsBearerContextRequest(tsc_EpsDefaultBearerId,
+                                                                                              v_PTId_UE,//f_NBIOT_MobileInfo_GetPTI(v_PDNIndex),
+                                                                                              v_ExpectedAccessPointName,
+                                                                                              v_PDN_Address2,
+                                                                                              omit,
+                                                                                              -,
+                                                                                              -,
+                                                                                              -,
+                                                                                              -, // @sic R5-184093 sic@
+                                                                                              cs_ControlPlaneInd,
+                                                                                              cs_ServingPLMNRateControl(int2oct (10, 2))))));
+      
+      // Step 4a1b3a4
+      SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                        tsc_SRB1bis,
+                                        cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                          cdr_CIOT_ActivateDefEpsBearerContextAccept(tsc_EpsDefaultBearerId))));
+       }
+    
+   function f_VZ_PdnConn_RtrSolicit_PdnDisconn(NBIOT_CellId_Type p_CellId, EPS_BearerIdentity p_EpsBearerId,
+                                              octetstring p_APN_Value,
+                                              template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId,
+                                              EUTRA_RRC_STATE_Type p_RRCState := RRC_IDLE, float p_timer,
+                                              float p_Wait := 3.5, integer p_Count := 1,
+                                              integer p_MaxRtry := 3, charstring p_StepNmbr1 := "TestStep", 
+                                              charstring p_StepNmbr2 := "TestStep", charstring p_StepNmbr3 := "TestStep",
+                                              PDN_Index_Type p_PdnIndex := PDN_1,
+                                              boolean p_IsExpcPdnReqAftrTmrExpiry := true,
+                                              boolean b_SkipTimer := true) runs on NBIOT_PTC
+   {
+       
+    const B8_Type tsc_Cause31_Pdn_Conn_EsmCause_Ipv6Only_Supported := '00110011'B;
+    var charstring v_TestcaseName := testcasename() & ": ";
+     var charstring v_sApn :="vzwadmin";
+    
+     if(p_PdnIndex == PDN_1)
+    {
+      if((p_StepNmbr1 == "Step13") or (p_StepNmbr1 == "Step16"))
+      {
+          log(v_TestcaseName, p_StepNmbr1, ": Verifying that the device connects to the Internet PDN within ",float2int(p_timer/60.0)," minute and the network ",
+                                         "does not assign an IPv4 address during the connection");
+      }
+      else
+      {
+          log(v_TestcaseName, p_StepNmbr1, ": Verifying that the device does not connects to the Internet PDN for atleast ",float2int(p_timer/60.0)," minute. Once the ",
+                                         "UE does connect again to the Internet PDN, verify that the network does not assign an IPv4 address during the connection");
+      }
+      f_NBIOT_HandleReConnectPDN(p_CellId, p_EpsBearerId, p_APN_Value, px_INTERNET_APN, RRC_CONNECTED, -, p_timer, p_PdnIndex, p_IsExpcPdnReqAftrTmrExpiry,
+                                 cs_ESM_Cause_v(tsc_Cause31_Pdn_Conn_EsmCause_Ipv6Only_Supported), b_SkipTimer);
+   
+    } else if(p_PdnIndex == PDN_2)
+    {
+      if((p_StepNmbr1 == "Step10") or (p_StepNmbr1 == "Step13"))
+      {
+          log(v_TestcaseName, p_StepNmbr1, ": Verifying that the device connects to the Admin PDN within ",float2int(p_timer/60.0)," minute and the network ",
+                                         "does not assign an IPv4 address during the connection");
+      }
+      else
+      {
+          log(v_TestcaseName, p_StepNmbr1, ": Verifying that the device does not connect to the Admin PDN for at least ",float2int(p_timer)," seconds. Once the ",
+                                         "UE does connect again to the Admin PDN, verify that the network does not assign an IPv4 address during the connection");
+      }
+       f_NBIOT_TriggerAdditionalPDN_Modified (nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);
+    
+      } 
+    
+    log(v_TestcaseName, "Successfully Verified ", p_StepNmbr1);
+      
+    log(v_TestcaseName, p_StepNmbr2, "a: Verifying that the UE sends IPv6 Router Solicitation msgs for the Internet PDN and that ",
+                                     "the network does not respond");
+     if(match(testcasename(), "TC_VZ_DATARETRYIMSLESS_6_1")){  
+       f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_1(p_StepNmbr2, v_TestcaseName, p_EpsBearerId);
+       f_VZ_NBIOT_Msg_Retransmit_Retry(p_Wait, p_Count, p_MaxRtry, p_StepNmbr2);  
+     }else{
+        f_VZ_NBIOT_Receive_Router_Solicit_Msg_6_2(p_StepNmbr2, v_TestcaseName);
+     }
+    log(v_TestcaseName, p_StepNmbr2, "b: Verifying that the UE does not send more than MAX_RTR_SOLICITATION = 3 Router Solicitation ",
+                                     "msgs separated by RTR_SOLICITATION_INTERVAL = 4 seconds");
+    log(v_TestcaseName, "Successfully verified ", p_StepNmbr2);
+      
+    //Verify that the UE disconnects from the Internet PDN.  
+    if(match(testcasename(), "TC_VZ_DATARETRYIMSLESS_6_1")){ 
+      f_Vz_NBIOT_VerifyPdnDisConnect_Internet(p_CellId,v_LinkedEpsBearerId, p_EpsBearerId);
+        log(v_TestcaseName, p_StepNmbr3, ": UE disconnected from the Internet PDN");
+    }else{
+      f_Vz_NBIOT_VerifyPdnDisConnect(p_CellId,v_LinkedEpsBearerId, p_EpsBearerId);
+        log(v_TestcaseName, p_StepNmbr3, ": UE disconnected from the PDN");
+    }
+    
+
+   
+   }  
+    
+  function f_VZ_DefineDeactivateAdminPDN_common(float v_Wait_Timer, 
+                                                float v_Interval_Timer,
+                                                integer Step_no,
+                                                integer v_TestSwap_Steps := 0) runs on NBIOT_PTC
+  {
+    timer t_WaitTime;
+    timer t_IntervalTime;
+    var EPS_BearerIdentity v_EpsBearerId2 := '6'H;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var template  AccessPointName v_ExpectedAccessPointName := cr_AccessPointName(tsc_Octet_Lower_ADMIN_APN); //cr_AccessPointName_Any;
+    var charstring v_apn;
+    var B3_Type v_PDN_RequestType := '001'B; 
+    var charstring v_UpperCasePattern_apn;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var charstring v_TcName := testcasename() & ": ";
+    var template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId2)};
+    var NAS_MSG_Indication_Type v_NasInd;
+    var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+    var charstring v_sApn := "vzwadmin";  
+      
+    
+    //f_UT_TriggerActivateAdminApn(UT);
+    log(v_TcName,"Step",Step_no,": Starting ",float2int(v_Wait_Timer/60.0)," minutes timer");
+    t_WaitTime.start(v_Wait_Timer);
+    log(v_TcName,"Step",Step_no,": Starting ",float2int(v_Interval_Timer/60.0)," interval timer");
+    t_IntervalTime.start(v_Interval_Timer);
+    
+    log(v_TcName,"Step",Step_no,": Verify that the UE waits at least ", float2int(v_Wait_Timer/60.0), " minutes before sending another NAS PDN Connectivity Request for the Admin PDN");
+      
+    alt 
+    {
+       
+        []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, v_SrbId,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  v_ExpectedAccessPointName, v_PDN_RequestType ))))-> value v_ReceivedAsp 
+      {
+        
+          t_IntervalTime.stop;
+          t_WaitTime.stop;
+	      log(v_TcName, "Step",Step_no,": UE sent PDN Connectivity Request message");
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "UE sent PDN Connectivity Request message for Deactivated APN");
+        }
+               
+       []t_WaitTime.timeout
+      {
+        t_IntervalTime.stop;
+        log(v_TcName,"Step",Step_no,": ", float2int(v_Wait_Timer/60.0)," minute timer elapsed, successfully verified UE did not send PDN Connectivity Reuest for Admin PDN");
+      }
+       []t_IntervalTime.timeout
+      {
+        log(v_TcName,"Step",Step_no,": ", float2int(v_Interval_Timer/60.0)," minute interval elapsed, sending AT test command to define a PDP context (+CGACT) on the DUT for the Admin PDN");
+        fl_UT_ApplyCommand(UT, cas_UT_Req(DEACTIVATE_ADMIN_APN, NO_CNF_REQUIRED));
+        t_IntervalTime.start(v_Interval_Timer);
+        repeat;
+      }
+    }
+    log(v_TcName,"Step",Step_no+1,": Verify the UE successfully connects to the Admin PDN");
+    fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+     f_NBIOT_TriggerAdditionalPDN_Modified (nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);
+   //f_EUTRA_Optionally_ActivateAdditionalPDN(eutra_Cell1,v_EpsBearerId2,tsc_Octet_ADMIN_APN,tsc_DRB2,-,"Step15",true);
+    log(v_TcName,"Step",Step_no+1,": Verified that the UE successfully connected to the Admin PDN");
+    
+    log(v_TcName,"Step",Step_no+2,": Send AT test command to deactivate the PDP context (+CGACT) on the DUT for the Admin PDN");
+    fl_UT_ApplyCommand(UT, cas_UT_Req(DEACTIVATE_ADMIN_APN, NO_CNF_REQUIRED));
+    f_Vz_NBIOT_VerifyPdnDisConnect(nbiot_Cell1, v_LinkedEpsBearerId, v_EpsBearerId2); 
+    if(v_TestSwap_Steps == 18)
+    {
+        if (match(testcasename(), "TC_VZ_DATARETRYIMSLESS_6_13_Test1"))
+        { //Step 18 is same for test2 but in test 1, step 17 and 18 are swapped
+            log(v_TcName,"Step17: ##### Reconfigure the DUT so that the WAIT_TIME parameter is set to 180 seconds#####");
+            log(v_TcName,"Step17: Timer of 30 seconds started for user to complete above manual step");
+            f_Delay(30.0);
+            log(v_TcName, "Step18: Admin PDN disconnected successfully");
+        }
+        else
+        {
+            log(v_TcName, "Step",Step_no+3,": Admin PDN disconnected successfully");
+        }
+    }
+    if(v_TestSwap_Steps == 28)
+    {
+        if (match(testcasename(), "TC_VZ_DATARETRYIMSLESS_6_13_Test1"))
+        {  
+            log(v_TcName,"Step28: ##### Reconfigure the DUT so that the WAIT_TIME parameter is set to 30 seconds#####");
+            log(v_TcName,"Step28: Timer of 30 seconds started for user to complete above manual step");
+            f_Delay(30.0);
+            log(v_TcName, "Step29: Admin PDN disconnected successfully");
+        }
+        else
+        {
+            log(v_TcName, "Step",Step_no+3,": Admin PDN disconnected successfully");
+        }
+    }
+    if(v_TestSwap_Steps == 0)
+    {
+        log(v_TcName, "Step",Step_no+3,": Admin PDN disconnected successfully");
+    }
+  } 
+    
+  //PDN Connecitivity Reject for UE requested Additional Default PDN
+  function f_NBIOT_PDN_Connectivity_Reject_Imsless_6_14(NAS_CauseValue_Type esm_Reject_Cause) runs on NBIOT_PTC
+  {
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var charstring v_TcName := testcasename() & ": ";
+    timer t_Procedure_Guard_Timer;
+    var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+      
+    timer t_WaitTime_10 := 30.0; // There is 30 sec buffer to receive PDN conection Req
+    t_WaitTime_10.start;
+    alt 
+    {
+      []t_WaitTime_10.timeout
+      {
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__, v_TcName &"PDN Con Req not received within 10 sec");
+      }
+       
+        
+       []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  *, '001'B ))))-> value v_ReceivedAsp 
+        
+      {
+          t_WaitTime_10.stop;
+          log(v_TcName, "UE attempted to re-connect immediately to the default PDN.");         
+      }
+       
+       []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {repeat;}
+       
+   
+       [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){repeat;}
+          
+    }
+   
+    v_PDNConnReq := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.pDN_CONNECTIVITY_REQUEST;
+    v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+     
+    //  The SS transmits a PDN CONNECTIVITY REJECT message.
+       SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     tsc_SRB1bis,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (esm_Reject_Cause))))); 
+      
+  }// f_NBIOT_PDN_Connecitivity_Reject
+  
+    
+    
+  function f_VZ_NBIOT_Verify_Internet_Pdn_Connected(float p_Wait := 120.0,
+                                        EPS_BearerIdentity v_EpsBearerId := tsc_EpsDefaultBearerId, 
+                                        charstring p_StepNmbr := "TestStep") runs on NBIOT_PTC
+  {
+    var octetstring v_Data;
+    var integer ipv6HdrLen;
+    var bitstring v_Bitstring;
+    var LinkedEpsBearerIdentity v_LinkedEpsBearerId;
+    var charstring v_TcName;
+    
+    timer t_WaitTime := p_Wait;
+    v_TcName := testcasename() & ": ";
+    v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId)};
+    t_WaitTime.start;
+    
+    log(v_TcName, p_StepNmbr, ": Monitoring the DUT for ", float2int(p_Wait), " seconds to verify that it does not send any more Router Solicitation Msg or PDN Disconnect for Internet PDN "&
+      "to check UE stays connected in Internet PDN with IPV4 address");
+    alt
+    {   
+      []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) {
+            t_WaitTime.stop;
+            log(v_TcName, p_StepNmbr, ": DUT triggered unexpected Router Solicitation Msg before expiry of Router Solicitation Interval of ", p_Wait, " seconds");
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "DUT triggered unexpected Router Solicitation Msg before expiry of Router Solicitation Retry Interval");
+          }         
+        
+       
+        []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(?,  *, '001'B ))))
+        
+      {
+         repeat;        
+      } 
+        
+       [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(v_LinkedEpsBearerId)))){
+      
+    
+        t_WaitTime.stop;
+        log(v_TcName, p_StepNmbr, ": DUT triggered PDN Disconnect Req. DUT does not remain connected to the Internet PDN");
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & " : DUT triggered PDN Disconnect Req. DUT does not remain connected to the Internet PDN");
+      }
+      []t_WaitTime.timeout
+      {
+        log(v_TcName, p_StepNmbr, ": Successfully verified that the DUT does not sent any more Router Solicitation or Pdn Disconnect Msgs for Internet APN and So UE stays connected in Internet APN with IPV4 address");
+      }
+    }
+  }
+    
+    
+}
+
+

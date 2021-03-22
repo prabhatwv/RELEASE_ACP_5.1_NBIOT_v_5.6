@@ -1,0 +1,627 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2018-10-17 21:34:23 +0200 (Wed, 17 Oct 2018) $
+// $Rev: 22625 $
+/******************************************************************************/
+
+module NBIOT_SysInfo_Templates {
+
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CommonDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+
+  template (value) NPUSCH_ACK_NACK_NumRepetitions_Msg4_Type cs_NPUSCH_ACK_NACK_NumRepetitions_Msg4_Default := { r1 }; //vzw_modified{ r8 };  /* @status    APPROVED (NBIOT) */
+
+  template (value) NPUSCH_ConfigCommon_NB_r13 cs_508_NPUSCH_ConfigCommon_NB_Default(template (value) NPUSCH_ACK_NACK_NumRepetitions_Msg4_Type p_ACK_NACK_NumRepetitions_Msg4 := cs_NPUSCH_ACK_NACK_NumRepetitions_Msg4_Default) :=
+  { /* 36.508 Table 8.1.6.3-6: NPUSCH_ConfigCommon_NB_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    ack_NACK_NumRepetitions_Msg4_r13 := p_ACK_NACK_NumRepetitions_Msg4,   /* @sic R5-174474: p_ACK_NACK_NumRepetitions_Msg4 sic@ */
+    srs_SubframeConfig_r13 :=  omit, // sc0, sc1, sc2, sc3, sc4, sc5, sc6, sc7, sc8, sc9, sc10, sc11, sc12, sc13, sc14, sc15
+    dmrs_Config_r13 := omit, /*{
+      threeTone_BaseSequence_r13  := 0, //vzw_modified omit,
+      threeTone_CyclicShift_r13   := 0,
+      sixTone_BaseSequence_r13    := 0,//vzw_modified omit,
+      sixTone_CyclicShift_r13     := 0,
+      twelveTone_BaseSequence_r13 := 0 //vzw_modified omit
+    },*/
+    ul_ReferenceSignalsNPUSCH_r13 := cs_UL_ReferenceSignalsNPUSCH
+  };
+
+  template (value) PCCH_Config_NB_r13 cs_508_PCCH_Config_NB_Default :=
+  { /* 36.508 Table 8.1.6.3-2: PCCH_Config_NB_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    defaultPagingCycle_r13 := rf128,  /* rf128, rf256, rf512, rf1024 */
+    nB_r13                 := oneT,
+    npdcch_NumRepetitionPaging_r13 := r1 //vzw_modified r8 // r1, r2, r4, r8, r16, r32, r64, r128, r256, r512, r1024, r2048, spare4, spare3, spare2, spare1
+  };
+
+  template (value) BCCH_DL_SCH_Message_NB cs_SystemInformation_Common_NB(template (value) SystemInformation_NB_r13_IEs p_SystemInformation) :=
+  { /* @status    APPROVED (NBIOT) */
+    message_ := {
+      c1 := {
+        systemInformation_r13 := {
+          criticalExtensions := {
+            systemInformation_r13 := p_SystemInformation
+          }
+        }
+      }
+    }
+  };
+
+  template (value) SchedulingInfoList_NB_r13 cs_SchedulingInfo_NB_1SI :=
+  { /* 36.508 Table 8.1.4.3.1.2-1: Scheduling for combination 1 */
+    /* @status    APPROVED (NBIOT) */
+    {
+      si_Periodicity_r13 := rf64,
+      si_RepetitionPattern_r13 := every16thRF,//VZW_MODIFIED every8thRF
+      sib_MappingInfo_r13 := {sibType3_NB_r13},    // only sibType2 present (see field description for SystemInformationBlockType1 in 36.331 cl. 6.2.2)
+      si_TB_r13 := b256 //VZW_MODIFID b552
+    }
+  };
+
+  template (value) SchedulingInfoList_NB_r13 cs_SchedulingInfo_NB_2SI(SIB_MappingInfo_NB_r13 p_Si2_SIBMapping) :=
+  { /* @status    APPROVED (NBIOT) */
+    /* 36.508 Table 8.1.4.3.1.2-5, 8.1.4.3.1.2-6: Scheduling for combination 5, 6 */
+    {
+      si_Periodicity_r13 := rf64,
+      si_RepetitionPattern_r13 := every2ndRF,
+      sib_MappingInfo_r13 := {},
+      si_TB_r13 := b256
+    },
+    {
+      si_Periodicity_r13  := rf64,
+      si_RepetitionPattern_r13 := every2ndRF,
+      sib_MappingInfo_r13 := p_Si2_SIBMapping,
+      si_TB_r13 := b256
+    }
+  };
+
+  template (value) SchedulingInfoList_NB_r13 cs_SchedulingInfo_NB_3SI(NB_SiPeriodicity_Type  p_Si2_Periodicity := rf64,
+                                                                      NB_SiRepetitionPattern_Type p_Si2_Repetition := every16thRF,
+                                                                      NB_SiTransportBlockSize_Type p_Si2_TBSize := b256,
+                                                                      SIB_MappingInfo_NB_r13 p_Si2_SIBMapping,
+                                                                      NB_SiPeriodicity_Type  p_Si3_Periodicity := rf64,
+                                                                      NB_SiRepetitionPattern_Type p_Si3_Repetition := every16thRF,
+                                                                      NB_SiTransportBlockSize_Type p_Si3_TBSize := b256,
+                                                                      SIB_MappingInfo_NB_r13 p_Si3_SIBMapping) :=
+  { /* 36.508 Table 8.1.4.3.1.2-2, 8.1.4.3.1.2-3, 8.1.4.3.1.2-4: Scheduling for combination 2, 3, 4 */
+    /* @status    APPROVED (NBIOT) */
+    {
+      si_Periodicity_r13 := rf64,
+      si_RepetitionPattern_r13 := every8thRF,
+      sib_MappingInfo_r13 := {},
+      si_TB_r13 := b552
+    },
+    {
+      si_Periodicity_r13  := p_Si2_Periodicity,
+      si_RepetitionPattern_r13 := p_Si2_Repetition,
+      sib_MappingInfo_r13 := p_Si2_SIBMapping,
+      si_TB_r13 := p_Si2_TBSize
+    },
+    {
+      si_Periodicity_r13  := p_Si3_Periodicity,
+      si_RepetitionPattern_r13 := p_Si3_Repetition,
+      sib_MappingInfo_r13 := p_Si3_SIBMapping,
+      si_TB_r13 := p_Si3_TBSize
+    }
+  };
+
+  template (value) NB_OperationModeInfo_Type cs_NB_OperationModeInfo_InBandSamePCI (integer p_Eutra_CRS_SequenceInfo) :=
+  { /* 36.508 Table 8.1.4.3.2_1: condition Inband-Same */
+    /* @status    APPROVED (NBIOT) */
+    inband_SamePCI_r13 := {
+      eutra_CRS_SequenceInfo_r13 := p_Eutra_CRS_SequenceInfo // @sic R5-177378 sic@
+    }
+  };
+
+  template (value) NB_OperationModeInfo_Type cs_NB_OperationModeInfo_InBandDifferentPCI(ChannelRasterOffset_NB_r13 p_Offset) :=
+  { /* 36.508 Table 8.1.4.3.2_1: condition Inband-Different */
+    /* @status    APPROVED (NBIOT) */
+    inband_DifferentPCI_r13 := {
+      eutra_NumCRS_Ports_r13 := same,
+      rasterOffset_r13       := p_Offset,
+      spare                  := '00'B
+    }
+  };
+
+  template (value) NB_OperationModeInfo_Type cs_NB_OperationModeInfo_GuardBand(ChannelRasterOffset_NB_r13 p_Offset) :=
+  { /* 36.508 Table 8.1.4.3.2_1: condition Guardband */
+    /* @status    APPROVED (NBIOT) */
+    guardband_r13 := {
+      rasterOffset_r13       := p_Offset,
+      spare                  := '000'B
+    }
+  };
+
+  template (value) NB_OperationModeInfo_Type cs_NB_OperationModeInfo_Standalone :=
+  { /* 36.508 Table 8.1.4.3.2_1: condition Standalone */
+    /* @status    APPROVED (NBIOT) */
+    standalone_r13 := {
+      spare                  := '00000'B
+    }
+  };
+
+  template (value) BCCH_BCH_Message_NB cs_508_MasterInformationBlock_NB_Init(template (value) NB_OperationModeInfo_Type p_OpMode) :=
+  { /* 36.508 Table 8.1.4.3.2_1: MasterInformationBlock */
+    /* @status    APPROVED (NBIOT) */
+    message_ := {
+      systemFrameNumber_MSB_r13 := int2bit(0, 4),             /* Defines the 8 most significant bits of the SFN
+                                                                 This value shall be fullfilled by SS */
+      hyperSFN_LSB_r13          := int2bit(0, 2),             /* Defines the 2 most significant bits of the SFN
+                                                                 This value shall be fullfilled by SS */
+      schedulingInfoSIB1_r13    := 2,
+      systemInfoValueTag_r13    := 1,//VZW_MODIFIED 0,
+      ab_Enabled_r13            := false,
+      operationModeInfo_r13     := p_OpMode,
+      additionalTransmissionSIB1_r15 := false,                /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+      spare   :=  '0000000000'B                               /* @sic R5s160711 BASELINE MOVING 2018: BIT STRING (SIZE (10)) sic@ */
+    }
+  };
+
+  template (value) PLMN_IdentityInfo_NB_r13 cs_PLMN_Identity_NB(template (value) EUTRA_ASN1_PLMN_Identity_Type p_PLMN_Identity,
+                                                                template (omit) PLMN_IdentityInfo_NB_r13.attachWithoutPDN_Connectivity_r13 p_AttachWithoutPDN) :=
+  { /* @status    APPROVED (NBIOT) */
+    plmn_Identity_r13                   := p_PLMN_Identity,
+    cellReservedForOperatorUse_r13      := notReserved,
+    attachWithoutPDN_Connectivity_r13   := p_AttachWithoutPDN
+  };
+
+  /*
+   * @desc      Build PLMN Identity template based on AttachWithoutPDN flag
+   * @param     p_PLMN_Identity
+   * @param     p_AttachWithoutPDN
+   * @return    template (value) PLMN_IdentityInfo_NB_r13
+   * @status    APPROVED (NBIOT)
+   */
+  function f_NBIOT_PLMN_Identity(template (value) EUTRA_ASN1_PLMN_Identity_Type p_PLMN_Identity,
+                                 boolean p_AttachWithoutPDN) return template (value) PLMN_IdentityInfo_NB_r13
+  {
+    var template (omit) PLMN_IdentityInfo_NB_r13.attachWithoutPDN_Connectivity_r13 v_AttachWithoutPDN;
+
+    if (p_AttachWithoutPDN) {
+      v_AttachWithoutPDN := true_;
+    } else {
+      v_AttachWithoutPDN := omit;
+    }
+    return cs_PLMN_Identity_NB(p_PLMN_Identity, v_AttachWithoutPDN);
+  }
+
+  template (value) BCCH_DL_SCH_Message_NB cs_508_SystemInformationBlockType1_NB_Def(template (value) PLMN_IdentityList_NB_r13 p_PLMN_IdentityList,
+                                                                                    template (value) EUTRA_ASN1_TrackingAreaCode_Type p_TrackingAreaCode,
+                                                                                    template (value) EUTRA_ASN1_CellIdentity_Type p_CellIdentity,
+                                                                                    integer p_EutraBand,
+                                                                                    template (omit) NB_EutraControlRegionSize_Type p_EutraControlRegionSize,
+                                                                                    template (omit) NRS_CRS_PowerOffset_Type p_NRS_CRS_PowerOffset,
+                                                                                    template (value) SchedulingInfoList_NB_r13 p_SchedulingInformation) :=
+  { /* 36.508 Table 8.1.4.3.2-3: SystemInformationBlockType1-NB */
+    /* @status    APPROVED (NBIOT) */
+    message_ := {
+      c1 := {
+        systemInformationBlockType1_r13 := {
+        hyperSFN_MSB_r13 := int2bit(0, 8),             /* Defines the 2 most significant bits of the SFN
+                                                        This value shall be fullfilled by SS */
+        cellAccessRelatedInfo_r13 := {
+        plmn_IdentityList_r13 := p_PLMN_IdentityList,
+        trackingAreaCode_r13 := p_TrackingAreaCode,
+        cellIdentity_r13 := p_CellIdentity,
+        cellBarred_r13 := notBarred,
+        intraFreqReselection_r13 := notAllowed            /*  Cond CellBarred */
+        },
+        cellSelectionInfo_r13 := {
+        q_RxLevMin_r13 := -70,    // -106dB acc. to SystemInformationBlockType1-NB field descriptions in 36.331 clause 6.7.2
+        q_QualMin_r13 := -34
+        },
+        p_Max_r13  :=  omit,
+        freqBandIndicator_r13 := p_EutraBand,
+        freqBandInfo_r13 := omit,
+        multiBandInfoList_r13 := omit,
+        downlinkBitmap_r13 := omit,
+        eutraControlRegionSize_r13 := p_EutraControlRegionSize,
+        nrs_CRS_PowerOffset_r13 := omit,//VZW Modidifed:p_NRS_CRS_PowerOffset,
+        schedulingInfoList_r13 := p_SchedulingInformation,
+        si_WindowLength_r13 := ms160,
+        si_RadioFrameOffset_r13 := 1,
+        systemInfoValueTagList_r13 := {2},              //VZW MODIFICATION       /* to be incremented whenever the SIB is changed */
+        lateNonCriticalExtension := omit,
+        nonCriticalExtension := omit
+        }
+      }
+    }
+
+  };
+
+  template (value) RACH_Info_NB_r13 cs_RACH_Info_NB_Default :=
+  { /* @status    APPROVED (NBIOT) */
+    ra_ResponseWindowSize_r13 := pp10,
+    mac_ContentionResolutionTimer_r13 := pp32 //pp8 vzw_modified
+  };
+
+  template (value) RACH_InfoList_NB_r13 cs_RACH_InfoList_NB_Default := { cs_RACH_Info_NB_Default };  /* @status    APPROVED (NBIOT) */
+
+  template (value) RACH_ConfigCommon_NB_r13 cs_508_RACH_ConfigCommon_NB_Default(template (value) EUTRA_ASN1_PreambleTransMax_Type p_PreambleTransMax := n6, //n6 vzw_modified,
+                                                                                template (value) RACH_InfoList_NB_r13 p_RACH_InfoList := cs_RACH_InfoList_NB_Default) :=
+  { /* 36.508 Table 8.1.6.3-8: RACH_ConfigCommon_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    preambleTransMax_CE_r13 := p_PreambleTransMax,            /* n1, n2, n3, n4, n5, n6, n7, n8, n10; @sic R5-174474: p_PreambleTransMax sic@ */
+    powerRampingParameters_r13 := {
+      powerRampingStep := dB6, //vzw_modified dB2,                                /* dB0, dB2,dB4, dB6 */
+      preambleInitialReceivedTargetPower := dBm_90            /* DEFAULT vzw_modified dBm_104
+                                                                 dBm_120, dBm_118, dBm_116, dBm_114, dBm_112, dBm_110, dBm_108, dBm_106,
+                                                                 dBm_104, dBm_102, dBm_100, dBm_98, dBm_96, dBm_94, dBm_92, dBm_90; */
+    },
+    rach_InfoList_r13 := p_RACH_InfoList,                     /* @sic R5-174474: p_RACH_InfoList sic@ */
+    connEstFailOffset_r13 := omit,
+    powerRampingParameters_v1450 := omit,                     /* @sic R5s180271 BASELINE MOVING 2018 Phase 1 sic@ */
+    rach_InfoList_v1530 := omit                               /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) BCCH_Config_NB_r13 cs_508_BCCH_Config_NB_Default :=
+  { /* 36.508 Table 8.1.6.3-1: BCCH_Config_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    modificationPeriodCoeff_r13   := n32   /* n16, n32, n64, n128; */
+  };
+
+  template (value) NPRACH_Parameters_NB_r13 cs_NPRACH_Parameters_Default(NPRACH_Parameters_NB_r13.nprach_Periodicity_r13 p_Periodicity := ms40, //vzw_modified ms80,
+                                                                         NPRACH_Parameters_NB_r13.nprach_StartTime_r13 p_StartTime := ms8, //vzw_modified ms32,
+                                                                         NPRACH_Parameters_NB_r13.nprach_SubcarrierOffset_r13 p_SubcarrierOffset := n0, //vzw_modified n12,
+                                                                         NPRACH_Parameters_NB_r13.maxNumPreambleAttemptCE_r13 p_MaxNumPreambleAttemptCE := n4, //vzw_modified n6,
+                                                                         NPRACH_Parameters_NB_r13.numRepetitionsPerPreambleAttempt_r13 p_NumRepetitionsPerPreambleAttempt := n1) :=
+  { /* 36.508 Table 8.1.6.3-5: PRACH_ConfigSIB_DEFAULT; as signalled in SIB2 */
+    /* @status    APPROVED (NBIOT) */
+    nprach_Periodicity_r13  := p_Periodicity,           /* @sic R5-171253: ms40 -> ms80 sic@ @sic R5-174474: p_Periodicity sic@ */
+    nprach_StartTime_r13    := p_StartTime,             /* @sic R5-171253: ms8  -> ms32 sic@ @sic R5-174474: p_StartTime sic@ */
+    nprach_SubcarrierOffset_r13 := p_SubcarrierOffset,  /* @sic R5-174474: p_SubcarrierOffset sic@ */
+    nprach_NumSubcarriers_r13   := n12,
+    nprach_SubcarrierMSG3_RangeStart_r13 := twoThird, //VZW_MODIFIED oneThird,
+    maxNumPreambleAttemptCE_r13 := p_MaxNumPreambleAttemptCE,
+    numRepetitionsPerPreambleAttempt_r13 := p_NumRepetitionsPerPreambleAttempt,
+    npdcch_NumRepetitions_RA_r13 := r1, //vzw_modified r16,
+    npdcch_StartSF_CSS_RA_r13   := v8,//vzw_modified v4,
+    npdcch_Offset_RA_r13    := zero
+  };
+
+  template (value) NPRACH_ConfigSIB_NB_r13 cs_508_NPRACH_ConfigSIB_NB(template (omit) RSRP_ThresholdsNPRACH_InfoList_NB_r13 p_RSRP_ThresholdsNPRACH_InfoList_NB := omit,
+                                                                      template (value) NPRACH_ParametersList_NB_r13 p_NPRACH_ParametersList_NB) :=
+  { /* 36.508 Table 8.1.6.3-5: PRACH_ConfigSIB_DEFAULT; as signalled in SIB2 */
+    /* @status    APPROVED (NBIOT) */
+    nprach_CP_Length_r13                := us66dot7,  //  us66dot7, us266dot7
+    rsrp_ThresholdsPrachInfoList_r13    := p_RSRP_ThresholdsNPRACH_InfoList_NB,
+    nprach_ParametersList_r13           := p_NPRACH_ParametersList_NB
+  };
+
+  template (value) NPDSCH_ConfigCommon_NB_r13 cs_508_NPDSCH_ConfigCommon_NB_Default :=
+  { /* 36.508 Table 8.1.6.3-4: PDSCH_ConfigCommon_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    nrs_Power_r13 := 9    /* 1 TX - INTEGER (-60..50)VZW NBIOT: Changed from 44 to 0  */
+  };
+
+  template (value) UL_ReferenceSignalsNPUSCH_NB_r13 cs_UL_ReferenceSignalsNPUSCH :=
+  { /* 36.508 Table 8.1.6.3-6: as signalled in RadioResourceConfiguration and SIB2 */
+    /* @status    APPROVED (NBIOT) */
+    groupHoppingEnabled_r13     := false,
+    groupAssignmentNPUSCH_r13   := 0                         /* INTEGER (0..29) */
+  };
+
+  template (value) UplinkPowerControlCommon_NB_r13 cs_508_UplinkPowerControlCommon_NB_Default :=
+  { /* 36.508 Table 8.1.6.3-14: UplinkPowerControlCommon_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    p0_NominalNPUSCH_r13  := -56, //vzw_modified-85,      // INTEGER (_126..24)
+    alpha_r13             := al09, //vzw_modified al1 ,      // al0, al04, al05, al06, al07, al08, al09, al1
+    deltaPreambleMsg3_r13 := 6 //vzw_modified 4         // INTEGER (_1..6)
+  };
+
+     template (value)  NPRACH_Parameters_NB_v1330 cs_NB_NPRACH_Parameters_NB_v1330 :=
+  { 
+      nprach_NumCBRA_StartSubcarriers_r13 := n12
+  };
+    
+
+    
+  template (value) NPRACH_ConfigSIB_NB_v1330  cs_508_NPRACH_ConfigSIB_NB_v1330 :=
+  { 
+      nprach_ParametersList_v1330 := {
+          cs_NB_NPRACH_Parameters_NB_v1330
+      }
+  };  
+    
+    
+  template (value) RadioResourceConfigCommonSIB_NB_r13 cs_508_RadioResourceConfigCommonSIB_NB_Default(template (value) NPRACH_ParametersList_NB_r13 p_NPRACH_ParametersList_NB) :=
+  { /* 36.508 Table 8.1.6.3-9: RadioResourceConfigCommonSIB_DEFAULT */
+    /* @status    APPROVED (NBIOT) */
+    rach_ConfigCommon_r13   := cs_508_RACH_ConfigCommon_NB_Default,
+    bcch_Config_r13         := cs_508_BCCH_Config_NB_Default,
+    pcch_Config_r13         := cs_508_PCCH_Config_NB_Default,
+    nprach_Config_r13       := cs_508_NPRACH_ConfigSIB_NB(-, p_NPRACH_ParametersList_NB),
+    npdsch_ConfigCommon_r13 := cs_508_NPDSCH_ConfigCommon_NB_Default,
+    npusch_ConfigCommon_r13 := cs_508_NPUSCH_ConfigCommon_NB_Default,
+    dl_Gap_r13              := omit,
+    uplinkPowerControlCommon_r13 := cs_508_UplinkPowerControlCommon_NB_Default,
+    nprach_Config_v1330 := cs_508_NPRACH_ConfigSIB_NB_v1330,// omit,                  /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    nprach_Config_v1450 := omit,                  /* @sic R5s180271 BASELINE MOVING 2018 Phase 1 sic@ */
+    nprach_Config_v1530 := omit,                  /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    dl_Gap_v1530 := omit,                         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    wus_Config_r15 := omit                        /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) UE_TimersAndConstants_NB_r13 cs_508_UE_TimersAndConstants_NB :=
+  { /* 36.508 values specified in Table 8.1.4.3.3-1: SystemInformationBlockType2 */
+    /* @status    APPROVED (NBIOT) */
+    t300_r13  := ms2500, //vzw_modified ms10000,
+    t301_r13  := ms2500, //vzw_modified ms10000,
+    t310_r13  := ms8000,
+    n310_r13  := n2, // vzw_modified n2,
+    t311_r13  := ms1000, //vzw_modified ms1000,
+    n311_r13  := n1,
+    t311_v1350 := omit,                           /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    t300_v1530 := omit,                           /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    t301_v1530 := omit,                           /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    t311_v1530 := omit,                           /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    t300_r15 := omit                              /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) SystemInformationBlockType2_NB_r13 cs_508_SystemInformationBlockType2_NB_Def(template (value) NPRACH_ParametersList_NB_r13 p_NPRACH_ParametersList_NB,
+                                                                                                template (omit) CarrierFreq_NB_r13 p_ULCarrierFreq) :=
+  { /* 36.508 values specified in Table 8.1.4.3.3-1: SystemInformationBlockType2; */
+    /* @status    APPROVED (NBIOT) */
+    radioResourceConfigCommon_r13 := cs_508_RadioResourceConfigCommonSIB_NB_Default(p_NPRACH_ParametersList_NB),
+    ue_TimersAndConstants_r13     := cs_508_UE_TimersAndConstants_NB,
+    freqInfo_r13 := {
+      ul_CarrierFreq_r13          := p_ULCarrierFreq, // @sic R5-170099 sic@
+      additionalSpectrumEmission_r13 := 1    // Acc. Table 8.1.4.3.3_-: SystemInformationBlockType2 and acc to TS 36.101 Table 6.2.4-1;
+    },
+    timeAlignmentTimerCommon_r13  :=  sf750, //vzw_modified infinity_,  /* sf500, sf750, sf1280, sf1920, sf2560, sf5120, sf10240, infinity_ */
+    multiBandInfoList_r13     := omit, // INTEGER (1..32)
+    lateNonCriticalExtension  := omit,
+    cp_Reestablishment_r14    := omit,         /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    servingCellMeasInfo_r14   := omit,         /* @sic R5s180412 BASELINE MOVING 2018-2, R5s180552 BASELINE MOVING 2018: cqi_Reporting_r14 and servingCellMeasInfo_r14 swapped sic@ */
+    cqi_Reporting_r14         := omit,         /* @sic R5s180412 BASELINE MOVING 2018-2, R5s180552 BASELINE MOVING 2018: cqi_Reporting_r14 and servingCellMeasInfo_r14 swapped sic@ */
+    enhancedPHR_r15           := omit,         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    freqInfo_v1530            := omit,         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    cp_EDT_r15                := omit,         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    up_EDT_r15                := omit          /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) SystemInformationBlockType3_NB_r13 cs_508_SystemInformationBlockType3_NB_Def :=
+  { /* 36.508 values specified in Table 8.1.4.3.3-2: SystemInformationBlockType3 */
+    /* @status    APPROVED (NBIOT) */
+    cellReselectionInfoCommon_r13 := {
+      q_Hyst_r13 := dB0
+    },
+    cellReselectionServingFreqInfo_r13 := {
+      s_NonIntraSearch_r13 := 31 // @sic R5-172878 sic@
+    },
+    intraFreqCellReselectionInfo_r13   := {
+      q_RxLevMin_r13     := -53,
+      q_QualMin_r13      := omit,
+      p_Max_r13          := omit,
+      s_IntraSearchP_r13 := 31, // @sic R5-172878 sic@
+      t_Reselection_r13  := s0 // s0, s3, s6, s9, s12, s15, s18, s21
+    },
+    freqBandInfo_r13 := omit,
+    multiBandInfoList_r13 := omit,
+    lateNonCriticalExtension := omit,
+    intraFreqCellReselectionInfo_v1350 := omit,  /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    intraFreqCellReselectionInfo_v1360 := omit,  /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    intraFreqCellReselectionInfo_v1430 := omit,  /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    cellReselectionInfoCommon_v1450 := omit,     /* @sic R5s180271 BASELINE MOVING 2018 Phase 1 sic@ */
+    nsss_RRM_Config_r15 := omit,                 /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    npbch_RRM_Config_r15 := omit                 /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) SystemInformationBlockType4_NB_r13 cs_508_SystemInformationBlockType4_NB_Def(template (omit) EUTRA_ASN1_IntraFreqNeighCellList_Type p_IntraFreqNeighCellList := omit,
+                                                                                                template (omit) EUTRA_ASN1_IntraFreqBlackCellList_Type p_IntraFreqBlackCellList := omit) :=
+  { /* 36.508 values specified in Table 8.1.4.3.3-3: SystemInformationBlockType4 */
+    /* @sic R5s180552 BASELINE MOVING 2018: p_IntraFreqNeighCellList, p_IntraFreqBlackCellList to make cs_SIB4_NB_AllParameters obsolete sic@ */
+    /* @status    APPROVED (NBIOT) */
+    intraFreqNeighCellList_r13   := p_IntraFreqNeighCellList,
+    intraFreqBlackCellList_r13   := p_IntraFreqBlackCellList,
+    lateNonCriticalExtension     := omit,
+    nsss_RRM_Config_r15          := omit,         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    intraFreqNeighCellList_v1530 := omit          /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) InterFreqCarrierFreqInfo_NB_r13 cs_NB_InterFreqCarrierFreq(template (value) NB_CarrierFreq_Type p_CarrierFreq) :=
+  { /* default SIB5 contents in 36.508 Table 8.1.4.3.3-4; */
+    /* @status    APPROVED (NBIOT) */
+    dl_CarrierFreq_r13           := p_CarrierFreq.DL,
+    q_RxLevMin_r13               := -53,
+    q_QualMin_r13                := omit,
+    p_Max_r13                    := omit,
+    q_OffsetFreq_r13             := dB0,
+    interFreqNeighCellList_r13   := omit,
+    interFreqBlackCellList_r13   := omit,
+    multiBandInfoList_r13        := omit,
+    delta_RxLevMin_v1350         := omit,         /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    powerClass14dBm_Offset_r14   := omit,         /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    ce_AuthorisationOffset_r14   := omit,         /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+    nsss_RRM_Config_r15          := omit,         /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    interFreqNeighCellList_v1530 := omit          /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) SystemInformationBlockType5_NB_r13 cs_508_SystemInformationBlockType5_NB_Def(template (value) InterFreqCarrierFreqList_NB_r13  p_InterFreqCarrierList) :=
+  { /* Acc. to 36.508 Table 8.1.4.3.3-4: SystemInformationBlockType5 */
+    /* @status    APPROVED (NBIOT) */
+    interFreqCarrierFreqList_r13 := p_InterFreqCarrierList,
+    t_Reselection_r13   := s0, // s0, s3, s6, s9, s12, s15, s18, s21
+    lateNonCriticalExtension := omit,
+    scptm_FreqOffset_r14 := omit                  /* @sic R5s170597 BASELINE MOVING 2017 sic@ */
+  };
+
+  template (value) AB_Config_NB_r13 cs_AB_Config_NB(AB_Category_Type p_AB_Category,
+                                                    B10_Type p_AB_BarringBitmap,
+                                                    template (omit) AB_ForExceptionData_Type p_AB_ForBarringExceptionData,
+                                                    B5_Type p_AB_BarringForSpecialAC) :=
+  { /* Acc. to 36.508 Table 8.1.4.3.3-5: SystemInformationBlockType14 */
+    /* @status    APPROVED (NBIOT) */
+    ab_Category_r13 := p_AB_Category,
+    ab_BarringBitmap_r13 := p_AB_BarringBitmap,
+    ab_BarringForExceptionData_r13 := p_AB_ForBarringExceptionData,    /* @sic R5s170597 BASELINE MOVING 2017: BarringExceptionData -> BarringForExceptionData sic@ */
+    ab_BarringForSpecialAC_r13 := p_AB_BarringForSpecialAC
+  };
+
+  template (value) SystemInformationBlockType14_NB_r13 cs_SystemInformationBlockType14_NB_Def :=
+  { /* Acc. to 36.508 Table 8.1.4.3.3-5: SystemInformationBlockType14 */
+    /* @status    APPROVED (NBIOT) */
+    ab_Param_r13 := {
+      ab_Common_r13 := cs_AB_Config_NB(a, '1111111111'B, omit, '11111'B)
+    },
+    lateNonCriticalExtension := omit,
+    ab_PerNRSRP_r15 := omit             /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+  
+  template (value) SystemInformationBlockType16_NB_r13 cs_SystemInformationBlockType16_NB_Def(integer p_UTCTimeInfoInSec, B2_Type p_DayLightSavingTime) :=
+  { //VZW NBIOT ADDED : For TC 22.2 SS
+     timeInfo_r11 := {					//	SEQUENCE {
+		timeInfoUTC_r11	:=	p_UTCTimeInfoInSec,	//			INTEGER (0..549755813887), 
+		dayLightSavingTime_r11 := p_DayLightSavingTime,	//  BIT STRING (SIZE (2))		OPTIONAL,	-- Need OR 
+		leapSeconds_r11	:=	10,			//	INTEGER (-127..128)			OPTIONAL,	-- Need OR 
+		localTimeOffset_r11 := 23		//  INTEGER (-63..64)			OPTIONAL	-- Need OR
+	},		//															OPTIONAL,	-- Need OR
+	lateNonCriticalExtension := omit,    //	OCTET STRING				OPTIONAL,
+    timeReferenceInfo_r15 := omit    
+  };
+
+  template (value) SystemInformationBlockType20_NB_r14 cs_508_SystemInformationBlockType20_NB_Def :=
+  {   /* @status    APPROVED (NBIOT) */
+  /* Acc. to 36.508 Table 8.1.4.3.3-7: SystemInformationBlockType20 */
+    npdcch_SC_MCCH_Config_r14   := {
+        npdcch_NumRepetitions_SC_MCCH_r14   := r8,
+        npdcch_StartSF_SC_MCCH_r14          := v1dot5,
+        npdcch_Offset_SC_MCCH_r14           := zero
+    },
+    sc_mcch_CarrierConfig_r14   := {
+        dl_CarrierIndex_r14             := 0
+    },
+    sc_mcch_RepetitionPeriod_r14    := rf32,
+    sc_mcch_Offset_r14              := 1,
+    sc_mcch_ModificationPeriod_r14  := rf512,
+    sc_mcch_SchedulingInfo_r14      := omit,
+    lateNonCriticalExtension        := omit
+  };
+
+  template (value) SystemInformationBlockType22_NB_r14 cs_508_SystemInformationBlockType22_NB_Def (template (value) DL_CarrierConfigCommon_NB_r14 p_DLCarrier,
+                                                                                                   CarrierFreq_NB_r13 p_ULCarrier) :=
+  {   /* @status    APPROVED (NBIOT) */
+      /* Acc. to 36.508 Table 8.1.4.3.3-8: SystemInformationBlockType22 */
+    dl_ConfigList_r14 := {{
+        dl_CarrierConfig_r14            := p_DLCarrier,
+        pcch_Config_r14                 := omit,
+        wus_Config_r15                  := omit        /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    }},
+    ul_ConfigList_r14 := {{
+        ul_CarrierFreq_r14              := p_ULCarrier,
+        nprach_ParametersList_r14       := omit,
+        nprach_ParametersListEDT_r15    := omit        /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    }},
+    pagingWeightAnchor_r14              := omit,
+    nprach_ProbabilityAnchorList_r14    := omit,
+    lateNonCriticalExtension            := omit,
+    mixedOperationModeConfig_r15        := omit,       /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+    ul_ConfigList_r15                   := omit        /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) DL_CarrierConfigCommon_NB_r14 cs_DL_CarrierConfigCommon_NB_r14(EUTRA_ASN1_ARFCN_ValueEUTRA_r9_Type p_CarrierFreqDL,
+                                                                                  NB_CarrierFreqOffset_r13_Type p_CarrierFreqOffset) :=
+  {  /* @status    APPROVED (NBIOT) */
+    dl_CarrierFreq_r14 := {
+      carrierFreq_r13 := p_CarrierFreqDL,
+      carrierFreqOffset_r13 := p_CarrierFreqOffset
+    },
+    downlinkBitmapNonAnchor_r14 := {
+      useNoBitmap_r14 := NULL
+    },
+    dl_GapNonAnchor_r14 := {
+      useNoGap_r14 := NULL
+    },
+    inbandCarrierInfo_r14 := omit,
+    nrs_PowerOffsetNonAnchor_r14 := dB0,
+    dl_GapNonAnchor_v1530  := omit               /* @sic R5s180552 BASELINE MOVING 2018 sic@ */
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB2(template (value) SystemInformationBlockType2_NB_r13 p_SystemInformationBlockType2) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib2_r13 := p_SystemInformationBlockType2 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB3(template (value) SystemInformationBlockType3_NB_r13 p_SystemInformationBlockType3) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib3_r13 := p_SystemInformationBlockType3 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB4(template (value) SystemInformationBlockType4_NB_r13 p_SystemInformationBlockType4) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib4_r13 := p_SystemInformationBlockType4 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB5(template (value) SystemInformationBlockType5_NB_r13 p_SystemInformationBlockType5) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib5_r13 := p_SystemInformationBlockType5 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB14(template (value) SystemInformationBlockType14_NB_r13 p_SystemInformationBlockType14) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib14_r13 := p_SystemInformationBlockType14 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB16 (template (value) SystemInformationBlockType16_NB_r13 p_SystemInformationBlockType16) :=
+  { /*VZW NBIOT ADDED: TC 22.2 SS*/
+    sib_TypeAndInfo_r13 := {{ sib16_r13 := p_SystemInformationBlockType16 }},
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };  
+    
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB20(template (value) SystemInformationBlockType20_NB_r14 p_SystemInformationBlockType20) :=
+  {   /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib20_v1430 := p_SystemInformationBlockType20 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) SystemInformation_NB_r13_IEs cs_SI_NB_SIB22(template (value) SystemInformationBlockType22_NB_r14 p_SystemInformationBlockType22) :=
+  { /* @status    APPROVED (NBIOT) */
+    sib_TypeAndInfo_r13 := {
+      { sib22_v1430 := p_SystemInformationBlockType22 }
+    },
+    lateNonCriticalExtension := omit,
+    nonCriticalExtension := omit
+  };
+
+  template (value) NB_BcchInfo_Type cs_BCCHInfo_NB_C1(template (value) BCCH_BCH_Message_NB    p_MIB,
+                                                      template (value) BCCH_DL_SCH_Message_NB p_SIB1,
+                                                      template (value) NB_SI_List_Type        p_SI_List) :=
+  { /* @status    APPROVED (NBIOT) */
+    MIB_NB  := p_MIB,
+    SIB1_NB := p_SIB1,
+    SIs     := p_SI_List
+  };
+
+}

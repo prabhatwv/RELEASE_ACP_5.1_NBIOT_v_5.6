@@ -1,0 +1,907 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module VZW_LTE_IOT_GSMA_TESTCASES 
+{
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CIOT_NASTemplates all;
+  import from CommonDefs all;
+  import from CommonAspDefs all;
+  import from Common4G5G_Templates all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_LoopBack_Templates all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NB_Parameters all;
+  import from EUTRA_Component all;
+  import from EUTRA_NB_SecurityDefinitionsAndExternalFunctions all;
+  import from LoopbackIP all;
+  import from NAS_CommonTemplates all;  
+  import from NBIOT_ASP_SrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CellInfo all;
+ /* import from EUTRA_CellInfoInit all; */
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from EUTRA_Component all;
+  import from NBIOT_ConfigurationSteps all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+  import from NBIOT_LoopBack all;
+  import from NBIOT_NASSteps all;
+  import from NBIOT_Parameters all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_RRC_Common all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_SRB_DRB_Templates all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SysInfo_Templates all;
+/*  import from EUTRA_SRB_Templates all;*/
+  import from NBIOT_Timing all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterPtcToMtcDefs all;
+  import from EUTRA_NB_NASSteps all;
+  import from EUTRA_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  import from EUTRA_NB_RRC_Templates all;
+  import from IMS_PTC_CoordMsg all;
+  import from EUTRA_NB_AuxiliaryFunctions all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_ESM_Testcases all;
+  import from UpperTesterCommon all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_COMMON all;
+  import from VZ_LTE_CommonParameters all;
+  import from NBIOT_ASP_L2DataDefs all;
+  import from EPS_NAS_SMS_Templates all;
+    
+    
+ function f_NBIOT_UserPlaneSignallingSRBHandling_CP_ignore_data(NBIOT_CellId_Type p_CellId) runs on NBIOT_PTC
+  {
+    var NB_SRB_COMMON_IND v_NB_SRB_COMMON_IND;
+    var template (value) UserDataContainer v_DataContainer;
+    var EPS_BearerIdentity v_BearerId;
+    var ProcedureTransactionIdentifier v_PTI;
+    var octetstring v_DataReply;
+    timer t_WaitForIPSignalling;
+    var NB_L2_DATA_IND v_NB_L2_DATA_IND;
+    timer t_timer, t_timer1;
+    var integer packet_count := 0, rrc_count:=1;
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType); //joni added this line
+       
+      
+    t_timer.start(600.0);
+    
+    log("User now manually send PING using AT so that UE may generate packet");
+    alt {
+      
+        // just continue
+      
+      [] SRB.receive(car_NB_SRB_NasPdu_IND(p_CellId,
+                                           tsc_SRB1bis,
+                                           cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                             cr_ESM_DATA_TRANSPORT(?, cr_UserDataContainer))))-> value v_NB_SRB_COMMON_IND {
+        packet_count := packet_count +1;
+        log("Recieved IP Packet with count #",packet_count ,"ignoring it");                                                                                   
+        repeat;
+      }
+      [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                               cr_PDNConnReqAdditionalPDN((f_GetPdnType(),'001'B), *,
+                                                                               '001'B)))){repeat;}
+        
+      []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) )){
+        rrc_count := rrc_count + 1;
+        log("Recieved RRC connection req with count #",rrc_count );            
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+         f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+         repeat;
+   
+      }
+   
+                
+   
+        []t_timer.timeout{}
+    }
+      
+  }
+    
+    
+    
+    
+ function f_NBIOT_UserPlaneSignallingSRBHandling_CP(NBIOT_CellId_Type p_CellId) runs on NBIOT_PTC
+  {
+    var NB_SRB_COMMON_IND v_NB_SRB_COMMON_IND;
+    var template (value) UserDataContainer v_DataContainer;
+    var EPS_BearerIdentity v_BearerId;
+    var ProcedureTransactionIdentifier v_PTI;
+    var octetstring v_DataReply;
+    timer t_WaitForIPSignalling;
+    var NB_L2_DATA_IND v_NB_L2_DATA_IND;
+    timer t_timer, t_timer1;
+    var integer packet_count := 0, rrc_count:=1;
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType); //joni added this line
+       
+      
+    t_timer.start(600.0);
+    
+    log("User now manually send PING using AT so that UE may generate packet");
+    alt {
+      
+        // just continue
+      
+      [] SRB.receive(car_NB_SRB_NasPdu_IND(p_CellId,
+                                           tsc_SRB1bis,
+                                           cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                             cr_ESM_DATA_TRANSPORT(?, cr_UserDataContainer))))-> value v_NB_SRB_COMMON_IND {
+        packet_count := packet_count +1;
+        log("Recieved IP Packet with count #",packet_count );                                                         
+        v_BearerId := v_NB_SRB_COMMON_IND.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.epsBearerId;
+        v_PTI := v_NB_SRB_COMMON_IND.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.procedureTransactionIdentifier;
+                                                                     
+        v_DataReply := v_NB_SRB_COMMON_IND.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer;
+         v_DataContainer := cs_UserDataContainer(v_DataReply);
+        L2DATA.send(cas_NB_L2_DATA_REQ(cs_NB_ReqAspCommonPart_RB(nbiot_Cell1,tsc_NB_RbId_SRB1bis), cs_L2Data_Request_PdcpSdu(v_DataReply))); // @sic R5s180192 sic@
+          t_timer1.start(50.0);
+         alt{             
+         [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                               cr_PDNConnReqAdditionalPDN((f_GetPdnType(),'001'B), *,
+                                                                               '001'B)))){repeat;}
+     
+         []L2DATA.receive(car_NB_L2_DATA_IND(cr_NB_IndAspCommonPart_RB(nbiot_Cell1, tsc_NB_RbId_SRB1bis), cr_L2Data_Indication_PdcpSdu(?) )) -> value v_NB_L2_DATA_IND {
+             v_DataReply := v_NB_L2_DATA_IND.L2Data.SubframeData.PduSduList.PdcpSdu[0];
+              v_DataContainer := cs_UserDataContainer(v_DataReply);
+           SRB.send(cas_NB_SRB_NasPdu_REQ(p_CellId,
+                                       tsc_SRB1bis,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_ESM_DATA_TRANSPORT(v_BearerId, v_PTI, v_DataContainer))));
+      
+             repeat;} // @sic R5s180192 sic@    
+             
+           [] SRB.receive(car_NB_SRB_NasPdu_IND(p_CellId,
+                                           tsc_SRB1bis,
+                                           cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                             cr_ESM_DATA_TRANSPORT(?, cr_UserDataContainer)))){repeat;}
+        
+             
+         []t_timer1.timeout{}
+         }                                                  
+                                                                 
+            repeat;
+      }
+      [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                               cr_PDNConnReqAdditionalPDN((f_GetPdnType(),'001'B), *,
+                                                                               '001'B)))){repeat;}
+        
+      []SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) )){
+        rrc_count := rrc_count + 1;
+        log("Recieved RRC connection req with count #",rrc_count );            
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+         f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+         repeat;
+   
+      }
+   
+                
+   
+        []t_timer.timeout{}
+    }
+      
+  }
+    
+  function f_TC_VZ_IOT_5_2_2_6_NBIOT() runs on NBIOT_PTC
+  {
+      
+    f_NBIOT_Init (c1);
+      
+    f_NBIOT_CellConfig_Def (nbiot_Cell1, CONTROL_PLANE);
+    f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+        
+       
+ 
+    /* 1. EPS reject the for the wrong APN configured in the IOT device.*/
+    f1_TC_VZ_IOT_5_2_2_6_NBIOT_Body();
+ 
+    //f_EUTRA_TestBody_Set(false);
+
+    // Execute postamble steps if required 
+          f_UT_SwitchOffUE (UT, false);
+        //And now remove the cell(s)
+        f_NBIOT_ReleaseAllCells();
+        f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "TC 5.2.2.3 [EXIT CRITERIA] : Back OFF and DATA RETRY behavior of DUT is verified");
+    
+        
+  }
+   
+   function f1_TC_VZ_IOT_5_2_2_6_NBIOT_Body ( ) runs on NBIOT_PTC
+  {
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var integer v_Back_off := 0; /* Back-off Timer variable */
+      var integer v_Back_off_Itr_Cntr := 0; /* Back-off Iteration Counter */
+      timer t_Back_off, t_verdict_timer; /* Back-off Timer, TC Verdict timer*/
+      var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+      var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType); //joni added this line
+      var NAS_MSG_Indication_Type v_NAS_Ind;
+      const charstring tsc_Fox := "The quick brown fox jumps over the lazy dog's back. Kaufen Sie Ihrer Frau vier bequeme Pelze. - 0123456789 - THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG'S BACK.";
+ 
+      
+      /* Switch on the DUT */
+      f_UT_SwitchOnUE(UT, true);
+      log("TC 5.2.2.6 : Switch On CMD sent to DUT.");
+      
+      /* Attach Procedure DUT stays in Connected Mode*/
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+        
+
+        f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+   
+      log("TC 5.2.2.6 [TEST PROCEDURE] Step-1: Device/DUT Successfully Attached to Network.");
+      
+      // Set message service as indicated in the PIXIT.     
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SELECT_MESSAGE_SERVICE, NO_CNF_REQUIRED, cs_MessageService("0"))); // @sic R5s180172 sic@
+
+      // Set Preferrred memory to preferred memories as indicated in the PIXIT.
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SET_PREFERRED_STORAGE, NO_CNF_REQUIRED, cs_PreferredStorage("SM","SM","MT"))); // @sic R5s180172 sic@
+
+      // Set message format to value given as PIXIT parameter
+      fl_UT_ApplyCommand(UT, cas_UT_Req(MESSAGE_FORMAT, NO_CNF_REQUIRED, cs_MessageFormat("1"))); // @sic R5s180172 sic@
+
+      // Set Character Set "GSM"
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SELECT_CHARACTER_SET, NO_CNF_REQUIRED, cs_SelectCharacterSet( """GSM"""))); // @sic R5s180172 sic@
+
+       // Set the UE to delete all messages from Preferred message store
+      fl_UT_ApplyCommand(UT, cas_UT_Req(DELETE_MESSAGE_WITHFLAG, NO_CNF_REQUIRED, cs_DeleteMessage_Withflag("1", "4"))); // @sic R5s180172 sic@
+
+      // Set service center address
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SERVICE_CENTRE_ADDRESS, NO_CNF_REQUIRED, cs_ServiceCentreAddress("""2222222222""", "129"))); // @sic R5s180172 sic@
+
+      log("TC 5.2.2.6 [ENTRY CRITERIA] Step-1: Device/DUT is configured with wrong SMSC.");
+      
+      // Set text mode parameters to trigger status report.
+      // bit 7(RP) 6(UDHI) 5(SRR) 4 3(VPF) 2(RD) 1 0(MIT)
+      //     0     0       1      1 0      0     0 1
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SET_TEXTMODE_PARAMETERS, NO_CNF_REQUIRED, cs_SetTextModeParameters("49", "167", "0"))); // @sic R5s180172 sic@
+
+      // Write message to memory storage
+      fl_UT_ApplyCommand(UT, cas_UT_Req(WRITE_MESSAGE_TOMEMORY_TEXTMODE, NO_CNF_REQUIRED, cs_WriteMessageToMemory_Text("""1111111111""", "129", tsc_Fox))); // @sic R5s180172 sic@
+
+      // Send message from storage.
+      fl_UT_ApplyCommand(UT, cas_UT_Req(SEND_STORED_MESSAGE_ONE, NO_CNF_REQUIRED, cs_SendMessageFromStorage("1"))); // @sic R5s180172 sic@
+  
+      log("TC 5.2.2.6 [TEST PROCEDURE] Step-2: SMS is sent from the device.");
+     
+      // Avoiding the Test Case Guard Timer.
+      t_verdict_timer.start (f_NBIOT_SetTimerToleranceMin( nonProtocolTimer, int2float(120)));
+      log("TC 5.2.2.6: Waiting to receive SMS Service Request from DUT.");
+      
+      alt {
+           // Check: Does the UE transmit a CP-DATA containing an RP-DATA RPDU (SMS SUBMIT TPDU) encapsulated in an Uplink NAS transport message?
+             
+          []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_SMS_UL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                                 cr_NAS_MsgContainer_SMS (?))))) -> value v_ReceivedAsp
+  
+          {
+               log("TC 5.2.2.6 [TEST PROCEDURE]: Received SMS Service Request from DUT.");
+               log("TC 5.2.2.6 Dropping the SMS Service Request from DUT due to wrong SMSC address.");
+               t_verdict_timer.stop;       
+           }
+           []t_verdict_timer.timeout
+           {
+               f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC 5.2.2.6 [EXIT CRITERIA]: UE doesn't trigger SMS Service Request after Successful Attach.");
+           }
+           []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit))))  { // @sic R5s180192 sic@
+               repeat;        
+           }
+           []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+      }
+            
+      log("######## TC 5.2.2.6 [TEST PROCEDURE] Step-3: Verify SMS Failed at DUT. ########");
+      
+       //Back off timer derived from the back off intervals using the back off iteration
+      v_Back_off :=  (px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr] + 
+                                 ((hex2int(px_IMSI_Def)) mod px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr]));
+              
+      // Increment the Back-off Iteration Counter
+      v_Back_off_Itr_Cntr := v_Back_off_Itr_Cntr + 1;
+      log("TC 5.2.2.6: Back-off Timer value [ ", v_Back_off, " ] for Iteration Counter [ ", v_Back_off_Itr_Cntr, " ].");
+      
+      //Start Back-off Timer 
+      t_Back_off.start (f_NBIOT_SetTimerToleranceMin(nonProtocolTimer, int2float(v_Back_off)));   
+      log("TC 5.2.2.6 [TEST PROCEDURE] Step-4: Back-off Timer started.");
+      
+      alt {          
+           // Check: Does the UE transmit a CP-DATA containing an RP-DATA RPDU (SMS SUBMIT TPDU) encapsulated in an Uplink NAS transport message?
+         []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_SMS_UL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                                 cr_NAS_MsgContainer_SMS (?))))) -> value v_ReceivedAsp
+  
+          {
+              log("TC 5.2.2.6: UE Triggers SMS during the Back-off Timer.");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC 5.2.2.6: UE Triggers unexpected SMS during the Back-off Timer.");
+          }
+          // Handling unexpected RRC Connection Request
+          [] SRB.receive( car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB(cr_EstablishmentCause_NB_Any, ?)))
+          {
+               f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC 5.2.2.6: UE Triggers unexpected RRC Connection Request during Back-off Timer.");
+          }
+          [] t_Back_off.timeout 
+          {
+              t_verdict_timer.start (f_NBIOT_SetTimerToleranceMin(nonProtocolTimer, int2float(30)));              
+              log("TC 5.2.2.6: Waiting for the device to retry SMS Service Request after the iteration [ ", v_Back_off_Itr_Cntr, " ] Back Off.");
+              
+              alt
+              {                  
+                  // Check: Does the UE transmit a CP-DATA containing an RP-DATA RPDU (SMS SUBMIT TPDU) encapsulated in an Uplink NAS transport message?
+                   []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_SMS_UL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                                 cr_NAS_MsgContainer_SMS (?))))) -> value v_ReceivedAsp
+  
+                  {   
+                      log("TC 5.2.2.6 [TEST PROCEDURE]: Received SMS Service Request from DUT.");
+                      t_verdict_timer.stop;                      
+                  }
+                  []t_verdict_timer.timeout
+                  {
+                      f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC 5.2.2.6 [EXIT CRITERIA]: UE doesn't trigger SMS Service Request after Back-off.");
+                  }
+                  []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit))))  { // @sic R5s180192 sic@
+                       repeat;
+                    }
+              }
+              
+              if( v_Back_off_Itr_Cntr < px_Max_Backoff_Itr_Counter )
+              {
+                  // back off timer calculation based on the back off intervals and back-off iteration
+                   // timer = backofbase [iteration] + IMSI % backofbase [iteration] 
+                  
+                  v_Back_off := (px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr] + 
+                      ((hex2int(px_IMSI_Def)) mod px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr]));                                    
+                  
+                  //increment the back-off iteration after the calculation of back-off timer
+                  v_Back_off_Itr_Cntr := v_Back_off_Itr_Cntr + 1; //Back-off Itr
+                  log("TC 5.2.2.6 : Back-off Timer value [", v_Back_off, "] for Iteration Counter [", v_Back_off_Itr_Cntr, "]");
+              
+                  t_Back_off.start (f_NBIOT_SetTimerToleranceMin( nonProtocolTimer, int2float(v_Back_off)));
+                  log("TC 5.2.2.6 [TEST PROCEDURE] Step-4: Back-off Timer started.");
+
+                  repeat;
+              }               
+          }
+             []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit))))  { // @sic R5s180192 sic@
+             repeat;
+           }
+           []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+      }  
+  }//f1_TC_VZ_IOT_5_2_2_6_EUTRA_Body
+    
+   function f_TC_VZ_IOT_5_2_2_3_NBIOT() runs on NBIOT_PTC
+  {
+      
+    f_NBIOT_Init (c1);
+      
+    f_NBIOT_CellConfig_Def (nbiot_Cell1, CONTROL_PLANE);
+      
+   
+    f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+    
+   // f_EUTRA_TestBody_Set(true);
+ 
+    /* 1. EPS reject the for the wrong APN configured in the IOT device.*/
+    f1_TC_VZ_IOT_5_2_2_3_NBIOT_Body();
+ 
+   f_UT_SwitchOffUE (UT, false);
+        //And now remove the cell(s)
+        f_NBIOT_ReleaseAllCells();
+        f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "TC 5.2.2.3 [EXIT CRITERIA] : Back OFF and DATA RETRY behavior of DUT is verified");
+    
+        
+  }//f_TC_VZ_IOT_5_2_2_3_EUTRA
+      
+  function f1_TC_VZ_IOT_5_2_2_3_NBIOT_Body ( ) runs on NBIOT_PTC
+  {
+      const NAS_CauseValue_Type v_Emm_Cause := '00010011'B; //"Emm Cause: 19 (ESM Failure)".
+      const NAS_CauseValue_Type v_Esm_Cause := '00011011'B; //"Esm Cause: 27 (Mising or unknown APN)"    
+      var integer v_Attach_Attemp_Cntr := 1; /* Max Attach Attempt Counte value is 3 from "Verizon LTE Data Retry Test Plan" */                                             
+      var integer v_Back_off; /* Back-off Timer variable */
+      var integer v_Back_off_Itr_Cntr := 0; /* Back-off Iteration Counter */
+      var float v_T3411 := 10.0;  /* value of T3411 timer set to default value as per spec 23.401
+                                  * (Table 10.2.1: EPS mobility management timers – UE side) - 10s */
+      var float v_T3402 := (12.0 * 60.0);  /* T3402 timer set to default value as per spec 23.401
+                                            * (Table 10.2.1: EPS mobility management timers – UE side)- 720s */
+      timer t_Back_off; /* Back-off Timer */
+      timer t_T3411; /* T3411 timer */
+      timer t_T3402; /* T3402 timer */
+      var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+      var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType); //joni added this line
+      var NAS_MSG_Indication_Type v_NAS_Ind;
+      var ProcedureTransactionIdentifier v_PTId_UE;
+      var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+      var NB_SRB_Identity_Type v_SrbId := f_NBIOT_GetSrb1Id(CONTROL_PLANE);
+   
+      
+      /* Switch on the DUT */
+      f_UT_SwitchOnUE(UT, true);
+      log("TC 5.2.2.3 : Switch on CMD sent to DUT");
+      
+      log("######## TC 5.2.2.3 [ENTRY CRITERIA] Step-1: Check SIM subscription configuration is correct ########");
+      log("######## TC 5.2.2.3 [ENTRY CRITERIA] Step-2: Configure a wrong APN in the Device a different APN from the one which provides the correct connectivity ########");
+               
+      /* PDN Reject for the Worng APN Configured in the DUT*/
+       v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+      
+      v_PDNConnReq := v_NAS_Ind.Pdu.PiggybackedPduList[0].Msg.pDN_CONNECTIVITY_REQUEST;
+      v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+   
+      SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     v_SrbId,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_RequestWithPiggybacking(v_NAS_Ind.SecurityProtection.Status,
+                                                                    cs_508_AttachReject(cs_EMM_Cause_v(v_Emm_Cause)),
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (v_Esm_Cause)))));
+
+
+  
+      log("TC 5.2.2.3 [ENTRY CRITERIA] Step-3: Data Connection Failed due to Wrong APN configured at DUT.");
+      
+      /* FIX */
+      t_T3411.start ( f_NBIOT_SetTimerToleranceMin(  nasTimer, v_T3411 ) );
+      log("TC 5.2.2.3 : T3411 timer Started");
+      
+      // SS Triggers RRC Connection Release 
+      f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 ); 
+      log("TC 5.2.2.3 : RRC Connection Release Sent to DUT");
+      
+      /* Back off timer derived from the back off intervals using the back off iteration*/
+      v_Back_off :=  (px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr] + 
+                                 ((hex2int(px_IMSI_Def)) mod px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr]));
+    
+      // Increment the Back-off Iteration Counter
+      v_Back_off_Itr_Cntr := v_Back_off_Itr_Cntr + 1;
+      log("TC 5.2.2.3 : Back off Timer Calculated := [ ",v_Back_off, " ] Back-off Iteration Counter := [ ", v_Back_off_Itr_Cntr, " ]");
+      
+      //Start Back-off Timer 
+      t_Back_off.start (f_NBIOT_SetTimerToleranceMin( nonProtocolTimer, int2float(v_Back_off)));   
+      log("TC 5.2.2.3 : Back-off Timer started.");
+          
+      alt {
+          /* Handling unexpected RRC Connection Request before the T3411 expiry */
+          [] SRB.receive( car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB(cr_EstablishmentCause_NB_Any, ?)))
+          {
+              t_T3411.stop;
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "TC 5.2.2.3 UE Triggers unexpected Attach 
+                                                                Request while backoff timer is running.");
+          }
+          /* Handling T3411 timer expiry and triggering Attach Reject for the Attach Request from the DUT
+           * increment the Attach Attempt Counter till 3 and re-start the T3411 timer.
+           * If Max Attach Attempt Counter reached (3) start T3402 timer with default value 12-min
+           * Attach Attempt Counter and Handling of T3411 is from the "Verzion LTE Data Retry Test Plan"
+           * and also from 23.401 based on the EMM Cause and ESM Cause values. */
+          
+          [] t_T3411.timeout
+          {
+              log("TC 5.2.2.3 : T3411 Timer Expired");
+              
+              /* Attach Procedure with PDN Connecitivity Reject */
+              v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+      
+             v_PDNConnReq := v_NAS_Ind.Pdu.PiggybackedPduList[0].Msg.pDN_CONNECTIVITY_REQUEST;
+             v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+   
+             SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     v_SrbId,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_RequestWithPiggybacking(v_NAS_Ind.SecurityProtection.Status,
+                                                                    cs_508_AttachReject(cs_EMM_Cause_v(v_Emm_Cause)),
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (v_Esm_Cause)))));
+
+
+  
+              log("TC 5.2.2.3 [ENTRY CRITERIA] Step-3: Data Connection Failed due to Wrong APN configured at DUT.");
+
+              //Increment the Attach Attempt counter
+              v_Attach_Attemp_Cntr := v_Attach_Attemp_Cntr + 1 ;
+              log("TC 5.2.2.3 : Attach Attempt Counter incremented := ", v_Attach_Attemp_Cntr);
+              
+              //Attach Attempt Counter is set to '5' (@spec 23.401 clause 5.5.1.2.6 step d)
+              if(v_Attach_Attemp_Cntr < 3)
+              {                   
+                  /* Start T3411 Timer */
+                  t_T3411.start ( f_NBIOT_SetTimerToleranceMin(  nasTimer, v_T3411 ) );
+                  log(" TC 5.2.2.3 : T3411 timer started with Attempt Counter:",v_Attach_Attemp_Cntr );                                
+              }
+              else 
+              {
+                  /* Start T3402 timer */
+                  t_T3402.start ( f_NBIOT_SetTimerToleranceMin ( nasTimer, v_T3402 ) );
+                  log("TC 5.2.2.3 : T3402 timer Started ");                  
+              }
+              
+               // SS Triggers RRC Connection Release 
+              f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+              log("TC 5.2.2.3 : RRC Connection Release sent to DUT");
+              
+              repeat;   
+          }
+          /* Handling T3402 timer expiry and triggering Attach Reject for the Attach Request from DUT
+           * reset the Attach Attempt counter to 1, start 3411 timer and repeat the alt block*/
+          []t_T3402.timeout
+          {
+              log("TC 5.2.2.3 : T3402 Timer Expired");
+              
+              /* Reset the Attach Attempting the counter */
+              v_Attach_Attemp_Cntr := 1;
+              log("TC 5.2.2.3 : Attach Attempt Counter Reset on T3402 Expiry := ", v_Attach_Attemp_Cntr);
+              
+              /* Attach Procedure with PDN Connecitivity Reject */
+                v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+      
+               v_PDNConnReq := v_NAS_Ind.Pdu.PiggybackedPduList[0].Msg.pDN_CONNECTIVITY_REQUEST;
+               v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+   
+               SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     v_SrbId,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_RequestWithPiggybacking(v_NAS_Ind.SecurityProtection.Status,
+                                                                    cs_508_AttachReject(cs_EMM_Cause_v(v_Emm_Cause)),
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (v_Esm_Cause)))));
+
+
+  
+              
+              log("TC 5.2.2.3 [ENTRY CRITERIA] Step-3: Data Connection Failed due to Wrong APN configured at DUT.");
+              
+                /* T3411 Timer */
+              t_T3411.start ( f_NBIOT_SetTimerToleranceMin(  nasTimer, v_T3411 ) );
+              log("TC 5.2.2.3 : T3411 timer Started");
+              
+              // SS Triggers RRC Connection Release 
+              f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+              log("TC 5.2.2.3 : RRC Connection Release sent to DUT");
+              
+              repeat;
+          }
+          /* Verifying the Connection Efficiency Retry Behavior after the back-off timer 
+           * for max back-off iterations (ie., max 7) stop T3411 and T3402 timers, reset the start the T3411 and also start the back off*/
+          [] t_Back_off.timeout
+          {
+              t_T3402.stop; //Stop T3402 timer on Back-off Timer Expiry 
+              t_T3411.stop; //Stop T3411 timer on Back-off Timer Expiry
+              
+              log("TC 5.2.2.3 : Back-off Timer Expired");
+                      
+              /* Reset the Attach Attempting the counter */
+              v_Attach_Attemp_Cntr := 1;
+              log("TC 5.2.2.3 : Attach Attempt Counter Reset on Back-off Expiry:= ", v_Attach_Attemp_Cntr);
+              
+              /* Attach Procedure with PDN Connecitivity Reject */
+               v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+      
+                v_PDNConnReq := v_NAS_Ind.Pdu.PiggybackedPduList[0].Msg.pDN_CONNECTIVITY_REQUEST;
+               v_PTId_UE := v_PDNConnReq.procedureTransactionIdentifier;
+   
+               SRB.send (cas_NB_SRB_NasPdu_REQ (nbiot_Cell1,
+                                     v_SrbId,
+                                     cs_TimingInfo_Now,
+                                     cs_NAS_RequestWithPiggybacking(v_NAS_Ind.SecurityProtection.Status,
+                                                                    cs_508_AttachReject(cs_EMM_Cause_v(v_Emm_Cause)),
+                                                                    cs_PdnConnectReject('0'H, // no EPS bearer assigned
+                                                                    v_PTId_UE, // @sic R5s170962 sic@
+                                                                    cs_ESM_Cause_v (v_Esm_Cause)))));
+
+
+  
+              log("TC 5.2.2.3 [ENTRY CRITERIA] Step-3: Data Connection Failed due to Wrong APN configured at DUT.");
+              
+                  
+              if( v_Back_off_Itr_Cntr < px_Max_Backoff_Itr_Counter )
+              {
+                  /* back off timer calculation based on the back off intervals and back-off iteration
+                   * timer = backofbase [iteration] + IMSI % backofbase [iteration] */
+                  
+                  v_Back_off := (px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr] + 
+                      ((hex2int(px_IMSI_Def)) mod px_Backoff_Timer_Interval [v_Back_off_Itr_Cntr]));
+                  
+                  /*increment the back-off iteration after the calculation of back-off timer */
+                  v_Back_off_Itr_Cntr := v_Back_off_Itr_Cntr + 1; //Back-off Itr
+                  log("TC 5.2.2.3 : Back off Timer Calculated := [ ",v_Back_off, " ] Back-off Iteration Counter := [ ", v_Back_off_Itr_Cntr, " ]");
+                  
+                  t_Back_off.start (f_NBIOT_SetTimerToleranceMin(  nonProtocolTimer, int2float(v_Back_off)));
+                  log("TC 5.2.2.3 : Back-off Timer started.");
+                  
+                  /*if(v_Back_off_Itr_Cntr < 2){
+                     // T3411 Timer 
+                     t_T3411.start ( f_NBIOT_SetTimerToleranceMin(  nasTimer, v_T3411 ) );
+                     log("TC 5.2.2.3 : T3411 timer Started");
+                  }*/
+                   // SS Triggers RRC Connection Release 
+                  f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+                  log("TC 5.2.2.3 : RRC Connection Release sent to DUT");             
+                  
+                  repeat;
+              } 
+              else 
+              {                  
+                  log("TC 5.2.2.3 : Max Backoff iteartions reached");
+                   // SS Triggers RRC Connection Release 
+                  f_NBIOT_RRC_ConnectionRelease( nbiot_Cell1 );
+                  log("TC 5.2.2.3 : RRC Connection Release sent to DUT");                               
+              }
+          }
+      }  
+  }//f1_TC_VZ_IOT_5_2_2_3_EUTRA_Body
+      
+    
+    
+    
+ function f_TC_VZ_IOT_5_2_2_5_Test2_NBIOT() runs on NBIOT_PTC
+    {
+        var NAS_AttDetValue_Type v_AttachType;
+        var template AdditionalUpdateType v_AdditionalUpdateType;
+        var integer v_ue_category := 3;
+        var integer v_Session_ID := 1;
+        var default v_GSMA_TC_default;
+        timer v_rrcConnRel_AfterAttachCompl_timer := px_Timer_RrcConnRel;
+        var boolean v_Internet_Switch := true;
+        var NAS_MSG_Indication_Type v_NAS_Ind;
+        var charstring p_IOT_Service_Platform_IPv4_Start;
+        var charstring p_IOT_Service_Platform_IPv4_End;
+        var charstring p_IOT_Service_Platform_URL_List;
+        timer t_receive_sms_timer := 0.0;
+        var integer v_Index,v_IPaddrv4_start,v_IPaddrv4_end,v_index;
+        var IntegerList_Type v_IPaddrv6_start,v_IPaddrv6_end;
+        var boolean b_RachHandling_RLF_FromScript := false; //default false, SS will send error in sys ind and TC will fail
+        var boolean invalid_value := false;
+        var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+        var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType); //joni added this line
+        var octetstring v_DataReply := 'FABAAAAAAA'O;
+        v_Index := 0;
+        v_IPaddrv4_start := 0;
+        v_IPaddrv4_end := 0;
+        v_IPaddrv6_start := {};
+        v_IPaddrv6_end := {};
+
+        
+        if (px_URL_Based_IOT_Service_Switch == false)
+        {
+            log("L2DATA=", cas_NB_L2_DATA_REQ(cs_NB_ReqAspCommonPart_RB(nbiot_Cell1,tsc_NB_RbId_SRB1bis ), cs_L2Data_Request_PdcpSdu(v_DataReply))); // @sic R5s180192 sic@
+            p_IOT_Service_Platform_URL_List := "";
+            log("########", testcasename(),  " : Iot Service Platform IPv4 Address start = ",px_Iot_Service_Platform_IPv4_Address_start);
+            log("########", testcasename(),  " : Iot Service Platform IPv4 Address end = ",px_Iot_Service_Platform_IPv4_Address_end);
+            log("########", testcasename(),  " : Iot Service Platform IPv6 Address start = ",px_Iot_Service_Platform_IPv6_Address_start);
+            log("########", testcasename(),  " : Iot Service Platform IPv6 Address end = ",px_Iot_Service_Platform_IPv6_Address_end);
+            f_VZ_ConvertIpv4Addr2Int(px_Iot_Service_Platform_IPv4_Address_start,v_IPaddrv4_start);
+            f_VZ_ConvertIpv4Addr2Int(px_Iot_Service_Platform_IPv4_Address_end,v_IPaddrv4_end);
+            f_VZ_ConvertIpv6Addr2Int(px_Iot_Service_Platform_IPv6_Address_start,v_IPaddrv6_start);
+            f_VZ_ConvertIpv6Addr2Int(px_Iot_Service_Platform_IPv6_Address_end,v_IPaddrv6_end);
+            if(v_IPaddrv4_start>v_IPaddrv4_end)
+            {
+                log("px_Iot_Service_Platform_IPv4_Address_start IP is higher than px_Iot_Service_Platform_IPv4_Address_end IP");
+                log("Kindly interchange IPs of px_Iot_Service_Platform_IPv4_Address_start with px_Iot_Service_Platform_IPv4_Address_end");
+                log("px_Iot_Service_Platform_IPv4_Address_start should be smaller than px_Iot_Service_Platform_IPv4_Address_end");
+                f_SetVerdictInconc(__FILE__, __LINE__, "Incorrect IPv4 start and IPv4 end configuration");
+            }
+            for(v_index := 1; v_index < lengthof(v_IPaddrv6_start)+1;v_index := v_index + 1)
+                            {
+                                if((v_IPaddrv6_start[lengthof(v_IPaddrv6_start)-v_index]) > (v_IPaddrv6_end[lengthof(v_IPaddrv6_start)-v_index]))
+                                   {
+                                    invalid_value := true;
+                                    }
+                                else
+                                   {
+                                    invalid_value := false;
+                                    }
+                                
+                            }
+            
+            if(invalid_value)
+            {
+                log("px_Iot_Service_Platform_IPv6_Address_start IP is higher than px_Iot_Service_Platform_IPv6_Address_end IP");
+                log("Kindly interchange IPs of px_Iot_Service_Platform_IPv6_Address_start with px_Iot_Service_Platform_IPv6_Address_end");
+                log("px_Iot_Service_Platform_IPv6_Address_start should be smaller than px_Iot_Service_Platform_IPv6_Address_end");
+                f_SetVerdictInconc(__FILE__, __LINE__, "Incorrect IPv6 start and IPv6 end configuration");
+                
+            }
+        }
+        else
+        {
+            p_IOT_Service_Platform_URL_List := px_Iot_Service_Platform_URL_List;
+            log("########", testcasename(),  " : Iot Service Platform URL list = ",p_IOT_Service_Platform_URL_List); 
+        }
+        
+        f_NBIOT_Init (c1);
+        f_Delay(5.0);
+        
+        f_NBIOT_CellConfig_Def (nbiot_Cell1 , CONTROL_PLANE);
+        f_NBIOT_SetCellPower ( nbiot_Cell1, tsc_ServingCellRS_EPRE );
+        
+        f_NBIOT_TestBody_Set(true);
+        log("Going to send l2 data");
+        //L2DATA.send(cas_NB_L2_DATA_REQ(cs_NB_ReqAspCommonPart_RB(nbiot_Cell1,tsc_NB_RbId_SRB1bis ), cs_L2Data_Request_PdcpSdu(v_DataReply))); // @sic R5s180192 sic@
+        log("l2 data send to SA");
+        if (match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008g") and px_URL_Based_IOT_Service_Switch == false) 
+            {
+                p_IOT_Service_Platform_IPv4_Start := px_Iot_Service_Platform_IPv4_Address_start;        //legacy IP range implementation
+                p_IOT_Service_Platform_IPv4_End := px_Iot_Service_Platform_IPv4_Address_end;
+            }
+         else if (match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008g") and px_URL_Based_IOT_Service_Switch == true) 
+            {
+                p_IOT_Service_Platform_IPv4_Start := "255.255.255.255";        //255.255.255.255 is block all IP packets
+                p_IOT_Service_Platform_IPv4_End := "255.255.255.255";
+            }
+        else
+            {
+                p_IOT_Service_Platform_IPv4_Start := "0.0.0.0";        //0.0.0.0 is block all IP packets
+                p_IOT_Service_Platform_IPv4_End := "0.0.0.0";
+            }
+        
+        
+        if(lengthof(px_File_1_GB) == 0 )
+        {
+            f_NBIOT_SS_ConfigDRBTraffic (nbiot_Cell1, NO_TRAFFIC, px_UE_ID, px_IPv4_Address1_UE, omit, UDP_FDX_TYPE, 
+                                         v_ue_category, v_Session_ID, -, ENABLE_STATS, -, -,
+                                         -,-, -, v_Internet_Switch, p_IOT_Service_Platform_IPv4_Start, p_IOT_Service_Platform_IPv4_End,
+                                         -,-,p_IOT_Service_Platform_URL_List, -, -, true);
+            log("Wireshark logging disabled");
+        }
+        else
+        {
+            f_NBIOT_SS_ConfigDRBTraffic (nbiot_Cell1, NO_TRAFFIC, px_UE_ID, px_IPv4_Address1_UE, omit, UDP_FDX_TYPE, 
+                                         v_ue_category, v_Session_ID, px_File_1_GB, ENABLE_STATS, -, -, 
+                                         -, -, -, v_Internet_Switch, p_IOT_Service_Platform_IPv4_Start, p_IOT_Service_Platform_IPv4_End,
+                                         -,-,p_IOT_Service_Platform_URL_List, -, -, true);
+            log("Wireshark logging Enabled");  
+        }
+        /* Switch on the DUT */
+       // f_NBIOT_SwitchOnUEandStartIP(nbiot_Cell1); JONI COMMENT THIS LINE AND ADDED A NBIOT SWITCH ON CMD HERE
+        f_UT_SwitchOnUE(UT, true);
+        log(testcasename(),  " : Switch on CMD sent to DUT");
+       /* v_AttachType := f_GetEAttachType(NORMAL);
+        v_AdditionalUpdateType := f_GetAdditionalUpdateType (NORMAL);*/ //JONI COMMENT THIS LINE
+        
+        v_GSMA_TC_default := null;
+        
+        v_GSMA_IotStateMap.v_GSMA_Duration_Timer := 0;
+        v_GSMA_IotStateMap.v_sms_retry_Cntr := 0; //default value for 5.2.2.6
+        v_GSMA_IotStateMap.v_Back_off_Itr_Cntr := 0;
+        v_GSMA_IotStateMap.v_Conn_Attempt[v_GSMA_IotStateMap.v_Back_off_Itr_Cntr].delta_bw_Conn_Attempts :=0.0;
+        v_GSMA_IotStateMap.v_Conn_Attempt[v_GSMA_IotStateMap.v_Back_off_Itr_Cntr].num_of_pkts_rcvd_for_serv_pltf :=0;
+        v_GSMA_IotStateMap.v_Back_off_Itr_Cntr :=1;
+        v_GSMA_IotStateMap.v_Conn_Attempt[v_GSMA_IotStateMap.v_Back_off_Itr_Cntr].delta_bw_Conn_Attempts :=0.0;
+        v_GSMA_IotStateMap.v_Conn_Attempt[v_GSMA_IotStateMap.v_Back_off_Itr_Cntr].num_of_pkts_rcvd_for_serv_pltf :=0;
+        v_GSMA_IotStateMap.v_GSMA_State_Timer_Expired :=false; //v_duration timer started
+        v_GSMA_IotStateMap.b_UL_ReportsRequired := true;
+        
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+        
+
+        f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+        log(testcasename(),  " : RRC Connection Request Count : 1");
+        log(testcasename(),  " : DUT successfully Attached with the Network");
+        log(testcasename(),  " : [RRC State Change]: RRC-IDLE -> RRC-CONNECTED");
+       // v_GSMA_TC_default := activate(a_EUTRA_StandardDefault_Vz_TC_Specific(eutra_Cell1)); //JONI COMMENT THIS LINE
+        log(testcasename(),  " : Default Spurious message handling started");
+        
+        if ( match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_001")) 
+        {
+             f_NBIOT_UserPlaneSignallingSRBHandling_CP(nbiot_Cell1);
+            
+        }
+        else if ( match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008g"))
+        {
+            f_NBIOT_UserPlaneSignallingSRBHandling_CP_ignore_data(nbiot_Cell1);
+        }
+       
+        if(b_RachHandling_RLF_FromScript)
+        {
+            f_NBIOT_SS_ConfigRachPreambleIndMode (nbiot_Cell1, tsc_L1Mac_IndicationMode_Enable);
+        }
+       
+        if (not match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_001")) 
+        {
+            log(testcasename(),  " : Waiting for device to backoff after failed connection attempt to IOT Service Platform");
+        }
+        else
+        {
+            log(testcasename(),  " : [Test Procedure STEP 2] Observing RRC State changes");
+        }
+        
+      //  f_VZ_IOT_Common_Test2_AltBlock_Handler (eutra_Cell1, t_receive_sms_timer); JONI COMMENT THIS
+        
+        if (match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_001")) 
+        {
+          log(testcasename(), " [EXIT CRITERIA]: DUT's Always-on connectivity is successfully verified");
+        }
+        else
+        {
+          log(testcasename(), " [EXIT CRITERIA]: BACK-OFF functionality of DUT is successfully Verified");
+        }
+        
+        f_NBIOT_TestBody_Set(false);
+    } //f_TC_VZ_IOT_5_2_2_5_Test2_EUTRA
+    
+}

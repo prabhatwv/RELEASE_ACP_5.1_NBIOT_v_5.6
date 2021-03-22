@@ -1,0 +1,1911 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module IMSLESS_SS_ESM_TESTCASES 
+{
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CIOT_NASTemplates all;
+  import from CommonDefs all;
+  import from CommonAspDefs all;
+  import from Common4G5G_Templates all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_LoopBack_Templates all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NB_Parameters all;
+  import from EUTRA_Component all;
+  import from EUTRA_NB_SecurityDefinitionsAndExternalFunctions all;
+  import from LoopbackIP all;
+  import from NAS_CommonTemplates all;  
+  import from NBIOT_ASP_SrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CellInfo all;
+ /* import from EUTRA_CellInfoInit all; */
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from EUTRA_Component all;
+  import from NBIOT_ConfigurationSteps all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+  import from NBIOT_LoopBack all;
+  import from NBIOT_NASSteps all;
+  import from NBIOT_Parameters all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_RRC_Common all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_SRB_DRB_Templates all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SecuritySteps all;
+  import from NBIOT_SysInfo_Templates all;
+/*  import from EUTRA_SRB_Templates all;*/
+  import from NBIOT_Timing all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterPtcToMtcDefs all;
+  import from EUTRA_NB_NASSteps all;
+  import from EUTRA_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  import from EUTRA_NB_RRC_Templates all;
+  import from IMS_PTC_CoordMsg all;
+  import from EUTRA_NB_AuxiliaryFunctions all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_ESM_Testcases all;
+  import from UpperTesterCommon all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from SS_NBIOT_CommonProcedures all;
+  import from  LTE_IMSLESS_VzSuppl_Testsuite all;
+  
+
+
+function f_SUPLCONFIMSLESS_TC_2_1_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+    var charstring v_sApn := "vzwadmin";
+      
+    VZ_LOG(-,-,-,"NBIOT INITIAL ATTACH (WITH PIGGYBACKING) ");             
+    VZ_LOG(-,-,-,"Guard Timer value is 360 seconds");  
+    f_NBIOT_Init(c1, CONTROL_PLANE, LTE_AllCellsOnSamePLMN);
+    
+    // Create cell and send out system information
+
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+    VZ_LOG(-,-,-,"Validating steps 1, 1a to 1g, 2, 2a"); 
+    f_NBIOT_Preamble_connected(nbiot_Cell1, CONTROL_PLANE);
+    VZ_LOG(-,-,-,"Validated steps 1, 1a to 1g, 2, 2a");  
+    f_Delay(1.0);
+      //postamble//
+    
+    VZ_LOG(-,-,-,"Postamble Execution Start");   
+     f_NBIOT_TestBody_Set(false);
+     f_NBIOT_ReleaseAllCells();
+    f_UT_PowerOffUE (UT);
+     
+    VZ_LOG(-,-,-,"Postamble Execution Completeted successfully");   
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "TC_2_1_NBIOT Successfully verified the Expected Result : The UE waits at least waitTime " &
+                                                           "seconds between transmissions of RRC connection attempts");
+ 
+  
+  }
+function f_SUPLCONFIMSLESS_TC_2_2_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+  }
+function f_SUPLCONFIMSLESS_TC_2_3_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+    var charstring v_apn := px_INTERNET_APN;    
+    
+    var charstring v_ClientIpAddress := px_IPv6_Address1_UE; 
+    var octetstring v_RouterAdv; 
+    timer t1_MinTmr := 120.0;   
+    timer t2_MinTmr := 270.0;  
+    var UInt32_Type v_PreferredLifetime := 3 * 60; // 3 mins  
+    var UInt32_Type v_ValidLifetime := 3 * 60; // 3 mins
+    var UInt16_Type v_RouterLifetime := 5 * 60; // 5 mins      
+    var charstring v_TestcaseName := testcasename();    
+    var default v_Additional_Default_Handler;
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+     var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+      var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+       
+           
+    VZ_LOG(-,-,-,"IPV6 ADDRESS ASSIGNMENT ");   
+    
+    VZ_LOG(-,-,-,"Guard Timer value is 600 seconds");  
+   
+    f_NBIOT_Init(c1); 
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    
+    f_UT_SwitchOnUE(UT, true);
+    VZ_LOG(-,-,"Step1","Configureg the UE to perform the Initial Attach procedure to the LTE network");   
+  
+    VZ_LOG(-,-,-,"Initiating the Initial Attach procedure as per Section 2.1"); 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+ 
+      
+    VZ_LOG(-,-,"Step2","Initial Attach procedure in Section 2.1 is completed"); 
+      
+    VZ_LOG(5,-,"Step2a","Confirm that the UE does not send out any Neighbor Solicitation messages during the initial Attach procedure");     
+    VZ_LOG(3,-,-,"UE does not send out any Neighbor Solicitation messages during the initial Attach");     
+    VZ_LOG(4,-,-,"UE did not send any DRB data during attach so no Neighbor Solicitation messages received during the initial Attach procedure");
+      
+    VZ_LOG(5,-,"Step2b","Does the UE send out the Router Solicitations to P-GW, using the link-local address, which is formed using the interface id received in the PDN Address information element of the ACTIVATE DEFAULT EPS BEARER CONTEXT REQUEST message?");     
+    VZ_LOG(2,-,-,"ROUTER SOLICITATION");
+    VZ_LOG(3,-,-,"UE sends out the Router Solicitations to P-GW, using the link-local address constructed using the interface id received in the PDN Address from network"); 
+         
+    f_VZ_NBIOT_Receive_Router_Solicit_Msg();
+  
+    VZ_LOG(-,-,-,"Postamble Execution Start");   
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    VZ_LOG(-,-,-,"Postamble Execution Completeted successfully");  
+   
+  }
+function f_SUPLCONFIMSLESS_TC_2_4_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+    var charstring v_TcName := testcasename() & ": ";
+    timer t_GuardTimer := tsc_GuardTimePreamble;
+            
+    f_NBIOT_Init(c1); 
+     
+    log(v_TcName,"Step 1: Configure Cell"); 
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);  
+    
+    log(v_TcName,"Step 1: Configured Cell");
+    
+    t_GuardTimer.start;
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);    
+    t_GuardTimer.stop;  
+    
+    f_NBIOT_TestBody_Set(true);
+    fl_SUPLCONFIMSLESS_TC_2_4_Body();
+    f_NBIOT_TestBody_Set(false);  
+    
+       
+  }
+      
+  function fl_SUPLCONFIMSLESS_TC_2_4_Body() runs on NBIOT_PTC
+  {
+    var charstring v_TcName := testcasename() & ": "; 
+    timer t_T60sec;
+    timer t_T180sec;
+    timer t_T240sec;
+    timer t_T1sec;
+    var integer i;
+      
+    var charstring v_Apn1 := "VZWINTERNET";
+    var charstring v_Apn2 := "VZWADMIN";
+    v_Apn1 := "VZWINTERNET";
+    
+    for (i := 1; i < 4; i := i+1) { 
+    
+       
+        
+        if(i == 1)
+        {
+                log(v_TcName,"Step 1: Using AT MMI mapping to Disable ",v_Apn1," and Enable ",v_Apn2);
+                fl_UT_ApplyCommand(UT, cas_UT_Req(DEACTIVATE_INTERNET_APN, NO_CNF_REQUIRED));
+                f_Delay(5.0);
+                fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+            
+        }
+        else if (i ==2)
+        {
+                log(v_TcName,"Step 2: Using AT MMI mapping to Disable ",v_Apn2," and Enable ",v_Apn1);
+                fl_UT_ApplyCommand(UT, cas_UT_Req(DEACTIVATE_ADMIN_APN, NO_CNF_REQUIRED));
+                f_Delay(5.0);
+                fl_UT_ApplyCommand(UT, cas_UT_Req(ACTIVATE_INTERNET_APN, NO_CNF_REQUIRED));    
+                }
+        else
+        {   
+                log(v_TcName,"Step 3: Using AT MMI mapping to Disable ",v_Apn1," and Disable ",v_Apn2);
+                fl_UT_ApplyCommand(UT, cas_UT_Req(DEACTIVATE_INTERNET_APN, NO_CNF_REQUIRED));
+        }
+             log(v_TcName,"Configuration applied using AT MMI mapping");
+            
+        
+      f_NBIOT_SS_ConfigRachPreambleIndMode (nbiot_Cell1, enable);
+      fl_UT_ApplyCommand(UT, cas_UT_Req(POWER_CYCLE, NO_CNF_REQUIRED));
+      t_T60sec.start(60.0);
+      alt
+      {
+      []SYSIND.receive(car_NB_RachPreamble_IND(nbiot_Cell1))
+          {
+                if(i == 1)
+                {
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,"Step 1a: UE sends Random access preamble despite "&v_Apn1&" is disabled");   
+                }
+                else if (i ==2)
+                {
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,"Step 2a: UE sends Random access preamble despite "&v_Apn2&" is disabled");  
+                }
+                else
+                {
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,"Step 3a:UE sends Random access preamble despite both "&v_Apn1&" and "&v_Apn2&" is disabled");
+                }   
+               
+           }
+      
+      []t_T60sec.timeout
+          {
+                if(i == 1)
+                {
+                    log(v_TcName,"Step 1a:T60 sec timeout -- UE didn't send any random access preamble");
+                }
+                else if (i ==2)
+                {
+                    log(v_TcName,"Step 2a:T60 sec timeout -- UE didn't send any random access preamble");
+                }
+                else
+                {
+                    log(v_TcName,"Step 3a:T60 sec timeout -- UE didn't send any random access preamble");
+                }
+                //f_NBIOT_SetCellPower(nbiot_Cell1, tsc_NonSuitableOffCellRS_EPRE);
+                f_Delay(1.0);
+                
+          }
+    };
+    } //End of for loop
+     
+     f_NBIOT_SS_ConfigRachPreambleIndMode (nbiot_Cell1,disable);
+
+     
+     
+     
+     log(v_TcName,"Power Off the Device");
+     f_UT_SwitchOffUE (UT, false); 
+      
+     log(v_TcName,"Release All Cells");
+     f_NBIOT_ReleaseAllCells();
+     
+      
+  }
+    
+    
+function f_SUPLCONFIMSLESS_TC_2_5_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+       var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B); 
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+    timer t_Procedure_Guard_Timer;
+    log(testcasename()," UE INITIATED PDN CONNECTION (EMM-CONNECTED)   ");
+    log(testcasename()," Guard Timer value is 360 seconds");    
+    f_NBIOT_Init(c1);    
+   // f_NBIOT_NAS_Init(LTE_AllCellsOnSamePLMN, c1);  // @sic R5s106627 sic@
+  
+    log(testcasename(),"  Step 1: Configure Cell");
+	f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE); 
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(testcasename(),"  Step 1: Configured Cell");
+      
+    log(testcasename(),"  Preamble Execution Start");
+//    f_NBIOT_Preamble_connected(nbiot_Cell1,CONTROL_PLANE);
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+    f_Delay(1.0);
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1,CONTROL_PLANE);
+    log(testcasename(),"  Preamble Execution Done");
+   
+    f_NBIOT_TestBody_Set(true);  
+    fl_TC_SUPLCONFIMSLESS_2_5_Body();
+    
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    f_NBIOT_TestBody_Set(false);  
+    
+  }
+    
+ function fl_TC_SUPLCONFIMSLESS_2_5_Body() runs on NBIOT_PTC
+ {
+    timer t_WaitTime;
+    var float v_RRCRetryTime;
+    var octetstring p_APN_Value := tsc_APN1; 
+    var NAS_MSG_Indication_Type v_NasInd_Rxd; 
+    //var NAS_AttDetValue_Type v_AttachReq;
+     var template (present) NAS_UL_Message_Type v_AttachReq;
+    var charstring v_sApn := "?vzwadmin";
+    var EPS_BearerIdentity v_EpsBearerId2 := '6'H;
+    var template (omit) EPS_BearerContextStatus v_EpsBearerCtxtStatus;
+    var GutiParameters_Type v_Guti1_Params; 
+    timer t_Procedure_Guard_Timer;
+//    timer t_WaitTime;
+    var default v_AdminApp_pdn := null;
+    var float tsc_GuardProcedureTimer_240 := 240.0;
+    var float tsc_GuardProcedureTimer_60 := 240.0;
+    var integer v_XtdWaitTime := 10;
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    //var B3_Type v_PDNType := f_GetPdnType();
+    var template (present) B2_Type v_PNB := '01'B;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    var integer v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+    var template (omit) RRCConnSetupComplete_AttachWithoutPDN_Type v_AttachWithoutPDN := omit;
+    var GutiParameters_Type v_Guti_Params1;
+    var template DeviceProperties v_DevicePropertiesEMM := cr_DeviceProperties('D'H) ifpresent;
+    var template DeviceProperties v_DevicePropertiesESM := cr_DeviceProperties('C'H) ifpresent; 
+    var charstring v_TcName := testcasename() & ": ";
+    var NB_SRB_COMMON_IND v_ReceivedAspRRC;
+    var   NAS_UL_Message_Type v_PDNConnectivityReq;  
+   
+     // After RRC connection release sent to UE, UE should not trigger any message as Per Test Plan.
+    // If triggered, failing the testcase immediately.
+    // To check that, introduced 10 second delay after RRC Connection release message sent to you.
+    // Next message UE need to send, after AT command triggered to UE for ADMIN Pdn.
+    log("Waiting for 10 sec. UE should not trigger any message. If triggered, doing testcase fail");
+    f_Delay(10.0);
+      
+    if(pc_SMS0_Enable == false)
+    {
+        log(v_TcName, "Waiting to receive Service Request from the DUT Automatically (If App is running on DUT)");
+        SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))->value v_ReceivedAspRRC;
+        if(ispresent(v_ReceivedAspRRC.Signalling.Rrc.Ccch.message_.c1.rrcConnectionRequest_r13.criticalExtensions.rrcConnectionRequest_r13.ue_Identity_r13.s_TMSI))
+                {
+                    log("Received RRC Connection Request UE identity is S-TMSI");
+                }
+                else
+                {
+                    log("Received RRC Connection Request message UE Identity is not S-TMSI");
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__,"Received RRC Connection Request message UE Identity is not S-TMSI");
+                }
+        
+                f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+       
+                
+
+                v_NasInd_Rxd := f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),
+                                                            cr_NAS_Indication (tsc_SHT_IntegrityProtected,  // @sic R5s170962 sic@
+                                                                   cr_CONTROL_PLANE_SERVICE_REQUEST(?, -, -, -, v_DevicePropertiesEMM)));
+                                                                                          
+                SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_SERVICE_ACCEPT)));
+              
+                v_PDNConnectivityReq := f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);
+                f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnectivityReq,char2oct(v_sApn));     
+            
+       }
+        else
+       {
+           fl_TC_IMSLESS_SendLteSMS(); // Admin Using SMS
+       }
+        log(v_TcName, "Validation done for Step 2 to Step 6a"); 
+     
+ }
+    
+function f_SUPLCONFIMSLESS_TC_2_6_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+   }
+    
+ 
+   
+function f_SUPLCONFIMSLESS_TC_2_8_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {  
+      var charstring v_TcName := testcasename() & ": ";
+       var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+    
+    f_NBIOT_Init(c1);  // @sic R5s106627 sic@
+    // Create cell and send out system information
+     
+    
+	f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+      
+    f_UT_SwitchOnUE(UT, true);
+   
+    log(v_TcName, "NETWORK INITIATED PDN DISCONNECT (EMM-CONNECTED) ");    
+    
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+   
+    log(v_TcName, "The UE under test should have already completed the Initial Attach procedure resulting in the setup of a default Internet PDN bearer.");  
+      f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), "vzwadmin");    
+  
+    
+    fl_TC_2_8_Body();
+    
+    f_NBIOT_TestBody_Set(false);
+    
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName,"Cell is released"); 
+    f_UT_PowerOffUE (UT);
+    log(v_TcName,"UE is Powered off");
+    
+  }
+    
+    function fl_TC_2_8_Body() runs on NBIOT_PTC
+  { // @sic R5-104734 sic@
+    var EPS_BearerIdentity v_EpsBearerId2 := '6'H; // default bearer on additional PDN
+    var template (value) ESM_Cause v_EsmCause;
+    var NAS_MSG_Indication_Type v_NasInd;
+    var template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId2)};
+    var PDN_DISCONNECT_REQUEST v_PDNDiscReq;
+    var ProcedureTransactionIdentifier v_EpsTi := int2oct(tsc_RRC_TI_Def,1);//'02'O;//tsc_PTI_Unassigned;
+    var NasCount_Type v_NasCountUL;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var NBIOT_SecurityParams_Type v_SecurityParams := f_NBIOT_Security_Get();
+    var charstring v_TcName := testcasename() & ": ";
+    var integer v_stepno;
+    //  The SS transmits a DEACTIVATE EPS BEARER CONTEXT REQUEST
+    //@siclog "Step 3" siclog@
+    v_EsmCause := cs_ESM_Cause_v ('00100100'B); // #36 regular deactivation
+     
+      v_stepno := 1;
+      log(v_TcName, "Step",v_stepno,":Network simulator sends a PDN Disconnect request for the Administrative PDN");      
+   
+    log(v_TcName, "Step",v_stepno+1,"a:The network simulator send RRC Connection reconfiguration message with ESM:DEACTIVATE EPS BEARER CONTEXT REQUEST ");
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_DeactivateEPSBearerCxtReq('6'H,
+                                                                                   v_EpsTi,
+                                                                                   v_EsmCause))));  
+     log(v_TcName, "Step",v_stepno+2,": does the UE transmit DEACTIVATE EPS BEARER CONTEXT ACCEPT message?");
+    
+      alt{
+      []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_DeactivateEPSBearerCxtAccept('6'H,
+                                                                                             v_EpsTi)))){}
+       []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (('5'H,'6'H), cr_UserDataContainer(?, ?), omit)))) {repeat;}
+     
+     } 
+      
+   
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName &"Received DEACTIVATE EPS BEARER CONTEXT ACCEPT");
+      
+   //Step 5:Network Initiated UE Context release
+    log(v_TcName, "Step",v_stepno+3,"a: Network simulator sends the RRC connection Release message to the UE ");
+    f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, disable);       //added for LCCP-2346
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    log(v_TcName, "Step",v_stepno+3,"b:Does UE send an RLC ACKnowledgement to the SS?"); 
+    log("######## USER Should Verify UE logs to check whether UE has sent RLC ACK or not in response of RRC Connection  release ########");  
+    //VZ_f_EUTRA_RRC_ConnectionRelease(eutra_CellA);
+  } 
+    
+    
+function f_SUPLCONFIMSLESS_TC_2_9_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { /* UE INITIATED DETACH FOR E-UTRAN (EMM-CONNECTED) 3 PDNS SCENARIO  */
+    // @sic R5s100313 sic@
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var charstring v_TcName := testcasename() & ": ";
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+    timer t_Procedure_Guard_Timer;
+
+    f_NBIOT_Init(c1);
+    // Create cell and send out system information
+    log(v_TcName, "Configure Cell");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR E-UTRAN (EMM-CONNECTED) 3 PDNS SCENARIO ");    
+    log(v_TcName, "Step1: The UE has to establish 3 PDN connections according to Test Case:VZ_TC_LTESUPSIGCONF_5398 " &
+                  "(UE INITIATED PDN CONNECTION [EMM-CONNECTED])");  
+//    f_NBIOT_Preamble_connected(nbiot_Cell1, CONTROL_PLANE);
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+
+      
+    log(v_TcName, "Step1a: The UE under test has already completed the Initial Attach procedure resulting in the setup of a default VZW INTERNET PDN bearer.");  
+
+    f_NBIOT_TestBody_Set(true);
+
+    fl_TC_SUPLCONFIMSLESS_2_9_Body();
+
+    f_NBIOT_TestBody_Set(false);
+
+    log(v_TcName, "Postamble Execution started");
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName, "Cell is released"); 
+    f_UT_SwitchOffUE (UT, false);
+    log(v_TcName, "UE is Switched off");
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName &" PASSED");
+    log(v_TcName, "Postamble Execution done");
+    log (v_TcName, "<<<<<<<<<< Test Execution Finished >>>>>>>>>>");  
+    
+  }
+    
+    function fl_TC_SUPLCONFIMSLESS_2_9_Body() runs on NBIOT_PTC
+    {
+    var charstring v_TcName := testcasename() & ": ";
+    var charstring v_sApn := "vzwadmin";
+    var GutiParameters_Type v_Guti;
+
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+   
+        log(v_TcName,"SS Sending AT command to UE to connect ADMIN PDN");
+         fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+                 
+         f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);    
+   
+    log(v_TcName, "Step1b: UE is connected to ADMIN PDN");
+
+ 
+    f_UT_InitiateDetach(UT);
+
+    v_Guti := f_NBIOT_CellInfo_GetGuti(nbiot_Cell1);
+
+	alt
+	{
+		  []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,?, // @sic R5s160263 sic@
+							  cr_NAS_Indication(?,cr_508_DETACH_REQUEST_MO(cr_NAS_KeySetIdentifier (?, ?), // @sic R5s110031 sic@
+												f_GutiParameters2MobileIdentity(omit, v_Guti),  // @sic R5s090225, R5s090310 sic@
+												 ?)))) // @sic R5-103675 sic@
+		   {
+               log(v_TcName, "Step3: UL Information Transfer Received");
+			   log(v_TcName, "Step3a: UL Information Transfer with the EMM: Detach Request");
+           }
+
+          [] any port.receive 
+           {
+               if(pc_DebugPrint_Enable){
+                   log(v_TcName, "UE triggered unexpected message");
+               }
+               repeat;    
+           }
+    }
+   
+ }
+    
+function f_SUPLCONFIMSLESS_TC_2_10_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+    timer t_Procedure_Guard_Timer;
+    var charstring v_TcName := testcasename() & ": ";
+
+    f_NBIOT_Init(c1);
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+   
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR NBIOT (EMM-IDLE) 3 PDNS SCENARIO ");    
+   
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+
+      
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+
+   
+
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+ 
+    
+    fl_TC_SUPLCONFIMSLESS_2_10_Body(); 
+
+    f_NBIOT_TestBody_Set(false);
+
+     f_NBIOT_ReleaseAllCells();
+     f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName &" PASSED");
+     log (v_TcName, "<<<<<<<<<< Test Execution Finished >>>>>>>>>>");  
+
+  }
+  function fl_TC_SUPLCONFIMSLESS_2_10_Body() runs on NBIOT_PTC
+{
+    var charstring v_sApn := "vzwadmin";
+    var charstring v_TcName := testcasename() & ": ";
+    var GutiParameters_Type v_Guti;
+    var integer v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+    var template DeviceProperties v_DevicePropertiesEMM := cr_DeviceProperties('D'H) ifpresent;
+  
+    log(v_TcName,"SS Sending AT command to UE to connect ADMIN PDN");
+   
+    f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);    
+    log(v_TcName, "Step1b: UE is connected to ADMIN PDN");
+
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1);
+    
+       
+    f_NBIOT_RRC_ConnectionRequest_Def(nbiot_Cell1);
+         
+       
+    f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+       
+    
+
+     f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),
+                                                            cr_NAS_Indication (tsc_SHT_IntegrityProtected,  // @sic R5s170962 sic@
+                                                                   cr_CONTROL_PLANE_SERVICE_REQUEST(?, -, -, -, v_DevicePropertiesEMM)));
+                                                                                          
+     SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_SERVICE_ACCEPT)));
+      
+    
+     v_Guti := f_NBIOT_CellInfo_GetGuti(nbiot_Cell1);
+    f_UT_SwitchOffUE (UT, false);
+    alt
+	{
+		  []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,?, // @sic R5s160263 sic@
+							  cr_NAS_Indication(?,cr_508_DETACH_REQUEST_MO(cr_NAS_KeySetIdentifier (?, ?), // @sic R5s110031 sic@
+												f_GutiParameters2MobileIdentity(omit, v_Guti),  // @sic R5s090225, R5s090310 sic@
+												 ?)))) // @sic R5-103675 sic@
+		   {
+               log(v_TcName, "Step5: UL Information Transfer Received");
+			   log(v_TcName, "Step5a: UL Information Transfer with the EMM: Detach Request");
+           }
+
+          [] any port.receive 
+           {
+               if(pc_DebugPrint_Enable){
+                   log(v_TcName, "UE triggered unexpected message");
+               }
+               repeat;    
+           }
+         []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {repeat;}
+       
+    } 
+    
+}  
+function f_SUPLCONFIMSLESS_TC_2_11_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+    timer t_Procedure_Guard_Timer;
+    var charstring v_TcName := testcasename() & ": ";
+
+    f_NBIOT_Init(c1);
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);  
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+    
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR NBIOT (EMM-IDLE) 3 PDNS SCENARIO ");    
+  
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+      
+    fl_TC_SUPLCONFIMSLESS_2_11_Body();  
+    f_NBIOT_TestBody_Set(false);
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName,"Cell is released");   
+ 
+  }
+    function fl_TC_SUPLCONFIMSLESS_2_11_Body() runs on NBIOT_PTC
+  {
+    var charstring v_TcName := testcasename() & ": ";  
+    var charstring v_sApn := "vzwadmin";
+    f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);    
+    log(v_TcName, "Step1b: UE is connected to ADMIN PDN");
+
+    SRB.send(cas_NB_SRB1bis_NasPdu_REQ(nbiot_Cell1,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_508_DETACH_REQUEST_MT(cs_DetachType(tsc_DetachMT_NoReAttach), omit))));
+ 
+    log (v_TcName,"Step3: Check Does the UE send a UL Information Transfer message to the eNB carrying the EMM:Detach Accept message");
+
+    alt{  
+    []SRB.receive(car_NB_SRB1bis_NasPdu_IND(nbiot_Cell1,  // @sic R5s180287 sic@
+                                          cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                            cr_508_DETACH_ACCEPT))){}
+      []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))) {repeat;}
+       
+    }
+    log (v_TcName,"Step3a: UE sent a UL Information Transfer message to the eNB carrying the EMM:Detach Accept message");  
+    f_NBIOT_PreliminaryPass (__FILE__, __LINE__,"step3");
+  
+    f_NBIOT_RRC_ConnectionRelease(nbiot_Cell1); 
+  }
+    
+function f_SUPLCONFIMSLESS_TC_2_12_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+      var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B); 
+    timer t_Procedure_Guard_Timer;  
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+     var charstring v_TcName := testcasename() & ": ";
+      
+    var float t_WaitTime;
+    f_NBIOT_Init(c1);
+    t_WaitTime := 10.0;
+	log(v_TcName, "Configure Cell");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);   
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+
+    VZ_LOG(-,-,-,"UE RE-INITIATED CONNECTION TO INTERNET PDN AFTER DISCONNECTED");   
+      
+    VZ_LOG(-,-,-,"Guard Timer value is 360 seconds");
+  
+    VZ_LOG(7,-,-,"The UE under test shall have already completed the initial Attach procedure to connect to the Internet PDN and established a connection to the Administrative PDN");  
+  //  f_NBIOT_Preamble_connected(eutra_CellA, STATE2_IDLEUPDATE);     
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+  
+    t_Procedure_Guard_Timer.stop;  
+      
+      
+      VZ_LOG(6,-,-,"Initial Attach procedure in Section 2.1 is completed"); 
+       f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), "vzwadmin");    
+    log(v_TcName, " UE is connected to ADMIN PDN");
+
+    fl_TC_SUPLCONFIMSLESS_2_12_Body();    
+     f_NBIOT_TestBody_Set(false);
+      f_NBIOT_ReleaseAllCells();
+    f_UT_SwitchOffUE(UT, false);
+    VZ_LOG(-,-,-,"Postamble Execution Completeted successfully");   
+  }
+    
+  function fl_TC_SUPLCONFIMSLESS_2_12_Body() runs on NBIOT_PTC
+  {
+      // @sic R5-104734 sic@
+    var NAS_UL_Message_Type v_PDNConnectivityReq;  
+    var charstring v_sApn := "?VZWINTERNET";  
+    var EPS_BearerIdentity v_EpsBearerId2 := '5'H; // default bearer on additional PDN
+    var template (value) ESM_Cause v_EsmCause;
+    var NAS_MSG_Indication_Type v_NasInd;
+    var template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId2)};
+    var PDN_DISCONNECT_REQUEST v_PDNDiscReq;
+    var ProcedureTransactionIdentifier v_EpsTi := int2oct(tsc_RRC_TI_Def,1);//'02'O;//tsc_PTI_Unassigned;
+    var NasCount_Type v_NasCountUL;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var NBIOT_SecurityParams_Type v_SecurityParams := f_NBIOT_Security_Get();
+  //  var template (value) EUTRA_FDD_TDD_CellInfo_Type v_EUTRA_FDD_TDD_Info := f_EUTRA_CellInfo_GetFDD_TDD_Info (eutra_CellA); //Get FDD or TDD mode from Cell-configuration
+  //  var template (value) DRB_ToAddModList_NB_r13 v_DRB_ToAddModList;
+      
+     VZ_LOG(-,-,"Step1","Network simulator Initiates the PDN disconnect from Internet PDN");
+      
+     VZ_LOG(2,-,-,"DEACTIVATE EPS BEARER CONTEXT REQUEST"); 
+  
+    v_EsmCause := cs_ESM_Cause_v ('00100100'B); // #36 regular deactivation
+      SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_DeactivateEPSBearerCxtReq('5'H,
+                                                                                   v_EpsTi,
+                                                                                   v_EsmCause))));  
+     alt{
+      []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_DeactivateEPSBearerCxtAccept('5'H,
+                                                                                             v_EpsTi)))){}
+       []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (('5'H,'6'H), cr_UserDataContainer(?, ?), omit)))) {repeat;}
+     
+     }   
+      v_PDNConnectivityReq := f_NBIOT_TriggerAdditionalPDN_Modified_SS_2(nbiot_Cell1,'5'H,CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_INTERNET_APN), v_sApn);
+      log("v_PDNConnectivityReq", v_PDNConnectivityReq);
+      f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnectivityReq,char2oct(v_sApn)); 
+      
+  }     
+    
+    function fl_TC_SUPLCONFIMSLESS_2_16_Body() runs on NBIOT_PTC
+    {
+      var charstring v_sApn := "?vzwadmin";  
+      var NAS_UL_Message_Type v_PDNConnectivityReq;     
+      v_PDNConnectivityReq :=f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);    
+      log(" UE is connected to ADMIN PDN");
+      f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnectivityReq,char2oct(v_sApn)); 
+    } 
+    
+function f_SUPLCONFIMSLESS_TC_2_16_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+       var charstring v_TcName := testcasename() & ": ";  
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    timer t_Procedure_Guard_Timer;
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;    
+      f_NBIOT_Init(c1);
+    // Create cell and send out system information
+    log(v_TcName, "Configure Cell");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE); 
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+    
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR NBIOT (EMM-IDLE) 3 PDNS SCENARIO ");    
+    
+     f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+      
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+
+    f_NBIOT_TestBody_Set(true);
+
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+      
+    fl_TC_SUPLCONFIMSLESS_2_16_Body();  
+    f_NBIOT_TestBody_Set(false);
+    f_NBIOT_ReleaseAllCells();
+    f_UT_SwitchOffUE(UT, false);
+    
+  }
+function f_SUPLCONFIMSLESS_TC_2_17_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+      var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    timer t_Procedure_Guard_Timer;  
+      
+    var ProcedureTransactionIdentifier v_EpsTi := tsc_PTI_Unassigned;  
+    var charstring v_sApn := "vzwadmin";  
+    var PDN_TypeToBeUsed_Type v_PDN_TypeToBeUsed;
+    var ProcedureTransactionIdentifier v_EPS_TI;
+    var O2_Type v_ProtocolId :=  'FF00'O ; 
+//    var template (value) DRB_ToAddModList v_DRB_ToAddModList;
+    var octetstring v_PcoAction := '03'O;
+    var template (value) TrafficFlowTemplate v_TrafficFlowTemplate;  
+    var charstring v_TcName := testcasename() &": ";
+    var EPS_BearerIdentity v_EpsBearerId := tsc_EpsDefaultBearerId2;
+           
+    var PDN_Index_Type v_PdnIndex := PDN_2;  
+    var ProcedureTransactionIdentifier v_EpsPti;  
+      
+    v_TrafficFlowTemplate := f_EUTRA_NB_Get_508_TrafficFlowTemplate(1, tsc_EpsDefaultBearerId, f_GetPdnType());
+    v_TrafficFlowTemplate.iei   := '36'O;    
+    v_TrafficFlowTemplate.tftOperationCode := '100'B; // Replace TFT
+    v_TrafficFlowTemplate.packetFilterList[0].spare       := '00'B; //  @sic R5s130195 Baseline Moving sic@
+    v_TrafficFlowTemplate.packetFilterList[0].direction   := '11'B; //  @sic R5s130195 Baseline Moving sic@
+    v_TrafficFlowTemplate.packetFilterList[0].iei         := '0'H;  //  @sic R5s130195 Baseline Moving sic@ @sic R5s170204 sic@
+
+
+    v_TrafficFlowTemplate.noOfPktFilter:='1111'B;  
+    
+    // @sic R5s100360 sic@ @sic R5-113714 sic@
+    log (v_TcName,"NETWORK INITIATED EPS BEARER MODIFICATION WITHOUT QOS UPDATE (EMM-CONNECTED) S");
+    f_NBIOT_Init(c1);    
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log(v_TcName, "Cell Configured Successfully");
+      
+    
+    v_EPS_TI := tsc_PTI_Unassigned;
+    f_NBIOT_TestBody_Set(true);
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+
+ 
+   
+        v_EpsBearerId := tsc_EpsDefaultBearerId;
+        v_PdnIndex := PDN_1;
+    
+   
+    log(v_TcName,"Step2:  Network simulator sends a DL Information Transfer message to the UE carrying UE carrying the Modify EPS Bearer Context Request message, with the following information elements:");
+    log(v_TcName,"        EPS bearer Identity");
+    log(v_TcName,"        TFT with number of packet filters=15");
+    log(v_TcName,"        Protocol Configuration Options = Operator reserved PCO container ID=FF00H, with MCC=311 and MNC=480. Action = 3 (Redirect)");
+
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_ModifyEPSBearerCxtReq(tsc_EpsDefaultBearerId,
+                                                                               v_EpsTi,
+                                                                               omit,v_TrafficFlowTemplate))));
+
+    log(v_TcName,"Check does the UE send ESM:MODIFY EPS BEARER CONTEXT ACCEPT message ?");   
+  
+    // UE transmits a MODIFY EPS BEARER CONTEXT ACCEPT message
+    SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_ModifyEPSBearerCxtAccept(tsc_EpsDefaultBearerId))));
+  
+      
+    log(v_TcName,"Check does the UE send ESM:MODIFY EPS BEARER CONTEXT ACCEPT message ?");   
+      
+    log(v_TcName,"Step3a:UE transmitted a MODIFY EPS BEARER CONTEXT ACCEPT message as specified"); 
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Step3a");
+    f_NBIOT_TestBody_Set(false);
+    
+    
+  }
+    
+    function fl_TC_SUPLCONFIMSLESS_2_18_Body() runs on NBIOT_PTC
+  {
+    var template (value) TrafficFlowTemplate v_TrafficFlowTemplate;   
+    var EPS_BearerIdentity v_EpsBearerId := tsc_EpsDefaultBearerId;  
+    var ProcedureTransactionIdentifier v_EpsTi := tsc_PTI_Unassigned;
+    v_TrafficFlowTemplate := f_EUTRA_NB_Get_508_TrafficFlowTemplate(1, tsc_EpsDefaultBearerId, f_GetPdnType());
+    v_TrafficFlowTemplate.iei   := '36'O;    
+    v_TrafficFlowTemplate.tftOperationCode := '100'B; // Replace TFT
+    v_TrafficFlowTemplate.packetFilterList[0].spare       := '00'B; //  @sic R5s130195 Baseline Moving sic@
+    v_TrafficFlowTemplate.packetFilterList[0].direction   := '11'B; //  @sic R5s130195 Baseline Moving sic@
+    v_TrafficFlowTemplate.packetFilterList[0].iei         := '0'H;  //  @sic R5s130195 Baseline Moving sic@ @sic R5s170204 sic@
+
+
+    v_TrafficFlowTemplate.noOfPktFilter:='1111'B;  
+    
+    // The SS transmits a MODIFY EPS BEARER CONTEXT REQUEST message to add TFT to the default EPS bearer
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                    tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_ModifyEPSBearerCxtReq(v_EpsBearerId,
+                                                                               v_EpsTi,
+                                                                               cds_508_EPS_QoS_Default_1_tlv,
+                                                                               v_TrafficFlowTemplate))));
+//    log(v_TcName,"Check does the UE send ESM:MODIFY EPS BEARER CONTEXT ACCEPT message ?");    
+    // UE transmits a MODIFY EPS BEARER CONTEXT ACCEPT message
+    SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_ModifyEPSBearerCxtAccept(v_EpsBearerId))));
+  }
+    
+    
+function f_SUPLCONFIMSLESS_TC_2_18_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    timer t_Procedure_Guard_Timer;
+    var float tsc_GuardProcedureTimer_240 := 240.0;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;  
+    var charstring v_TcName := testcasename() & ": ";
+      
+    f_NBIOT_Init(c1);
+    // Create cell and send out system information
+    log(v_TcName, "Configure Cell");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);   
+    log(v_TcName, "Cell Configured Successfully");
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    //activate(a_EUTRA_ImsLessDefault(eutra_CellA));
+
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR NBIOT (EMM-IDLE) 3 PDNS SCENARIO ");    
+   // f_Default_Handler_StartStop(eutra_CellA, true, TestPlan_Name);  //Function for Multi-PDN Default Handler
+    f_UT_SwitchOnUE(UT, true);
+    
+    log(" Started Default Procedure Guard Timer ",tsc_GuardProcedureTimer_240 , "s");  
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);  
+    
+    //f_NBIOT_Preamble_connected(nbiot_Cell1, CONTROL_PLANE);
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+      
+    fl_TC_SUPLCONFIMSLESS_2_18_Body();  
+    f_NBIOT_TestBody_Set(false);  
+ 
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Step3a");
+    f_NBIOT_TestBody_Set(false);
+      
+  }
+function f_SUPLCONFIMSLESS_TC_2_19_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+    
+    
+ function fl_TC_SUPLCONFIMSLESS_2_20_Body() runs on NBIOT_PTC
+    {
+    var charstring v_TcName := testcasename() & ": ";
+     var EPS_BearerIdentity v_EpsBearerId2 := '6'H; // default bearer on additional PDN
+    var template (value) ESM_Cause v_EsmCause;
+    var ProcedureTransactionIdentifier v_EpsTi := int2oct(tsc_RRC_TI_Def,1);//'02'O;//tsc_PTI_Unassigned;
+    var template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId2)};
+    var O2_Type v_ProtocolId:='FF00'O ; 
+    const octetstring tsc_contents_PLMN:= '130184'O;
+    v_EsmCause := cs_ESM_Cause_v ('00100100'B); // #36 regular deactivation
+    
+    log (testcasename(),": Step 2: Network simulator sends the RRC Connection Reconfiguration message to the UE");
+    log(v_TcName, "Step7: Configure the test equipment to send a NAS 'Deactivate EPS Bearer Context Request' message to disconnect the Internet PDN");        
+      
+      
+      
+     SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_DeactivateEPSBearerCxtReq('6'H,
+                                                                                   v_EpsTi,
+                                                                                   v_EsmCause,-,-,
+                                                                                    cs_ExtdPCO('0001'O,
+                                                                                    cs_vz_ProtocolContainer_Common(v_ProtocolId,
+                                                                                    4,
+                                                                                                                    tsc_contents_PLMN &'01'O))))));  
+    
+      
+
+    log(v_TcName, "Expecting DEACTIVATE EPS BEARER CONTEXT ACCEPT from UE");
+     
+     alt
+        {
+            
+        []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                           tsc_SRB1bis,
+                                           cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId2, cr_UserDataContainer(?, ?), omit)))){
+             
+                repeat;
+           }
+            
+                                                             
+        [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_DeactivateEPSBearerCxtAccept('6'H,
+                                                                                             v_EpsTi)))){}
+  
+                                    
+        }                                                     
+    log(v_TcName, "Received DEACTIVATE EPS BEARER CONTEXT ACCEPT from UE");
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Step 3a");
+    
+    }
+    
+function f_SUPLCONFIMSLESS_TC_2_20_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+      var charstring v_TcName := testcasename() & ": ";  
+    var charstring v_sApn := "vzwadmin";  
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0; 
+     timer t_Procedure_Guard_Timer;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;  
+    var charstring v_PDN := "INTERNET";  
+    f_NBIOT_Init(c1);
+    // Create cell and send out system information
+    log(v_TcName, "Configure Cell");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1,CONTROL_PLANE);   
+    log(v_TcName, "Cell Configured Successfully");
+    //activate(a_EUTRA_ImsLessDefault(eutra_CellA));
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    log (v_TcName,"<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED DETACH FOR NBIOT (EMM-IDLE) 3 PDNS SCENARIO ");    
+   // f_Default_Handler_StartStop(eutra_CellA, true, TestPlan_Name);  //Function for Multi-PDN Default Handler
+    
+    f_UT_SwitchOnUE(UT, true);
+      
+    t_Procedure_Guard_Timer.start(tsc_GuardProcedureTimer_240); //Guard Procedure Started 
+      
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+    log(v_TcName, "Step1: The UE under test should has already completed the Initial Attach procedure resulting in the setup of a default INTERNET PDN bearer.");  
+    log(testcasename(),": Step 1: UE running an Internet application");
+    
+   
+        
+    log(testcasename(),": SS Sending AT command to UE to connect ADMIN PDN");
+     f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), v_sApn);    
+    log(testcasename(),": Step 1: UE is connected to ",v_PDN, "PDN.");
+      
+    VZ_LOG(-,-,-,"Validating test steps to set up a Default bearer for the VZWADMIN PDN"); 
+     
+    fl_TC_SUPLCONFIMSLESS_2_20_Body();  
+    f_NBIOT_TestBody_Set(false);
+      
+    f_UT_SwitchOffUE(UT,false);
+    f_NBIOT_ReleaseAllCells();  
+  
+  }
+function f_SUPLCONFIMSLESS_TC_2_21_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {  
+  }
+function f_SUPLCONFIMSLESS_TC_2_22_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+       var charstring v_TcName := testcasename() & ": ";
+     var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var float tsc_GuardProcedureTimer_240 := 240.0; 
+     timer t_Procedure_Guard_Timer;  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+     var NAS_MSG_Indication_Type v_NAS_Ind;  
+    
+    log(v_TcName, "TIME RETRIEVAL VIA SIB16 MESSAGE"); 
+    log(v_TcName, "Step1: Power on the UE");
+    f_NBIOT_Init( c7);  // @sic R5s106627 sic@
+    log(v_TcName, "Step2: Configure the network simulator to broadcast the SystemInformationBlockType16 message with 'system time info','daylight saving indicator','local time offset' and 'leap seconds'");
+     
+    
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+    f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+    //Preamble
+    f_UT_SwitchOnUE(UT, true);
+    log(v_TcName, "Step3: UE performs the Initial Attach Procedure");
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+   //
+    fl_TC_2_22_Body();  
+    f_NBIOT_TestBody_Set(false);
+    // Postamble
+   
+    log(v_TcName, "Postamble Execution Start");
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName, "Postamble Execution Done");
+  }
+    
+  function fl_TC_2_22_Body() runs on NBIOT_PTC
+ { 
+    var charstring v_Quote := oct2char ('22'O);
+    var charstring v_Expression_CTZR := "*"&v_Quote&"(*)"&v_Quote&",([0-9])*"&v_Quote&"(*)"&v_Quote; // used for LTZ, DST and Time checking  @sic R5s160161 sic@
+    var charstring v_Expression_CTZR_EMMinfo_Response;
+    var charstring v_TcName := testcasename() & ": "; 
+    var boolean v_isTimeOut := true;
+    timer t_Wait := f_NBIOT_SetTimerToleranceMin( nasTTCNTimer, 5.0 );
+     
+     
+    log("#### ",v_TcName,"USER NEED TO CHECK TIME ZONE AT UE DISPLAY AFTER SIB 16 ADD ####");
+    
+    f_Delay(30.0); //30 seconds delay to check time zone on UE display
+     
+    log(v_TcName, "Step4:Configure the network simulator to send the EMM information message to the UE with the following Information element'Local time zone','universal time and local time,'network day light saving time'");
+     
+     
+    SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,tsc_SRB1bis,
+                                 cs_TimingInfo_Now,
+                                 cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                cs_508_EMMInformation(omit,omit,
+                                                                         cs_TimeZone('40'O), // @sic R5s130067 sic@ @sic R5-142869 sic@
+                                                                         cs_TimeZoneAndTime('01'O, '40'O, '21'O, '31'O, '83'O, '25'O,'40'O),  // @sic R5s140361 sic@
+                                                                         cs_DaylightSavingTime_tlv('01'B)))));
+
+    log(v_TcName, "Step4: SS has sent EMM information message to update Local time zone ,Universal time and local time zone & network daylight saving time");
+     
+     
+     // Check: Does the UE transmit an EMM STATUS message with cause #97 "message type non-existent
+     // or not implemented" in the next 5 seconds
+     
+    t_Wait.start;
+    alt {
+      [] SRB.receive (car_NB_SRB_NasPdu_IND(nbiot_Cell1,tsc_SRB1bis,
+                                          cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                            cr_508_EMMStatus(cr_EMM_Cause_v(tsc_EmmCause_MessageTypeNonExistentOrNotImplemented)))))
+      {
+          t_Wait.stop;
+          log(v_TcName, "Step4: Message type not existent or not implemented");
+      }
+      [] t_Wait.timeout
+      {
+         f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName & " Step4: UE has ignore EMM Information message");
+      }
+    }
+    
+     log("######## USER Should Check does UE display proper time based on data received in system information block type 16 message? ########");  
+   
+     
+ }    
+     
+function f_SUPLCONFIMSLESS_TC_2_23_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_24_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_25_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+      // IMSLess SS 2.25: UE INITIATED TRACKING AREA UPDATE AFTER RADIO LINK FAILURE //
+    var EUTRA_ASN1_PhysCellId_Type v_PhysicalCellIdentity_Cell1, v_PhysicalCellIdentity_Cell2;
+    var EUTRA_ASN1_ShortMAC_I_Type v_ShortMAC_I;
+    var NBIOT_SecurityParams_Type v_AuthParams;
+    var template (value) NB_CellPowerList_Type v_CellPowerList_AtT0, v_CellPowerList_AtT1;
+    var charstring v_TcName := testcasename() & ": ";
+    var GutiParameters_Type v_Guti2_Params;
+    var template (omit) EPS_BearerContextStatus v_EpsBearerCtxtStatus;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;      
+    var NAS_MSG_Indication_Type v_NAS_Ind, v_NasInd;
+    var NAS_PlmnId v_PLMN;
+    var EUTRA_ASN1_TrackingAreaCode_Type v_Tac;
+    var template (value) TrackingAreaIdList v_TaiList;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+    var template (present) EUTRA_ASN1_ReestabUE_Identity_Type v_UE_Identity;
+    var integer v_SelectedPlmnIndex; 
+    timer t_Wait := 2.0;
+  
+
+    log (v_TcName, "<<<<<<<<<< Test Execution Started >>>>>>>>>>");  
+    log(v_TcName, "UE INITIATED TRACKING AREA UPDATE AFTER RADIO LINK FAILURE ");
+    v_CellPowerList_AtT1 := {
+      cs_NB_CellPower (nbiot_Cell2, tsc_NonSuitableOffNBIOTCellRS_EPRE),
+      cs_NB_CellPower (nbiot_Cell1, tsc_ServingCellRS_EPRE)
+    };
+      
+    v_CellPowerList_AtT0 := {
+      cs_NB_CellPower (nbiot_Cell2, tsc_ServingCellRS_EPRE),
+      cs_NB_CellPower (nbiot_Cell1, tsc_NonSuitableOffNBIOTCellRS_EPRE)
+    };
+
+    //f_EUTRA_Init ( c2, -, USE_BIG_GRANTS); //@sic R5s100459 sic@ @sic R5-141101 sic@ 
+    f_NBIOT_Init(c2);
+      
+    //Get Physical cell identity
+    v_PhysicalCellIdentity_Cell1 := f_NBIOT_CellInfo_GetPhyCellId ( nbiot_Cell1 );
+    v_PhysicalCellIdentity_Cell2 := f_NBIOT_CellInfo_GetPhyCellId ( nbiot_Cell2 );  //@sic R5-141101 sic@
+    
+    //Step 1:
+    log("Preconditions: cell-1 (belongs to TAI-1, home PLMN) transmit power is set to -85dbm ");
+    log("Preconditions: cell-2 (belongs to TAI-2, home PLMN) transmit power is set to 'OFF'");
+    //Create and configure cells
+    log(v_TcName, "Step 1: Configure Cell 1");
+    f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+    log(v_TcName, "Step 1: Cell 1 Configured Successfully ");
+
+    log(v_TcName, "Step 1: Configure Cell 2");
+    f_NBIOT_CellInfo_SetTAC(nbiot_Cell2, oct2bit(tsc_TAC2));
+    f_NBIOT_CellConfig_Def(nbiot_Cell2, CONTROL_PLANE); 
+    log(v_TcName, "Step 1: Cell 2 Configured Successfully ");
+
+    // Set Cell 1 power level to -85db and Cell 2 Power level to -145 dbm
+    f_NBIOT_SetCellPowerList(v_CellPowerList_AtT0); 
+    //Preamble
+      
+      
+    //f_EUTRA_Preamble_connected(eutra_Cell1, STATE2_IDLEUPDATE);
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+      t_Wait.start;
+      alt {
+      [] t_Wait.timeout {
+        // just continue
+      }
+      [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                           tsc_SRB1bis,
+                                           cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                             cr_ESM_DATA_TRANSPORT(?, cr_UserDataContainer)))) {
+        log("eSM_DATA_TRANSPORT 2");                                                         
+        
+      }
+      }
+    
+    //Calculate Short MAC-I
+    v_ShortMAC_I := f_NBIOT_Calculate_ShortMAC (nbiot_Cell1, nbiot_Cell2);  
+    
+    f_NBIOT_TestBody_Set ( true );
+      
+    
+    f_NBIOT_SetCellPowerList(v_CellPowerList_AtT1);                // @sic R5s110726 additional changes for change 2 sic@
+    //Step 2:
+    log(v_TcName, "Step 2: Set Cell-1 transmit power to Off and Cell-2 transmit power to -85dbm");  
+    v_UE_Identity := cr_ReestabUE_Identity_NB(tsc_C_RNTI_Def, v_PhysicalCellIdentity_Cell1, v_ShortMAC_I);
+    
+    //@siclog "Step 3" siclog@
+    //Check: Does the UE send RRC connection re-establishment request message on Cell 2?
+    log(v_TcName, "Step 3: Does the UE send RRC Connection reestablishment request message on cell 2");
+         
+     SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell2, cr_RRCConnectionReestablishmentRequest_NB(v_UE_Identity, otherFailure)));
+      
+   
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName & "Step 3: SS Received RRCConnectionReestablishmentRequest message");
+
+    v_AuthParams := f_NBIOT_Security_Get ( );     //@sic R5s100324 & R5s100564 sic@
+    //v_AuthParams := f_EUTRA_SS_AS_ActivateSecurity_HO_Reest ( eutra_Cell2, v_AuthParams, 0 ); //@sic R5s100324 sic@
+    f_NBIOT_Security_Set ( v_AuthParams );        //@sic R5s100324 sic@
+
+    //@siclog "Step 4" siclog@
+    //The SS transmits RRCConnectionReestablishment message.
+    log(v_TcName, "Step 4: Network simulator send RRCConnectionReestablishment message");
+    f_NBIOT_SS_ConfigRachProcedureMsg4(nbiot_Cell2, f_NBIOT_508_RRCConnectionReestablishment());    /* @sic R5s170258: configure SS to send RRCConnectionReestablishment*/
+
+    
+    //f_NBIOT_RRC_RRCConnectionReestablishment_Def ( nbiot_Cell2 );
+   
+      
+    log(v_TcName, "Step 5: Waiting for RRCConnectionReestablishmentComplete");
+       
+     SRB.receive(car_NB_SRB_RrcPdu_IND(nbiot_Cell2, tsc_SRB1, cr_RRCConnectionReestablishmentComplete_NB(tsc_RRC_TI_Def)));
+    
+      
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName & "Step 5:  Received RRCConnectionReestablishment Complete message");
+
+    //Network Simulator transmit RRC Connection reconfiguration message
+    log(v_TcName, "Step 6: Network Simulator send RRC Connection Reconfiguration ");
+    //f_NBIOT_RRC_RRCConnectionReconfiguration_Resume_SRB2_DRBs ( nbiot_Cell2, tsc_RRC_TI_Def );
+      
+     SRB.send(cas_NB_SRB_RrcPdu_REQ(nbiot_Cell2,
+                                   tsc_SRB1,
+                                   cs_TimingInfo_Now,
+                                   cs_RRCConnectionReconfiguration_NB(tsc_RRC_TI_Def,
+                                                                      cs_RadioResourceConfigDedicated_NB_DrbConfig(omit,
+                                                                                                                   omit,
+                                                                                                                   cs_RLF_TimersAndConstants_Release))));
+     
+      
+    SRB.receive(car_NB_SRB_RrcPdu_IND(nbiot_Cell2, tsc_SRB1, cr_RRCConnectionReconfigurationComplete_NB(tsc_RRC_TI_Def)));
+    
+   
+    log(v_TcName, "Step 7: UE send RRC Connection Reconfiguration Complete message");
+    
+    //Check: Does the UE transmit an UL information transfer message EMM:Tracking Area Update request Message?
+    log(v_TcName, "Step 8: UE  Transmit EMM: Tracking area update request message?");
+    //f_EUTRA_ConnectedMode_TAU (eutra_Cell2); //This also works
+    //f_EUTRA_TrackingAreaUpdate_Without_Release_Any_ActiveFlag( eutra_Cell2 );
+     v_Guti2_Params := f_NBIOT_CellInfo_GetGuti(nbiot_Cell2); 
+     v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+     SRB.receive(car_NB_SRB_RrcNasPdu_IND(nbiot_Cell2, tsc_SRB1bis, 
+                               cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),  
+                                cr_NAS_Indication(tsc_SHT_IntegrityProtected,
+                                                                  cdr_TAU_Request_OldAddGutiTAI(tsc_EpsUpdate_TaUpdate,  //Table 22.5.7a.3.3-5
+                                                                                                '001'B,
+                                                                                                cr_DRXparameter_Any ('5C'O) ifpresent,
+                                                                                                cr_AdditionalUpdateType_CIOT ifpresent,  // @sic R5-176872 sic@
+                                                                                                f_GutiParameters2MobileIdentity(omit, v_Guti2_Params),
+                                                                                                cr_TAI_Any ifpresent,
+                                                                                                omit, // @sic R5s170777 sic@
+                                                                                                cr_PTMSI_SignatureAny ifpresent))))-> value v_ReceivedAsp;
+         
+   
+      
+    v_NasInd := v_ReceivedAsp.Signalling.Nas[0] ;
+
+    if (not isvalue (v_NasInd.Pdu.Msg.tRACKING_AREA_UPDATE_REQUEST))
+    {
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, 
+             "Unexpected NAS message received while waiting for Tracking Area Update Request");
+    }
+    log(v_TcName, "Step 8: UE sends an UL Information Transfer message EMM: TRACKING AREA UPDATE REQUEST message successfully");
+
+    v_EpsBearerCtxtStatus := v_NasInd.Pdu.Msg.tRACKING_AREA_UPDATE_REQUEST.epsBearerContextStatus;
+    
+    v_PLMN := f_Asn2Nas_PlmnId (v_Guti2_Params.PLMN_Identity);
+    v_Tac := f_NBIOT_CellInfo_GetTAC (nbiot_Cell2);
+    v_TaiList := cds_TAIListNonConsecutive_tlv(v_PLMN, {bit2oct(v_Tac)});
+    
+    // Creating New Guti parameter
+    v_Guti2_Params := f_CreateGutiParamsWithUpdatedSTmsi(v_Guti2_Params);
+      
+   SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell2,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_TAU_Accept_Common(tsc_EpsUpdate_TaUpdate,
+                                                                       f_GutiParameters2MobileIdentity(tsc_IEI_Guti, v_Guti2_Params),
+                                                                       v_TaiList,
+                                                                       v_EpsBearerCtxtStatus,
+                                                                       omit,
+                                                                       omit,
+                                                                       f_GetNBIOTAdditionalUpdateResult(v_NasInd.Pdu.Msg.tRACKING_AREA_UPDATE_REQUEST.addUpdateType),
+                                                                       -, -, -,
+                                                                       f_GetNBIOTNetworkFeatureSupport(CONTROL_PLANE)))));
+      
+      
+    log(v_TcName, "Step 9: Network simulator sends TRACKING AREA UPDATE ACCEPT message with a new value for GUTI IE successfully");
+
+    log(v_TcName, "Step 10: Waiting to receive tracking area update complete message from UE");
+      
+      SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell2,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_TAU_Complete)));
+  
+    
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName & "Step 10: UE responds with a tracking area update complete message");
+      
+    f_NBIOT_TestBody_Set ( false );
+
+    log(v_TcName, "Postamble Execution started");
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName, "Cell is released"); 
+
+    f_UT_SwitchOffUE (UT, false);
+    log(v_TcName, ": UE is Powered off");
+    f_NBIOT_PreliminaryPass(__FILE__, __LINE__, v_TcName &" PASSED");
+    log(v_TcName, "Postamble Execution done");
+    log (v_TcName, "<<<<<<<<<< Test Execution Finished >>>>>>>>>>");  
+
+  }
+    
+    
+function fl_SUPLCONFIMSLESS_TC_2_27_Step2_Step6(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+    var octetstring v_APN_Value := tsc_Octet_ADMIN_APN;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    var NAS_MSG_Indication_Type v_NasInd;
+    var PDN_CONNECTIVITY_REQUEST v_PDNConnReq;
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var template (value) AccessPointName v_AccessPointName;
+    var template (omit) ProtocolConfigOptions v_Pco; 
+    var B3_Type v_Request_Type;
+    var B3_Type v_Pdn_Type;
+    var boolean v_EIT_Flag := false;
+    var PDN_Address v_PDN_Address2;
+    var EPS_BearerIdentity p_EpsBearerId := '5'H;     
+    var EPS_BearerIdentity v_EpsBearerId2 := '6'H; // default bearer on additional PDN
+    var EUTRA_CellId_Type p_CellId:=eutra_CellA;
+    var charstring v_ClientIpAddress := px_IPv6_Address1_UE;
+    var UInt32_Type v_ValidLifetime := 3 * 60; // 3 mins
+    var UInt16_Type v_RouterLifetime := 5 * 60;
+    var UInt32_Type v_PreferredLifetime := 3 * 60; // 3 mins 
+    var charstring v_TcName := testcasename() & ": ";
+    var NAS_UL_Message_Type v_PDNConnectivityReq;  
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+      var template (value) UserDataContainer v_DataContainer;
+      var EPS_BearerIdentity v_BearerId;
+      var ProcedureTransactionIdentifier v_PTI;
+      var octetstring v_DataReply;
+      timer time := 10.0;
+      
+    log(v_TcName,"Step2: Network simulator sends the Package #0 SMS message to the UE to trigger an Admin PDN connection request");
+    if(pc_SMS0_Enable)
+    {
+        log(v_TcName,"SS Sending SMS to UE to connect ADMIN PDN");
+        fl_TC_IMSLESS_SendLteSMS(RRC_CONNECTED); // Admin Using SMS
+    }
+    else
+    {
+        log(v_TcName,"SS Sending AT command to UE to connect ADMIN PDN");
+        fl_UT_ApplyCommand(UT, cas_UT_Req(INITIATE_ADMIN_TEST_APP, NO_CNF_REQUIRED));
+    
+     
+    
+         
+    log(v_TcName,"Step2: Waiting for UE to send PDN CONNECTIVITY REQUEST message for VZWADMIN");
+    v_PDNConnectivityReq := f_NBIOT_TriggerAdditionalPDN_Modified (nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), "vzwadmin");
+    log( "Step3: Received PDN CONNECTIVITY REQUEST message for VZWADMIN");
+    
+    time.start;
+        
+    alt{    
+    []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (v_EpsBearerId2, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp{// @sic R5s180192 sic@
+    
+        v_DataReply := f_NBIOT_ProcessIPv6Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+        v_BearerId := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.epsBearerId;
+        v_PTI := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.procedureTransactionIdentifier;
+       
+        v_DataContainer := cs_UserDataContainer(v_DataReply);
+       log(v_TcName,"Step6: Network simulator sends an IPv6 Router Advertisement, with the "&"IPv6 Prefix"&" value included");
+   
+        SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                       tsc_SRB1bis,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_ESM_DATA_TRANSPORT(v_EpsBearerId2, v_PTI, v_DataContainer))));
+                                             repeat;}
+            []time.timeout{}      
+    }
+    f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnectivityReq,char2oct("?VZWADMIN"));     
+           
+  } 
+  }
+    
+function f_SUPLCONFIMSLESS_TC_2_27_Test1(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+       var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+      var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+      var NAS_MSG_Indication_Type v_NAS_Ind;  
+      var charstring v_TcName := testcasename() & ": ";
+      
+      
+      
+        log("####### This test requires a PC to generate DNS queries and send these queries through the UE. Depending on the UE under test, "&
+        "the PC may be connected to the UE via either a tethered or LAN connection #######");
+        f_Delay(10.0);
+      
+      
+        f_NBIOT_Init( c1);   // @sic R5s106627 sic@ @sic R5-110726 sic@
+        // Create cell and send out system information for CellA  
+        log(v_TcName,"Configuring Cell");
+        f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+        f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+        log(v_TcName,"Configured Cell");
+        f_UT_SwitchOnUE(UT, true);
+        log(v_TcName,"Step1: Start with UE in EMM registered/EMM connected state with a connection to the Internet PDN");
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+       f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+  
+      log(v_TcName,"Step1: Verified that UE in EMM registered/EMM connected state with a connection to the Internet PDN");
+     
+        fl_SUPLCONFIMSLESS_TC_2_27_Step2_Step6(v_TcName);
+         log(v_TcName,"Step7: PC transmits an IPv6 DNS AAAA query to www.test-ipv6.com");
+            
+        log(v_TcName,"Step7a: packet sent from source IPv6 address with IP prefix set to value received in step 1");
+            
+        log(v_TcName,"Step7: Is packet sent to IPv6 DNS server address as specified in Step 1");
+            
+        log(v_TcName,"Step7: Is packet sent on EPS bearer as specified in Step 1");
+   
+         f_NBIOT_SS_ConfigRachPreambleIndMode(nbiot_Cell1, disable);
+      
+        
+        f_NBIOT_ReleaseAllCells();
+        f_UT_SwitchOffUE (UT, false);
+  }
+    
+    
+  function f_SUPLCONFIMSLESS_TC_2_27_Test2(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+       var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+      var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+      var NAS_MSG_Indication_Type v_NAS_Ind;  
+      var charstring v_TcName := testcasename() & ": ";
+       var NAS_UL_Message_Type v_PDNConnectivityReq;  
+    var charstring v_sApn := "?VZWINTERNET";  
+    var EPS_BearerIdentity v_EpsBearerId2 := '5'H; // default bearer on additional PDN
+    var template (value) ESM_Cause v_EsmCause;
+    var NAS_MSG_Indication_Type v_NasInd;
+    var template (value) LinkedEpsBearerIdentity v_LinkedEpsBearerId := {idValue := hex2bit(v_EpsBearerId2)};
+    var PDN_DISCONNECT_REQUEST v_PDNDiscReq;
+    var ProcedureTransactionIdentifier v_EpsTi := int2oct(tsc_RRC_TI_Def,1);//'02'O;//tsc_PTI_Unassigned;
+    var NasCount_Type v_NasCountUL;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    
+
+      
+      
+        log("####### This test requires a PC to generate DNS queries and send these queries through the UE. Depending on the UE under test, "&
+        "the PC may be connected to the UE via either a tethered or LAN connection #######");
+        f_Delay(10.0);
+      
+      
+        f_NBIOT_Init( c1);   // @sic R5s106627 sic@ @sic R5-110726 sic@
+        // Create cell and send out system information for CellA  
+        log(v_TcName,"Configuring Cell");
+        f_NBIOT_CellConfig_Def(nbiot_Cell1, CONTROL_PLANE); 
+        f_NBIOT_SetCellPower(nbiot_Cell1, tsc_ServingCellRS_EPRE);
+        log(v_TcName,"Configured Cell");
+        f_UT_SwitchOnUE(UT, true);
+        log(v_TcName,"Step1: Start with UE in EMM registered/EMM connected state with a connection to the Internet PDN");
+         v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+       f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+  
+      log(v_TcName,"Step1: Verified that UE in EMM registered/EMM connected state with a connection to the Internet PDN");
+     
+        fl_SUPLCONFIMSLESS_TC_2_27_Step2_Step6(v_TcName);
+        
+      log(v_TcName,"Step7: Network simulator Initiates the PDN disconnect from Internet PDN");
+ 
+        log(v_TcName,"Waiting for DEACTIVATE EPS BEARER CONTEXT REQUEST"); 
+      
+       
+        v_EsmCause := cs_ESM_Cause_v ('00100100'B); // #36 regular deactivation
+      SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_508_DeactivateEPSBearerCxtReq('5'H,
+                                                                                   v_EpsTi,
+                                                                                   v_EsmCause))));  
+      log(v_TcName,"Network simulator sends deactivate bearer context request");  
+       log(v_TcName,"Step8: : Checking the UE disconnected from the Internet PDN?");  
+        VZ_LOG(2,-,-,"DEACTIVATE EPS BEARER CONTEXT ACCEPT");
+        VZ_LOG(3,-,-,"UE should transmit a deactivate bearer context accept");  
+       
+     alt{
+      []SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                      tsc_SRB1bis,
+                                      cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                        cr_508_DeactivateEPSBearerCxtAccept('5'H,
+                                                                                             v_EpsTi)))){}
+       []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (('5'H,'6'H), cr_UserDataContainer(?, ?), omit)))) {repeat;}
+     
+     } 
+      VZ_LOG(4,-,-,"deactivate bearer context accept from UE");   
+    
+        VZ_LOG(5,-,"Step9:","Does UE send an UL Information Transfer message ESM: PDN Connectivity Request message?");   
+      log(v_TcName,"Step9: Waiting for UE to send PDN CONNECTIVITY REQUEST message for VZWINTERNET");
+          
+      v_PDNConnectivityReq := f_NBIOT_TriggerAdditionalPDN_Modified_SS_2(nbiot_Cell1,'5'H,CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_INTERNET_APN), v_sApn);
+      
+      log("v_PDNConnectivityReq", v_PDNConnectivityReq);
+      f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnectivityReq,char2oct(v_sApn)); 
+      
+       log(v_TcName,"Step13: PC transmits an IPv6 DNS AAAA query to www.test-ipv6.com");
+        
+        
+        
+        log(v_TcName,"Step13a: Check: Does UE send the DNS Packet as follows?:"&
+                    "•	Is packet sent from source IPv6 address with IP prefix set to value received in step 10?"&
+                    "•	Is packet sent to IPv6 DNS server address as specified in Step 10?"&
+                    "•	Is packet sent on EPS bearer as specified in Step 10?");
+  
+   
+        f_NBIOT_ReleaseAllCells();
+        f_UT_SwitchOffUE (UT, false);
+  }  
+    
+    
+function f_SUPLCONFIMSLESS_TC_2_28_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_29_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_30_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_31_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_32_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {  
+  }
+function f_SUPLCONFIMSLESS_TC_2_33_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_34_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {
+    /*var template (value) NB_CellPowerList_Type v_CellPowerList_AtT0;
+    var template (value) NB_CellPowerList_Type v_CellPowerList_AtT1;
+    timer t1:=300.0;
+    var CellCarrierFreqEUTRA_Type v_CarrierFreq_Cell2;
+    var boolean v_No_platform_config := false;
+    var charstring v_TcName := testcasename() & ": ";
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B);  
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);  
+    var NAS_MSG_Indication_Type v_NAS_Ind;  
+    
+    log(v_TcName,"NON-ESSENTIAL SYSTEM INFORMATION DETECTION FAILURE ");
+    v_CellPowerList_AtT0 := {
+      cs_NB_CellPower (eutra_Cell2, tsc_NonSuitableOffCellRS_EPRE)
+    };
+    v_CellPowerList_AtT1 := {
+      cs_NB_CellPower (eutra_Cell1, -90),
+      cs_NB_CellPower (eutra_Cell2, -83)
+    };
+    f_NBIOT_Init ( c3, -, USE_BIG_GRANTS, -, - ,v_No_platform_config);
+    
+    f_NBIOT_CellInfo_InitMaxReferencePower(eutra_Cell2, -79);
+    //Set new C-RNTI to be used by UE in Cell 2 at creation
+    f_NBIOT_CellInfo_SetC_RNTI (eutra_Cell2, tsc_C_RNTI_Def2);
+    
+    
+    log("Pre-Conditions to maintain");
+    log(" - cell A (belongs to TAI-1, home PLMN) transmit power is set to -85 dBm");
+    log(" - cell B (belongs to TAI-1, home PLMN) transmit power is set to ''off''.");
+    //Create and configure all cells
+    log("Configure Cell 1");
+    f_EUTRA_CellConfig_Def (eutra_Cell1);
+    log("Configure Cell 2");
+    f_EUTRA_CellConfig_Def (eutra_Cell2);
+    f_EUTRA_SetCellPowerList (v_CellPowerList_AtT0);
+    
+    //Bring UE to initial state
+    log(v_TcName,"Step 1:Start with UE in RRC Connected state on cell A and connect the UE to a PC such "&
+      "that there is data to be sent to maintain RRC connection");
+      v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(nbiot_Cell1,
+                                                  cr_EstablishmentCause_NB_Any,
+                                                  cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                    cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT), //Table 22.5.7a.3.3-4
+                                                                                    v_ESMMessage)); 
+
+    f_NBIOT_InitialRegistration_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind);
+
+      
+    f_EUTRA_TestBody_Set (true);
+    //Set RS EPRE and parameters according to T0
+    log(v_TcName,"Step 2:Reduce the Power on Cell A to -90dbm, set Cell B power on at -83 dbm ");
+    f_EUTRA_SetCellPowerList (v_CellPowerList_AtT1);
+    f_Delay(2.0);
+      
+    v_CarrierFreq_Cell2 := f_NBIOT_CellInfo_GetEARFCN (eutra_Cell2); //@sic R5s110279 change 1 sic@
+    
+    log(v_TcName,"Step 3:SS sends RRCConnectionConfiguration message on cell A to direct the UE to HO to cell B");
+    f_EUTRA_508RRC_IntraLTE_HO_InterCell (eutra_Cell1,
+                                          eutra_Cell2,
+                                          -, 
+                                          -, 
+                                          -, 
+                                          -,
+                                          -, 
+                                          -,
+                                          -, 
+                                          cs_CarrierFreqEUTRA(v_CarrierFreq_Cell2.dl_CarrierFreq, omit)); 
+    log(v_TcName,"Step 4:The UE sends RRCConnectionReconfigurationComplete on cell B");
+    log(v_TcName,"Step 5:SS transmits MIB, SIB1, and SIB2 periodically, without transmitting SIB5 or SIB8");
+    
+    log(v_TcName,"Step 6:Verify that the RRC connection continues for the next 5 minutes without any RLF or RRC re-establishment.");
+    t1.start;
+      alt{
+         [] SRB.receive (car_SRB0_RrcPdu_IND (?, cr_RRCConnectionReestablishmentRequest_AnyUE (?))) 
+            {
+              f_EUTRA_SetVerdictFailOrInconc(__FILE__, __LINE__, v_TcName & "Step 6: UE triggers RLF or RRCConnectionReestablishment message"); 
+              t1.stop;
+             }
+         [] t1.timeout
+            {
+                f_EUTRA_PreliminaryPass(__FILE__, __LINE__, v_TcName & "Step 6: UE successfully maintain the RRC connection from cell 2 after 5 min of HO");
+                
+                // Release Cell-1
+                cs_CellPower (eutra_Cell2, tsc_NonSuitableOffCellRS_EPRE);
+                f_Delay(2.0);
+                
+            }
+      }
+    
+    log(v_TcName,"Step 7:Power off the device");
+      
+    log(v_TcName,"Postamble Execution Start");
+    
+    f_UT_SwitchOffUE(UT, false);
+    f_NBIOT_ReleaseAllCells();
+    log(v_TcName,"Postamble Execution Done");*/
+  }
+function f_SUPLCONFIMSLESS_TC_2_37_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_38_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_39_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_40_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_41_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_42_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_43_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+function f_SUPLCONFIMSLESS_TC_2_48_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  {  
+  }
+function f_SUPLCONFIMSLESS_TC_2_49_NBIOT(charstring TestPlan_Name) runs on NBIOT_PTC
+  { 
+  }
+
+}
+
+

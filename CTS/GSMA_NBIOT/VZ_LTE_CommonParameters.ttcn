@@ -1,0 +1,139 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module VZ_LTE_CommonParameters
+{
+    import from Parameters all;
+    
+    //CMAS CONFIGURATION PAPAMETERS  
+    modulepar charstring                  px_session_id:="1-A";
+    modulepar boolean                     px_RTPG := true;
+ 
+    // REGRETRY CONFIGURATION PARAMETERS
+    modulepar charstring        px_IPv4_Address_P_CSCF2  := "192.168.2.209";
+    modulepar charstring        px_IPv4_Address_P_CSCF3  := "192.168.2.208";
+    modulepar charstring        px_IPv4_Address_P_CSCF4  := "192.168.2.210";
+    modulepar charstring        px_IPv4_Address_P_CSCF5  := "192.168.2.210";
+    modulepar charstring        px_IPv6_Address_P_CSCF2  := "5546:222:2259::209";
+    modulepar charstring        px_IPv6_Address_P_CSCF3  := "5546:222:2259::208";
+    modulepar charstring        px_IPv6_Address_P_CSCF4  := "5546:222:2259::210";
+    modulepar charstring        px_IPv6_Address_P_CSCF5  := "5546:222:2259::210";
+    
+    modulepar charstring        px_pAccessNetworkInfo_val := "31148000010000100";
+    modulepar charstring        px_pAccessNetworkInfo_val_RPLMN := "31147800020000102";
+    modulepar charstring        px_pAccessNetworkInfo_val_EHPLMN := "31148100020000102"; //Equivalent home PLMN + IMSI
+
+    modulepar float             px_deregistration := 4.0;
+    modulepar boolean           px_Akav2Enable := true; 
+    modulepar boolean           px_multi_pcscf := true ;
+    modulepar charstring        px_Subscriber1 := "311480123456401";
+    modulepar charstring        px_Subscriber2 := "123456789876543";
+    modulepar charstring        px_Subscriber3 := "+12244004601";
+    
+    const integer               px_UDP_IMS_PDN_PTU_SIZE := 1428;
+
+    //----------------------------------------------------------------------------
+    //|                 PIXIT Parameters for IoT Testcases                       |
+    //----------------------------------------------------------------------------
+    type integer                          BKTMRxData[7];    /* Back-off timer */
+    modulepar integer                     px_Iot_Dce_Max_Dconn_Attempts_to_Monitor            := 350; /* Number of data disconnection attempts to monitor */
+    modulepar integer                     px_Iot_Dce_Max_Reboots_to_Monitor                   := 30; /* Number of data connection attempts to monitor */
+    modulepar float                       px_Iot_Always_On_Duration                           := 60.0; /* Always on duration to monitor */
+    modulepar integer                     px_Iot_Always_On_Max_Connections                    := 1; /* Max Data Connections allowed in Always On */
+    modulepar float                       px_Iot_Dce_Time_Interval_for_Randomization          := 20.0; /* Maximum window time in sec between connection attempts */
+    modulepar float                       px_Iot_Dce_Data_on_to_Application_Prop_Delay        := 0.0; /* Propagation delay in sec*/
+    modulepar float                       px_Iot_Dce_Monitor_Period                           := 60.0; /* Maximum window to monitor DCE behavior in sec */
+    modulepar float                       px_Iot_Dce_Min_Wait_Time_Interval                   := 20.0; /* [0s, 10s, 20s, 30s, 60s, 120s, 180s, 300s, 600s, ...] */
+    modulepar float                       px_Iot_Dce_Max_Wait_Time_Interval                   := 299.0; /* [0s, 10s, 20s, 30s, 60s, 120s, 180s, 300s, 600s, ...] */
+    
+    /* Max Number of failed Network Data Connection per hour []Ref: Section 4.1 from [VerizonWirelessConnectionEfficiencyRequirementsTestsv1 7]*/
+    modulepar integer                     px_Iot_RRC_Conn_Max_Attempts                        := 300; /* Max number of RRC Connection attempts (TC 5.3.1) */
+    modulepar integer                     px_Iot_PDN_Conn_Max_Attempts                        := 300; /* Max number of PDN Connectivity attempts (TC 5.2.2.3) */
+    modulepar integer                     px_Iot_SMS_Max_Attempts                             := 300; /* Max number of SMS over NAS attempts (TC 5.2.2.6) */
+    modulepar integer                     px_Iot_Server_Conn_Max_Attempts                     := 500; /* Max number of attempts device tries to connect to IOT 
+                                                                                                     * server platform (TC 5.2.2.5) */
+    
+    /* Back off Timer Intervals [] TS.34_7.1_REQ_005: TS.34 - IoT Device Connection Efficiency Guidelines v3.0 */
+    modulepar BKTMRxData                  px_Backoff_Timer_Interval                           := {60, 120, 240, 480, 960, 1920, 3840};
+    /* Back-off Iteration Counter [] TS.34_7.3_REQ_005: TS.34 - IoT Device Connection Efficiency Guidelines v3.0 */
+    modulepar integer                     px_Max_Backoff_Itr_Counter                          := 7;
+    modulepar boolean                     px_Execute_Test1                                    := true;
+    
+      /* DNS Server IP configuration for Internet Connectivity */
+    modulepar charstring                  px_IPV4_EXTERNAL_DNS_SERVER := "8.8.8.8";
+    modulepar charstring                  px_IPV6_EXTERNAL_DNS_SERVER := "5546:222:2259::110"; // optional
+    
+    // STPar (Start Timer Interval in Seconds 1-15360, (Default value is 60))
+    /* If STPar is the number contained in the parameter <STPar> then the value of the 
+    ST timer is calculated with the following formula Start Timer = 1 + (IMSI % STPar) */
+    
+    modulepar integer                     px_StartTimer_param                                 := 60;  /* STPar to calculate the Start Timer */
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address                := "172.217.167.228";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address                := "2404:6800:4002:80d::2004";
+    
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address_start          := "172.217.167.228";
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address_end            := "192.168.2.210";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address_start          := "2404:6800:4002:80d::2004";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address_end            := "5546:222:2259::210";
+    modulepar charstring                  px_Iot_Service_Platform_URL_List                    := "xyz.com;abc.org";      //URL list implementation for gsmaiot 5.2.2.5 and 5.3.1 (send url list to SA and recieve IP list)
+    modulepar boolean                     px_URL_Based_IOT_Service_Switch := false;     //GSMA switch if trrue == URL list based implementation, false == legacy IP range based implementation
+    /*  
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address                := "192.168.1.1";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address                := "5546:222:2258::9";
+    
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address_start          := "192.168.1.1";
+    modulepar charstring                  px_Iot_Service_Platform_IPv4_Address_end            := "192.168.1.50";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address_start          := "5546:222:2258::9";
+    modulepar charstring                  px_Iot_Service_Platform_IPv6_Address_end            := "5546:222:2258::50";
+    modulepar charstring                  px_Iot_Service_Platform_URL_List                    := "xyz.com;abc.org";      //URL list implementation for gsmaiot 5.2.2.5 and 5.3.1 (send url list to SA and recieve IP list)
+    modulepar boolean                     px_URL_Based_IOT_Service_Switch := false;     //GSMA switch if trrue == URL list based implementation, false == legacy IP range based implementation
+  */
+    modulepar float                       px_Iot_Poll_Interval                                := 60.0;
+    modulepar integer                     px_Iot_Poll_Mesg_Monitor_Count                      := 2;
+    modulepar integer                     px_Iot_Min_Deviation_Expected                       := 10;
+    modulepar integer                     px_Iot_Pause_Duration                               := 5;
+    modulepar float                       px_Reg_Retry_tolerance                              := 0.5;
+    
+    /* Timer to Monitor the UE behavior (LTE Retry and Back Off Behavior) */
+    modulepar float                       px_Device_Monitor_Timer                              := 1800.0; // Default 30min
+    
+    // PICS Parameters
+    modulepar boolean                      pc_NFM_Active                                      := false;    /* Activate NFM */
+    modulepar boolean                      pc_StartTimer_Active                               := false;    /* Activate Start Timer */
+    modulepar boolean                      pc_StartTimer_par                                  := false;    /* Include STPar in NFMC */
+    
+    const integer                          tsc_StartTimer_val                                 := 1 + (hex2int(px_IMSI_Def) mod px_StartTimer_param);
+    
+    /* Default values for counters and timers */
+    const integer c_def_connectionEfficiencyFlag := 1;
+    const integer c_def_backOffTimerActiveFlag := 0;
+    const integer c_def_backOffTimerValue := 0;
+    const integer c_def_nfmIterationCounter_1 := 60;
+    const integer c_def_nfmIterationCounter_2 := 120;
+    const integer c_def_nfmIterationCounter_3 := 240;
+    const integer c_def_nfmIterationCounter_4 := 480;
+    const integer c_def_nfmIterationCounter_5 := 960;
+    const integer c_def_nfmIterationCounter_6 := 1920;
+    const integer c_def_nfmIterationCounter_7 := 3840;
+    const integer c_def_backOffIterationCounter := 0;
+    const integer c_def_failedNetworkDataConnectionCounter := 0;
+    const integer c_def_successfulDataConnectionCounter := 0;
+    const integer c_def_failedSMSMOCounter := 0;
+    const integer c_def_resetCounter := 0;
+    const integer c_def_startTimerActiveFlag := 1;
+    const integer c_def_startTimerValue := 10;
+
+   /* Default values for LTE HPLMN(MCC,MNC)*/
+  const octetstring tsc_contents_PLMN:= '130184'O;
+      const integer     px_UDP_IMS_PDN_MTU_SIZE := 1428;
+
+}

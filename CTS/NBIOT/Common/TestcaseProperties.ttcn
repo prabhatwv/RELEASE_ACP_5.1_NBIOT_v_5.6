@@ -1,0 +1,71 @@
+/******************************************************************************/
+// AUTOMATICLLY GENERATED MODULE - DO NOT MODIFY
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2017-10-06 16:58:46 +0200 (Fri, 06 Oct 2017) $
+// $Rev: 19764 $
+/******************************************************************************/
+
+module TestcaseProperties {
+
+  function f_GetTestcaseAttrib_Eutra_Release(charstring p_Testcase) return charstring
+  {
+    select (p_Testcase) {
+      case ("TC_22_3_1_10") { return "rel_14"; }
+      case ("TC_22_3_1_6a") { return "rel_14"; }
+      case ("TC_22_3_1_7") { return "rel_14"; }
+      case ("TC_22_3_1_9") { return "rel_14"; }
+      case ("TC_22_4_19a") { return "rel_14"; }
+      case ("TC_22_4_20a") { return "rel_14"; }
+    }
+    return "";
+  }
+
+  function f_GetTestcaseAttrib_Mbms(charstring p_Testcase) return boolean
+  {
+    return false;
+  }
+
+  function f_GetTestcaseAttrib_NullIntegrityAlgorithmAllowed(charstring p_Testcase) return boolean
+  {
+    return false;
+  }
+
+  function f_GetTestcaseAttrib_Qbased_Rsrq(charstring p_Testcase) return boolean
+  {
+    select (p_Testcase) {
+      case ("TC_22_2_4") { return true; }
+    }
+    return false;
+  }
+
+  function f_GetTestcaseAttrib_WLAN(charstring p_Testcase) return boolean
+  {
+    return false;
+  }
+
+  function f_GetTestcaseAttrib_NbiotOperationModeStandaloneOnly(charstring p_Testcase) return boolean
+  {
+    select (p_Testcase) {
+      case ("TC_22_3_1_6") { return true; }
+      case ("TC_22_3_1_6a") { return true; }
+    }
+    return false;
+  }
+   //  ADDED THIS FUNTION FOR NBIOT COMPATIBILITY START HERE -----
+    function f_GetTestcaseAttrib_Is_Data_Tpt(charstring p_Testcase) return boolean
+  {
+    select (p_Testcase) {
+      case ("TC_VZ_DATATHRU_3_8_Test1A") { return true; }
+      case ("TC_VZ_DATATHRU_3_8_Test1B") { return true; }
+      case ("TC_VZ_DATATHRU_3_9_Test1A") { return true; }
+      case ("TC_VZ_DATATHRU_3_9_Test1B") { return true; }
+    }
+    return false;
+  } //  ADDED THIS FUNTION FOR NBIOT COMPATIBILITY END HERE -----
+
+}

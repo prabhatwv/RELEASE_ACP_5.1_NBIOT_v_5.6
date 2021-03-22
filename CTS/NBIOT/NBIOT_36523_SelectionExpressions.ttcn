@@ -1,0 +1,135 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2018-12-04 15:11:34 +0100 (Tue, 04 Dec 2018) $
+// $Rev: 23329 $
+/******************************************************************************/
+
+module NBIOT_36523_SelectionExpressions {
+
+  import from EUTRA_NB_Parameters all;
+  import from NBIOT_Parameters all;
+  import from Parameters all;
+
+  type enumerated NBIOT_36523_Condition_Type {  /* @status    APPROVED (NBIOT) */
+    //TCSE from 36.523-2 specific to NBIOT
+    C266,
+    C271,
+    C272,
+    C275,
+    C277,
+    C288,
+    C290,
+    C291,
+    C293,
+    C322,
+    C323,
+    C339,
+    C341,
+    C342,
+    C347,
+    C348,
+    C349,
+    C350,
+    C351
+  }
+
+  /*
+   * @desc      Set the applicability conditions according to 36.523-2 Table 4-1a: Applicability of tests Conditions
+   *            Function specific to NBIOT  TCSE
+   * @param     p_Condition
+   * @return    boolean
+   * @status    APPROVED (NBIOT)
+   */
+  function f_SelectionExpr(NBIOT_36523_Condition_Type p_Condition) return boolean
+  {
+    var boolean v_ApplCond;
+   
+    select (p_Condition) {
+      case(C266){
+      //UEs supporting NB-IoT
+        v_ApplCond := pc_NB;
+      }
+      case(C271){
+        //UEs supporting NB-IoT and User plane CioT Optimisation
+        v_ApplCond := pc_NB and pc_User_Plane_CIoT_Optimisation;
+      }
+      case(C272){
+        //UEs supporting NB-IoT and ZUC algorithms
+        v_ApplCond := pc_NB and pc_ZUC;
+      }
+      case(C275){
+        //UEs supporting NB-IoT and LAP and LAP override
+        v_ApplCond := pc_NB and pc_LAP and pc_LAP_override;
+      }
+      case(C277){
+        //UEs supporting NB-IoT and Multiple PDN and LAP and LAP override
+        v_ApplCond := pc_NB and pc_Multiple_PDN and pc_LAP and pc_LAP_override;
+      }
+      case(C288){
+      // case(C278) void @sic R5-183074 sic@
+        //UEs supporting NB-IoT and User plane CIoT Optimisation with multi-carrier operation
+        v_ApplCond := pc_NB and pc_NB_MultiCarrier;  /* @sic R5-176143: UP mode restriction removed sic@ */
+      }
+      case(C290) {
+        //UEs supporting NB-IoT, and S1-U Data Transfer @sic R5-180553 sic@
+        v_ApplCond := pc_NB and (pc_User_Plane_CIoT_Optimisation or pc_S1_U_DataTransfer);
+      }
+      case(C291) {
+        //UEs supporting NB-IoT and S1-U Data Transfer and ZUC algorithm
+        v_ApplCond := pc_NB and (pc_User_Plane_CIoT_Optimisation or pc_S1_U_DataTransfer) and pc_ZUC;
+      }
+      case(C293){
+      // case(C292) void @sic R5-183074 sic@
+        //UEs supporting NB-IoT, ESM UE requested bearer resource modification procedure  and requesting PDN of type "IP" @sic R5-180553 sic@
+        v_ApplCond := pc_NB and pc_IP_PDN and pc_ESM_MO_Bearer_Modification;
+      }
+      case(C322){
+        //UEs supporting NB-IoT and RRC connection re-establishment
+        v_ApplCond := pc_NB and pc_RRC_re_establishment_CP_CIoT;
+      }
+      case(C323){
+        //UEs supporting NB-S1 and WB-S1 @sic R5-181280 sic@
+        v_ApplCond := (pc_eFDD or pc_eTDD) and pc_NB;
+      }
+      case(C339){
+        //UEs supporting NB-IoT and 2 HARQ processes in DL and UL
+        v_ApplCond := pc_NB and pc_NB_TwoHARQ_Processes and pc_ue_Category_NB2;
+      }
+      case(C341) {
+        //UEs supporting NB-IoT
+        v_ApplCond := pc_NB;
+      }
+      case(C342) {
+        //UEs supporting NB-IoT and APN rate control and additional APN rate control for exception data
+        v_ApplCond := pc_NB and pc_APN_RateControl and pc_Additional_APN_RateControl;
+      }
+      case(C347) {
+        //UEs supporting NB-IoT and Category NB2
+        v_ApplCond := pc_NB and pc_ue_Category_NB2;
+      }
+      case(C348) {
+        //UEs supporting NB-IoT and NPRACH on non-anchor carrier
+        v_ApplCond := pc_NB and pc_NB_MultiCarrier_NPRACH;
+      }
+      case(C349) {
+        //UEs supporting NB-IoT and paging on non-anchor carriers in NB-IoT
+        v_ApplCond := pc_NB and pc_NB_MultiCarrier_Paging;
+      }
+      case(C350) {
+        //UEs supporting NB-IoT and SC-PTM in Idle mode
+        v_ApplCond := pc_NB and pc_SCPTM_IDLE;
+      }
+      case(C351){
+        //UEs supporting NB-IoT and SC-PTM and Feature Group Indicator 3 and Feature Group Indicator 7
+        v_ApplCond := pc_NB and pc_SCPTM and (pc_FeatrGrp_3_F or pc_FeatrGrp_3_T) and (pc_FeatrGrp_7_F or pc_FeatrGrp_7_T);
+      }
+    }
+    return v_ApplCond;
+  }
+
+}

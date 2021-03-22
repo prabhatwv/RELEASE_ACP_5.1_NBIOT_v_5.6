@@ -1,0 +1,15 @@
+module UpperTesterCommon
+{
+	group TypeDefs_Common with {}
+	group TypeDefs_UT_System with {encode "TCI XML"}
+	//template car_UT_CnfAny with {encode "TCI XML"}
+	template cs_Ut_Parameter_Common with {encode "TCI XML"}
+	type Ut_Parameter_Type with {encode "TCI XML"}
+	type Ut_ParameterList_Type with {encode "TCI XML"}
+	type Ut_CnfReq_Type with {encode "TCI XML"}
+	type UT_COMMON_CNF with {encode "TCI XML"}
+	type MMI_Cmd_Type with {encode "TCI XML"}
+	type Ut_System_Cmd_Type with {encode "TCI XML"}
+	type UT_SYSTEM_REQ with {encode "TCI XML"}
+	type MTC_System_Ut with {encode "TCI XML"}
+} with {}

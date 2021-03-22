@@ -1,0 +1,7 @@
+module NBIOT_ASP_L2DataDefs
+{
+	group System_Interface with {encode "TCI XML"}
+	type NB_L2_DATA_REQ with {encode "TCI XML"}
+	type NB_L2_DATA_IND with {encode "TCI XML"}
+	type NBIOT_L2DATA_PORT with {encode "TCI XML"}
+} with {}

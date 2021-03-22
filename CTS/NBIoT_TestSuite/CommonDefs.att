@@ -1,0 +1,16 @@
+module CommonDefs
+{
+	external function fx_GetSystemTime with { encode "Plain" variant "Int32" }
+	type MessageAuthenticationCode with {encode "Plain"  variant "NoLenField"}
+	type B3_Type with { encode "Plain" variant "NoLenField"}
+	external function fx_KeyDerivationFunction with { encode "Plain" variant "Int32" }
+	type B5_Type with { encode "Plain" variant "NoLenField"}
+	type KDF_Type with { encode "Plain" variant "Int8" }
+	type B128_Type with { encode "Plain" variant "NoLenField"}
+	
+	type B256_Type with { encode "Plain" variant "NoLenField"}
+	
+	type O4_Type with { encode "Plain" variant "NoLenField"}
+
+	type Struct_tm_Type with { encode "Plain" variant "Align4"}
+} with {}

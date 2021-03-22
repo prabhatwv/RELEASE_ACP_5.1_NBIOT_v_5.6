@@ -1,0 +1,4 @@
+module EUTRA_NB_CommonDefs
+{
+	type IntegrityProtAlgorithm_Type with { encode "Plain" variant "Int8" }
+} with {}

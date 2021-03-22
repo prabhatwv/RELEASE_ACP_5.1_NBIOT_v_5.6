@@ -1,0 +1,50 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2018-12-16 11:45:57 +0100 (Sun, 16 Dec 2018) $
+// $Rev: 23491 $
+/******************************************************************************/
+
+module EPS_NAS_MessageTemplates {
+
+  import from CommonDefs all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_MsgContainers all;
+  import from NAS_CommonTemplates all;
+  import from NAS_CommonTypeDefs all;
+
+  template (value) NAS_DL_Message_Type cs_508_AUTHENTICATION_REJECT :=
+  { /* @status    APPROVED (LTE, NBIOT) */
+    aUTHENTICATION_REJECT := {
+      securityHeaderType          := tsc_SHT_NoSecurityProtection,
+      protocolDiscriminator       := tsc_PD_EMM,
+      messageType                 := tsc_MT_AuthenticationReject
+    }
+  };
+
+  /*
+   * @desc      local function to calculate single remote port acc. to reference packet filters in 36.508
+   * @param     p_PortNumber
+   * @param     p_EPS_BearerId
+   * @return    UInt16_Type
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT)
+   */
+  function fl_SingleRemoteport508(UInt16_Type p_PortNumber,
+                                  HalfOctet_Type p_EPS_BearerId) return UInt16_Type
+  {
+    return (p_PortNumber + hex2int(p_EPS_BearerId) - 6);
+  }
+
+  template (value) PacketFilterComponent cs_PktFilterCompSingleRemotePort61000(HalfOctet_Type p_EPS_BearerId) :=
+  /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT) */
+    cs_PktFilterCompSingleRemotePort(fl_SingleRemoteport508(61000, p_EPS_BearerId));
+
+  template (value) PacketFilterComponent cs_PktFilterCompSingleRemotePort31160(HalfOctet_Type p_EPS_BearerId) :=
+  /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT) */
+    cs_PktFilterCompSingleRemotePort(fl_SingleRemoteport508(31160, p_EPS_BearerId));
+
+}

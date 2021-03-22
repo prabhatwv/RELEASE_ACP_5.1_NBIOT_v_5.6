@@ -1,0 +1,20 @@
+ MyTli(): OPENED the log 
+2020-11-09 12:40:51.717 File: VZW_LTE_IMSLESS_DATA_RETRY_TESTCASES_TC_VZ_DATARETRYIMSLESS_7_3.pcap does not exist or not able to be deleted return val: -1
+VZW_LTE_IMSLESS_DATA_RETRY_TESTCASES_TC_VZ_DATARETRYIMSLESS_7_3.pcap opened successfully
+serialNo reset
+ExternalLogger.cpp 118 tliTcStarted LOG file opened VZW_LTE_IMSLESS_DATA_RETRY_TESTCASES_TC_VZ_DATARETRYIMSLESS_7_3.pcap
+2020-11-09 12:40:51.952 ExternalLogger.cpp 1316 tliEncode entry
+tliEncode ENCODING type: TCI XMLUT_SYSTEM_REQ
+DEBUG: begin of  getAsnNDecode serialNo 2020-11-09 12:40:51.952:0
+loop count783
+DEBUG: end of  getAsnNDecode serialNo 2020-11-09 12:40:51.952:0
+2020-11-09 12:40:51.952 ExternalLogger.cpp 1378 tliEncode exit
+2020-11-09 12:40:52.123 ExternalLogger.cpp 1393 tliDecode entry
+tliDecode ENCODING type: TCI XMLUT_COMMON_CNF
+DEBUG: begin of  getAsnNDecode serialNo 2020-11-09 12:40:52.123:0
+loop count388
+DEBUG: end of  getAsnNDecode serialNo 2020-11-09 12:40:52.123:0
+2020-11-09 12:40:52.123 ExternalLogger.cpp 1469 tliDecode exit
+2020-11-09 12:40:52.123 ExternalLogger.cpp 1687 tliLog entry
+Ahsan1: shmlog created
+2020-11-09 12:40:52.123creating shared memory

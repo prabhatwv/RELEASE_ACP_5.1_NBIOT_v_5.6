@@ -1,0 +1,202 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module VZW_LTE_DATA_RETRY_CommonDefs 
+{
+     import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all;
+  import from CommonDefs all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from NBIOT_ASP_SrbDefs all;
+//  import from NBIOT_ASP_DrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+ // import from NBIOT_NB_AuxiliaryFunctions all;
+ // import from NBIOT_AuxiliaryFunctions all;
+  import from NBIOT_CellInfo all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from NBIOT_ConfigurationSteps all;
+ // import from NBIOT_DRB_Templates all;
+  import from NBIOT_NASSteps all;
+//  import from NBIOT_PdcchConfig all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SecuritySteps all;
+  //import from NBIOT_SRB_Templates all;
+  import from IP_PTC_CtrlMsgs all;
+  //import from NBIOT_L2_CommonTemplates all;
+  //import from MAC_Templates all;
+  import from NAS_CommonTemplates all;
+  import from NAS_CommonTypeDefs all;
+  import from NBIOT_Timing all;
+  import from NBIOT_Component all;
+  import from Parameters all;
+  import from NBIOT_Parameters all;
+  import from EPS_NAS_MessageTemplates all;
+  import from NBIOT_LoopBack all;
+  import from UpperTesterPtcToMtcDefs all;  
+  //import from NBIOT_NB_CommonDefs all;
+  //import from NBIOT_NB_NASSteps all; 
+  import from TestcaseProperties all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterCommon all;
+  //import from SS_NAS_AuxiliaryDefsAndFunctions all;
+  import from CIOT_NASTemplates all;
+    
+  /* For F_NBIOT_AttachProcedure_ConnectedUpdated */  
+  import from NAS_AuxiliaryDefsAndFunctions all;
+  //import from NBIOT_NB_ASP_L2DataDefs all;
+  //import from NBIOT_NB_ASP_TypeDefs all; 
+  //import from NBIOT_NB_CommonDefs all;
+  //import from NBIOT_NB_NASSteps all;
+  //import from NBIOT_InitialRegistration all;
+  //import from NBIOT_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  //import from NBIOT_NB_RRC_Templates all;
+  import from CommonIP all;
+  //import from NBIOT_InitialRegistration all;  
+  import from IMS_PTC_CoordMsg all;    
+  import from EPS_NAS_LoopBack_TypeDefs all;
+  //import from VZW_LTE_IMSLESS_DATA_RETRY_CommonDefs all;
+  //import from NBIOT_NB_CommonDefs all;
+  //import from VZ_TestcaseProperties all;
+  //import from VZ_LTE_CommonDefs all;
+  import from Common4G5G_Templates all;  
+  import from CommonAspDefs all;
+  //import from NBIOT_CellInfoInit all;
+  import from Common4G5G_LoopBack all;  
+  import from Common4G5G_Templates all;
+  import from EUTRA_NB_CommonDefs all;
+  import from CIOT_NASTemplates all;
+
+      /* Attach Procedure */  
+ /* function f_NBIOT_AttachProcedure_ConnectedUpdated ( NBIOT_CellId_Type p_CellId,
+                                                      NBIOT_ATTACH_Type p_ForcedAttach,                       
+                                                      template NAS_AttDetValue_Type p_AttachType := ?,
+                                                      template AdditionalUpdateType p_AdditionalUpdateType,
+                                                      template (omit) GPRS_Timer p_T3402 := omit,
+                                                      IDLEUPDATED_STATE_Type p_State := STATE2_IDLEUPDATE,
+                                                      charstring p_apn := px_IMS_APN,
+                                                      DelayForUserPlaneSignalling_Type p_WaitForIMS := waitForIMS,
+                                                      octetstring p_Contents_OpPCO := '00'O,
+                                                      boolean b_InitialAttachIsCompleted := true) runs on NBIOT_PTC
+  
+  {
+    var RRC_TransactionIdentifier v_RRC_TI := tsc_RRC_TI_Def;
+    var B3_Type v_PDNType := f_GetPdnType();
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    var template (omit) EmergNumList v_EmergNumList := omit;
+    var integer v_NoOfEmergencyNumbers := 0;
+    var integer p_NoOfEmergencyNumbers := 0; // @sic R5s130681 sic@
+    var charstring v_UpperCasePattern_apn;
+    var charstring v_exapn;
+    var charstring v_apnUpper;
+    var APNandPCOs_Type ReceivedApn;
+   
+    if(pc_IMS == false)
+    {
+        p_apn := px_INTERNET_APN;
+        p_WaitForIMS := noDelay;
+    } 
+    //var integer p_SelectedPlmnId := 1;
+    if(match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008d") or match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008g") or 
+       match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008h") or match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_001")) 
+    {
+        v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(p_CellId,
+                                                v_RRC_TI,
+                                                cr_EstablishmentCause_Any,
+                                                cr_NAS_IndicationWithPiggybacking(?,//tsc_SHT_IntegrityProtected,
+                                                                         // JONI_COMMENT cr_508_ATTACH_REQUEST(?, ?),
+  //p_AdditionalUpdateType),
+                                                                                 cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT),
+                                                                                 cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType)
+                                                                     // JONI_COMMENT  cr_508_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, ?)));       }
+    else
+    {  
+       // Receive RRC Connection Setup Complete with
+       v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas(p_CellId,
+                                                    v_RRC_TI,
+                                                    cr_EstablishmentCause_Any,
+                                                    cr_NAS_IndicationWithPiggybacking(?,//tsc_SHT_IntegrityProtected,
+                                                                                    // JONI_COMMENT   cr_508_ATTACH_REQUEST(p_AttachType, p_AdditionalUpdateType),////p_AdditionalUpdateType),
+                                                                                             cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT),
+                                                                                             cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType)
+                                                                                     // JONI_COMMENT cr_508_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType)//));
+    }
+    log(testcasename(),  ": Received Attach Request from device");
+      
+    // step 5-15
+    ReceivedApn := f_NBIOT_InitialRegistration_Step5_15 (p_CellId,
+                                                                             p_State,
+                                                                             p_ForcedAttach,
+                                                                             v_NAS_Ind,
+                                                                           //  v_PDN_TypeToBeUsed,
+                                                                             -,
+                                                                             p_T3402,
+                                                                             -,
+                                                                             -,
+                                                                             p_NoOfEmergencyNumbers,
+                                                                             -,
+                                                                             -,
+                                                         p_Contents_OpPCO,
+                                                         b_InitialAttachIsCompleted);
+    if(match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008d") or match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008g") or 
+      match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_008h") or match(testcasename(), "TC_VZ_IOT_TS35_5_1_TC_001")) 
+    {
+       //Do Nothing 
+    }
+    else if(match(testcasename(), "TC_VZ_PCO_2_1") or match(testcasename(), "TC_VZ_PCO_2_2") or 
+      match(testcasename(), "TC_VZ_PCO_2_4") or match(testcasename(), "TC_VZ_PCO_2_7")) 
+    {
+      log("Validating the APNs");
+      v_UpperCasePattern_apn := f_StringToUpper(oct2char(ReceivedApn.accessPointName.nameValue));
+      v_exapn := substr(v_UpperCasePattern_apn,1,lengthof(v_UpperCasePattern_apn)-1); //trimming 1st character from apn name.
+      if(("VZWIMS" == v_exapn) or ("IMS" == v_exapn))
+      {
+        log("Validated APN := ", v_exapn);              
+      }
+      else
+      {
+        log("Expected APN := VZWIMS/IMS, Received APN := ", v_exapn);
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__,"Invalid APN Configured/Received");
+      }
+    }
+    else
+    {
+      log("Validating the APNs");
+      v_UpperCasePattern_apn := f_StringToUpper(oct2char(ReceivedApn.accessPointName.nameValue));
+      v_exapn := substr(v_UpperCasePattern_apn,1,lengthof(v_UpperCasePattern_apn)-1); //trimming 1st character from apn name.
+      v_apnUpper := f_StringToUpper(p_apn);
+      if(v_apnUpper != v_exapn)
+	  {
+        log("Expected APN := ", v_apnUpper, " Configured/Received APN := ", v_exapn);
+        f_VZ_Apn_LogPrint(v_apnUpper); 
+  	    f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__,"Invalid APN Configured/Received");
+      }
+      else
+      {
+        log("Validated APN := ", v_apnUpper);              
+      }
+    }
+    // step 16-17  
+    f_NBIOT_InitialRegistration_Step16_16c1 (p_CellId,p_WaitForIMS,-,-,p_Contents_OpPCO); 
+  }*/
+
+    
+    
+}

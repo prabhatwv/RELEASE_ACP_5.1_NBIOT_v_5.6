@@ -1,0 +1,1592 @@
+/*
+ * @author
+ *     
+ * @version
+ *     1.0
+ * @desc
+ *     
+ * @remark
+ *     
+ * @see
+ *     
+ */ 
+module SS_NBIOT_CommonProcedures 
+{
+    
+  import from NBIOT_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CIOT_NASTemplates all;
+  import from CIoT_SMS_Templates all;
+  import from CommonDefs all;
+  import from CommonAspDefs all;
+  import from Common4G5G_Templates all;
+  import from CommonIP all;
+  import from EPS_NAS_Constants all;
+  import from EPS_NAS_LoopBack_Templates all;
+  import from EPS_NAS_SMS_Templates all;
+  import from EPS_NAS_MsgContainers all;
+  import from EPS_NAS_Templates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NB_Parameters all;
+  import from EUTRA_Component all;
+  import from EUTRA_NB_SecurityDefinitionsAndExternalFunctions all;
+  import from ICMPv6_TypeDefs all;
+  import from LoopbackIP all;
+  import from NAS_CommonTemplates all;  
+  import from NBIOT_ASP_SrbDefs all;
+  import from NBIOT_ASP_TypeDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CellCfg_Templates all;
+  import from NBIOT_CellInfo all;
+ /* import from EUTRA_CellInfoInit all; */
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_CommonProcedures all;
+  import from NBIOT_Component all;
+  import from EUTRA_Component all;
+  import from NBIOT_ConfigurationSteps all;
+  import from NBIOT_Imported_EUTRA_ASN1_Types all;
+  import from NBIOT_LoopBack all;
+  import from NBIOT_NASSteps all;
+  import from NBIOT_Parameters all;
+  import from NBIOT_RRCSteps all;
+  import from NBIOT_RRC_Common all;
+  import from NBIOT_RRC_Templates all;
+  import from NBIOT_SRB_DRB_Templates all;
+  import from NBIOT_SecurityFunctions all;
+  import from NBIOT_SysInfo_Templates all;
+/*  import from EUTRA_SRB_Templates all;*/
+  import from NBIOT_Timing all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+  import from UpperTesterFunctions all;
+  import from UpperTesterPtcToMtcDefs all;
+  import from EUTRA_NB_NASSteps all;
+  import from EUTRA_NB_ASP_Templates all;
+  import from NBIOT_Paging all;
+  import from EUTRA_NB_RRC_Templates all;
+  import from IMS_PTC_CoordMsg all;
+  import from EUTRA_NB_AuxiliaryFunctions all;
+  import from MTC_Component_NBIOT all;
+  import from MTC_Main_NBIOT all;
+  import from NBIOT_General_CP all;
+  import from NBIOT_ESM_Testcases all;
+  import from UpperTesterCommon all;
+  import from NBIOT_NAS_TrackingArea all;
+  import from SMS_TypeDefs all;
+  import from SMS_Templates all;
+  import from VZW_LTE_IMSLESS_DATA_RETRY_COMMON all;
+    
+    
+  type record  ExpectedPdnInfo 
+  {
+     boolean initialInfoValidation, // Initial Req, PDN Type, EIT flag ETC
+     boolean pcscf_ipv4_addr,  // Protocol ID 000C
+     boolean pcscf_ipv6_addr,  // Protocol ID 0001
+     boolean dns_ipv4_addr,    // Protocol ID 000D
+     boolean dns_ipv6_addr,    // Protocol ID 0003
+     boolean msisdn,           // Protocol ID 000E
+     boolean operator_pco,     // Protocol ID FF00
+     boolean ipv4_link_mtu,    // Protocol ID 0010
+     boolean dns               // Protocol ID 0003 (ipv6 dns) or 000D (ipv4 dns)
+  };
+    
+  function VZ_LOG(integer MessageType := 1, charstring Message_header := "", charstring p_StepNmbr := "", charstring Message := "") 
+   // return charstring
+  {
+    var charstring v_String := "";
+    var charstring v_statement := "";
+  
+    select (MessageType) 
+    {
+      case (1) 
+      {
+          v_String := "";
+      }
+      case (2) 
+      {
+          v_String := "Message";
+          
+      }
+      case (3) 
+      {
+          v_String := "Expected";
+      } 
+      case (4) 
+      {
+        
+          v_String := "Received";
+      }
+      case (5)
+      {
+          v_String := "Check"; 
+      }  
+      case (6)
+      {
+          v_String := "Info"; 
+      } 
+      case (7)
+      {
+          v_String := "Prerequisite"; 
+      }   
+    }  
+   
+    if(p_StepNmbr == "" and v_String == "")
+    {  
+        v_statement :=  ": " & Message;  
+    }    
+  
+    else if(p_StepNmbr == "" and v_String != "")  
+    {
+        if(Message_header != "")
+        {
+            v_statement :=  ": " & v_String & " " & Message_header & ": " & Message;
+        }    
+        else
+        {
+            v_statement :=  ": " & v_String & ": " & Message;
+        }    
+    }    
+    else if(p_StepNmbr != "" and v_String == "")
+    {
+        v_statement :=  ": " & p_StepNmbr & ": " & Message;
+    }    
+    else   
+    {
+        if(Message_header != "")
+        {
+            v_statement :=  ": " & p_StepNmbr & ": " & v_String & " " & Message_header & ": " & Message;
+          
+        }    
+        else
+        {
+            v_statement :=  ": " & p_StepNmbr & ": " & v_String & ": " & Message;
+            
+        }   
+      
+    }    
+      
+ 
+    log(testcasename(), v_statement);
+ 
+  }
+    
+ 
+     function f_NBIOT_NAS_InitialRegistration_Step14_AttachComplete_SS(NBIOT_CellId_Type p_CellId,
+                                         HalfOctet_Type p_EpsBearerId,
+                                         template (omit) NAS_MSG_Indication_Type p_AttachComplete := omit) runs on NBIOT_PTC
+  {
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cdr_CIOT_ActivateDefEpsBearerContextAccept(p_EpsBearerId);
+    var NBIOT_PDN_Type v_PDN;
+    var NB_SRB_COMMON_IND v_ReceivedAsp;
+    if (px_DoAttachWithoutPDN) {
+      v_ESMMessage := cr_ESM_DUMMY_MESSAGE;
+    }
+     VZ_LOG(5,-,-,"Does the UE transmit the ATTACH COMPLETE and ACTIVATE DEFAULT EPS BEARER CONTEXT ACCEPT messages?");  
+   
+     VZ_LOG(2,-,-,"Uplink Direct Transfer"); 
+    if (not isvalue(p_AttachComplete)) {
+      SRB.receive(car_NB_SRB_NasPdu_IND(p_CellId,
+                                        tsc_SRB1bis,
+                                        cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                          cr_508_ATTACH_COMPLETE,
+                                                                          v_ESMMessage)))-> value v_ReceivedAsp;
+    }
+    VZ_LOG(3,"NAS EPS MM Message Type",-,"Attach Complete");    
+    if(ispresent(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.aTTACH_COMPLETE))
+    {  
+        VZ_LOG(4,"NAS EPS MM Message Type",-,"Attach Complete");  
+    }    
+      
+    VZ_LOG(3,"NAS EPS SM Message Type",-,"Activate Default EPS Bearer Context Accept");  
+    if(ispresent(v_ReceivedAsp.Signalling.Nas[0].Pdu.PiggybackedPduList[0].Msg.aCTIVATE_DEFAULT_EPS_BEARER_CONTEXT_ACCEPT))
+    {  
+        VZ_LOG(4,"NAS EPS SM Message Type",-,"Activate Default EPS Bearer Context Accept");  
+    }
+    if (f_NBIOT_MobileInfo_GetNoOfPDNsConfigured () > 0) {  // @sic R5s170597 sic@
+      v_PDN := f_NBIOT_MobileInfo_GetAssignedPdn (0);  // This is registration, so this is the first PDN
+      if (not px_DoAttachWithoutPDN and match(v_PDN.assignedPdnType, ('010'B, '011'B, '100'B))) {
+        f_NBIOT_DelayForUserPlaneSignalling_CP(p_CellId);
+      }
+    }
+  }
+    
+    
+  function f_NBIOT_IdleUpdated_Step5_14(NBIOT_CellId_Type p_CellId,
+                                                IOT_STATE_Type p_IOT_State,
+                                                NBIOT_IDLEUPDATED_STATE_Type p_State,
+                                                NAS_MSG_Indication_Type p_NAS_Ind,
+                                                template (omit) GPRS_Timer p_T3402 := omit,
+                                                PDN_TypeToBeUsed_Type p_PDN_TypeToBeUsed := pdnTypeAsSupportedByUE)
+    runs on NBIOT_PTC
+  { /* @sic R5-171559: p_PDN_TypeToBeUsed sic@ */
+
+    f_NBIOT_InitialRegistration_Step5_12(p_CellId, p_IOT_State, p_State, p_NAS_Ind);
+    
+    f_NBIOT_InitialRegistration_Step13_SS(p_CellId,
+                                       p_IOT_State,
+                                       p_NAS_Ind,
+                                       p_PDN_TypeToBeUsed,-,-,-,-,-,p_T3402);
+    
+    f_NBIOT_NAS_InitialRegistration_Step14_AttachComplete_SS(p_CellId, tsc_EpsDefaultBearerId, omit);
+  }
+
+    
+  //function Used to attach and release the UE at the end    
+  function f_NBIOT_Preamble_connected(NBIOT_CellId_Type p_CellId,
+                            IOT_STATE_Type p_State,
+                            integer p_NoOfEmergencyNumbers := 0,   // @sic R5-115673 sic@
+                            template (omit) EPS_NetworkFeatureSupport p_NtwkFeatSupport := cs_EPS_NwkFtSup_IMSVoice, // @sic R5-130620 sic@
+                            boolean b_InitialAttachIsCompleted := true //6th parameter
+                           // PDN_TypeToBeUsed_Type p_PDN_TypeToBeUsed := pdnTypeAsSupportedByUE 
+                            ) runs on NBIOT_PTC
+  { // @sic R5s130347: local GuardTimer sic@ 
+    timer t_GuardTimer := tsc_GuardTimePreamble; //Timer stopped after step 4 Upon receiving rrcConnectionSetupComplete
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    timer t_AttachGuardTimer := 300.0; //Timer stopped before preamble exit
+    t_AttachGuardTimer.start;
+    t_GuardTimer.start;
+
+    // First switch cell back on
+    f_NBIOT_SetCellPower(p_CellId, tsc_ServingCellRS_EPRE);
+
+    // Switch on UE
+    VZ_LOG(-,-,-,"Switch on UE");    
+    f_UT_SwitchOnUE(UT); 
+	
+    // Store the value of NetworkFeatureSupport to be used throughout the test
+    //f_EUTRA_MobileInfo_SetNetworkFeatureSupport (p_NtwkFeatSupport); // @sic R5s180648 sic@
+
+    v_NAS_Ind := f_NBIOT_IdleUpdated_Vz_2_1_Step1_4 (p_CellId, PREAMBLE); // @sic R5s100780, R5s110176 sic@
+    t_GuardTimer.stop;
+      
+    f_NBIOT_IdleUpdated_Step5_14(nbiot_Cell1, CONTROL_PLANE, STATE2_NB_CONNECTED_UPDATED, v_NAS_Ind); 
+       
+    t_AttachGuardTimer.stop;
+  }
+   
+    /* This function Returns which all parameter of PCO need to be validated for particulat testcase. 
+   * It can be further refine based on PDNs (admin/app/internet if required by testcase in future. 
+   * Currentally pcscf is extra for IMS and all other PDNs expected PCO are same   
+   */
+  function f_vz_setExpectedPdnInfo (charstring APN_string := px_IMS_APN)  runs on NBIOT_PTC return ExpectedPdnInfo 
+  {
+      var ExpectedPdnInfo v_ExpectedPdnInfo;
+	  var boolean isImsPdn := false;
+	  
+      if ((APN_string == px_IMS_APN) and pc_IMS)
+      {
+         isImsPdn := true;
+      }
+      
+      // Default
+      v_ExpectedPdnInfo.initialInfoValidation := false;
+      v_ExpectedPdnInfo.pcscf_ipv4_addr := false;
+	  v_ExpectedPdnInfo.pcscf_ipv6_addr := false;
+	  v_ExpectedPdnInfo.dns_ipv4_addr := false;
+	  v_ExpectedPdnInfo.dns_ipv6_addr := false;
+	  v_ExpectedPdnInfo.ipv4_link_mtu := false;
+	  v_ExpectedPdnInfo.msisdn := false;
+	  v_ExpectedPdnInfo.operator_pco := false;
+      v_ExpectedPdnInfo.dns := false; // Either IPV6 or IPV4 DNS
+      
+      select(testcasename())
+      {
+         case("TC_VZ_SUPLCONFIMSLESS_2_1") // Internet PDN
+         {
+            if (APN_string == px_INTERNET_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns_ipv4_addr := true;
+               v_ExpectedPdnInfo.dns_ipv6_addr := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.msisdn := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SUPLCONFIMSLESS_2_12") 
+         {
+             log("APN_string=",APN_string, "px_INTERNET_APN=",px_INTERNET_APN);
+            if (APN_string == px_INTERNET_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SUPLCONFIMSLESS_2_16") 
+         {
+            if (APN_string == px_ADMIN_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SUPLCONFIMSLESS_2_5", "TC_VZ_SUPLCONFIMSLESS_2_27_Test1", "TC_VZ_SUPLCONFIMSLESS_2_27_Test2")  // ADMIN PDN
+         {
+             log("APN_string",APN_string);
+            if (APN_string == px_ADMIN_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true; // TRUE does not mean address has to be present. It just means we need to print log and validate that parameter for expected behaviour for this TC. 
+            }
+         }
+         case("TC_VZ_SUPLCONFIMSLESS_2_6")  // ADMIN and APP PDN
+         {
+            if ((APN_string == px_ADMIN_APN) )
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true; // TRUE does not mean address has to be present. It just means we need to print log and validate that parameter for expected behaviour for this TC. 
+            }
+         }
+          
+         //////////// IMS - SS
+         case("TC_VZ_SS_2_1") // IMS and Internet PDN
+         {
+            if (APN_string == px_IMS_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns_ipv6_addr := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.msisdn := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SS_2_7", "TC_VZ_SS_2_58") 
+         {
+            if (APN_string == px_INTERNET_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true; // Should not be included for non IMS PDN
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SS_2_8") 
+         {
+            if ((APN_string == px_INTERNET_APN) or (APN_string == px_ADMIN_APN) )
+            { 
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true; // Should not be included for non IMS PDN
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SS_2_16") 
+         {
+            if (APN_string == px_IMS_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_SS_2_18", "TC_VZ_SS_2_19", "TC_VZ_SS_2_20") 
+         {
+            if ((APN_string == px_INTERNET_APN) or (APN_string == px_ADMIN_APN) )
+            { 
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+          
+         //////////// IMS - MBSS
+         case("TC_VZ_MBAND_2_1", "TC_VZ_MBAND_2_5") // IMS 
+         {
+            if (APN_string == px_IMS_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns_ipv6_addr := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true;
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+         case("TC_VZ_MBAND_2_6",  // Internet
+              "TC_VZ_MBAND_2_7",  // Internet, ADMIN and App PDN
+              "TC_VZ_MBAND_2_13"  // Internet and Enterprise PDN 
+                               ) 
+         {
+            if (APN_string == px_INTERNET_APN)
+            {
+               v_ExpectedPdnInfo.initialInfoValidation := true;  
+               v_ExpectedPdnInfo.dns := true;
+               v_ExpectedPdnInfo.pcscf_ipv6_addr := true; 
+               v_ExpectedPdnInfo.ipv4_link_mtu := true;
+               v_ExpectedPdnInfo.operator_pco := true;
+            }
+         }
+      }
+	  return v_ExpectedPdnInfo;
+  };
+    
+// This function is to print log for validation required for all PCO param, based on Testcase requirement(Expected)    
+  function f_vz_SS_NAS_GetPcoToBeValidated (ExpectedPdnInfo p_ExpectedPdnInfo, boolean isImsPdn := false) runs on NBIOT_PTC
+  {
+      if (p_ExpectedPdnInfo.dns_ipv4_addr or p_ExpectedPdnInfo.dns_ipv6_addr or p_ExpectedPdnInfo.ipv4_link_mtu or p_ExpectedPdnInfo.msisdn
+          or p_ExpectedPdnInfo.operator_pco or p_ExpectedPdnInfo.pcscf_ipv4_addr or p_ExpectedPdnInfo.pcscf_ipv6_addr)
+      {
+         VZ_LOG(2,-,-,"PDN CONNECTIVITY REQUEST");     
+         VZ_LOG(3,"PCO List");   
+      }
+      
+      if (p_ExpectedPdnInfo.dns)
+      {
+         VZ_LOG(3,-,-,"    DNS");  
+      }    
+
+      if (p_ExpectedPdnInfo.dns_ipv4_addr)
+      {
+         VZ_LOG(3,-,-,"    DNS IPv4 address");  
+      }    
+      
+      if (p_ExpectedPdnInfo.dns_ipv6_addr)
+      {
+         VZ_LOG(3,-,-,"    DNS IPv6 address");     
+      }
+      
+      if (p_ExpectedPdnInfo.pcscf_ipv4_addr)
+      {
+         if (isImsPdn)
+         {  
+            VZ_LOG(3,-,-,"    P-CSCF IPv4 address");  
+         }
+         else
+         {
+            VZ_LOG(3,-,-,"    P-CSCF IPv4 address is not included");  
+         }
+      }
+      
+      if (p_ExpectedPdnInfo.pcscf_ipv6_addr)
+      {
+         if (isImsPdn)
+         {  
+            VZ_LOG(3,-,-,"    P-CSCF IPv6 address");  
+         }
+         else
+         {
+            VZ_LOG(3,-,-,"    P-CSCF IPv6 address is not included");  
+         }
+      }
+      
+      if (p_ExpectedPdnInfo.ipv4_link_mtu)
+      {
+         VZ_LOG(3,-,-,"    IPv4 Link MTU");     
+      }
+      
+      if (p_ExpectedPdnInfo.msisdn)
+      {
+         VZ_LOG(3,-,-,"    MSISDN");     
+      }
+      
+      if (p_ExpectedPdnInfo.operator_pco)
+      {
+         VZ_LOG(3,-,-,"    Operator reserved PCO container ID=FF00H, with MCC=311 and MNC=480"); 
+      }
+  }   
+    
+    
+    
+     function ss_NAS_GetProtocolConfigOptionList_check_validation(NAS_ExtdProtocolConfigOptions_Type p_ConfigOptionsRX,
+                                                               charstring APN_string := px_IMS_APN) runs on NBIOT_PTC
+  {
+    var template (value) NAS_ProtocolConfigOptions_Type v_ProtocolContainerList := {};
+    var integer v_PcoCnt := 0;
+    var O2_Type v_ProtocolId;
+    var octetstring v_Contents;
+    var octetstring v_Contents_OpPCO := ''O;
+    const octetstring tsc_contents_PLMN:= '130184'O;
+    var integer i,ipv4_DNS:=0,ipv4_MTU:=0,Operator_PCO:=0,P_CSCF:=0,MSISDN:=0;
+    var integer P_CSCF_IPV6 := 0;
+    var integer DNS_IPV6 := 0;  
+    var ExpectedPdnInfo v_ExpectedPdnInfo;   
+    var boolean isImsPdn := false;  
+
+    if ((APN_string == px_IMS_APN) and pc_IMS)
+    {
+       isImsPdn := true;
+    }
+      
+    v_ExpectedPdnInfo := f_vz_setExpectedPdnInfo(APN_string);
+      
+    f_vz_SS_NAS_GetPcoToBeValidated(v_ExpectedPdnInfo, isImsPdn);
+
+    // Received From UE in PDN Request  
+    for (i := 0; i < lengthof(p_ConfigOptionsRX); i := i + 1) 
+    {
+      v_ProtocolId := p_ConfigOptionsRX[i].protocolID;
+      v_Contents := ''O;
+      select (v_ProtocolId) 
+      {  // See 24.008 Table 10.5.154
+        case ('0001'O) 
+        {       // P-CSCF IPv6 address
+	        P_CSCF_IPV6 := 1;             
+        }
+        case ('0002'O) 
+        {            // IM CN Subsystem Signalling Flag, reply with an empty container
+        }
+        case ('0003'O) 
+        {       // DNS Server IPv6 address
+            DNS_IPV6 := 1;         
+        }
+        case ('000C'O) 
+        {       // P-CSCF IPv4 address
+            P_CSCF := 1;
+        }
+        case ('000D'O) 
+        {       // DNS Server IPv4 address
+            ipv4_DNS :=1;
+        }
+        case ('000E'O) 
+        {
+            MSISDN :=1;        //MSISDN    
+        }  
+        case ('FF00'O) 
+        {       //Operator specific PCO
+            Operator_PCO :=1;
+            if (isvalue(p_ConfigOptionsRX[i].content))
+            {
+                v_Contents_OpPCO := p_ConfigOptionsRX[i].content;
+            }
+        }
+        case ('0010'O) 
+        {       // Ipv4 Link MTU 
+           ipv4_MTU:=1;
+          
+        }
+      }
+    }
+
+    if (v_ExpectedPdnInfo.dns_ipv4_addr or v_ExpectedPdnInfo.dns_ipv6_addr or v_ExpectedPdnInfo.ipv4_link_mtu or v_ExpectedPdnInfo.msisdn
+          or v_ExpectedPdnInfo.operator_pco or v_ExpectedPdnInfo.pcscf_ipv4_addr or v_ExpectedPdnInfo.pcscf_ipv6_addr)
+    {
+       log(testcasename(),": Received PCO List:");  
+    }
+      
+    // Verdict for initial attach is not applicable for other TCs according to TP. It is applicable for 2.1 only.
+    // DNS (IPV4 ot V6)  
+    if (v_ExpectedPdnInfo.dns == true)
+    {
+        if (ipv4_DNS == 1 or DNS_IPV6 == 1)
+        {
+           if(DNS_IPV6 == 1)
+           {
+              log(testcasename(),": Received:    DNS IPv6 address:    Present");
+           }  
+           if(ipv4_DNS == 1)
+           {
+              log(testcasename(),": Received:    DNS IPv4 address:    Present");
+           }
+        }
+        else
+        {
+            log(testcasename(),": Received:    DNS (IPv6 or Ipv4) address:    Not Present");
+            f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : DNS Server IPv4/Ipv4 not present");    
+        }
+    }
+      
+    // DNS IPV4  
+    if (v_ExpectedPdnInfo.dns_ipv4_addr == true)
+    {
+        if(ipv4_DNS != 1)
+        {
+           log(testcasename(),": Received:    DNS IPv4 address:   Not Present");
+           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : DNS Server IPv4 address not present");    
+        }
+        else
+        {
+           log(testcasename(),": Received:    DNS IPv4 address:    Present");
+        }  
+    }
+      
+    // DNS IPV6  
+    if (v_ExpectedPdnInfo.dns_ipv6_addr == true)
+    {
+       if(DNS_IPV6 != 1)
+       {
+          log(testcasename(),": Received:    DNS IPv6 address:    Not Present");
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : DNS Server IPv6 address not present");         
+       }
+       else
+       {
+          log(testcasename(),": Received:    DNS IPv6 address:    Present");
+       }  
+    }  
+      
+    // P-CSCF IPV4  
+    if (v_ExpectedPdnInfo.pcscf_ipv4_addr == true) // Expected here for just for logging.
+    {
+       if (isImsPdn) // IMS PDN
+       { 
+          if(P_CSCF != 1)
+          {
+             log(testcasename(),": Received:    P-CSCF IPv4 address not present");  
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv4 address not present");
+          }   
+          else
+          {
+             log(testcasename(),": Received:    P-CSCF IPv4 address present");  
+          }
+       }
+       else  // Non IMS PDN
+       {
+          if(P_CSCF == 1)
+          {
+             log(testcasename(),": Received:    P-CSCF IPv4 address included");  
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv4 address included");
+          }   
+          else
+          {
+             log(testcasename(),": Received:    P-CSCF IPv4 address not included");  
+          }
+       }
+    }
+    else // No logging but just failing TC in case device sends P-CSCF address for Non IMS PDN sends 
+    {
+        if ((isImsPdn == false) and (P_CSCF == 1))
+        {
+           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv4 address present for Non Ims PDN");
+        }
+    }
+      
+    // P-CSCF IPV6  
+    if (v_ExpectedPdnInfo.pcscf_ipv6_addr == true) // Expected here for just for logging.
+    {
+       if (isImsPdn) // IMS PDN
+       { 
+          if(P_CSCF_IPV6 != 1)
+          {
+             log(testcasename(),": Received:    P-CSCF IPv6 address not present");  
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv6 address not present");
+          }   
+          else
+          {
+             log(testcasename(),": Received:    P-CSCF IPv6 address present");  
+          }
+       }
+       else  // Non IMS PDN
+       {
+          if(P_CSCF_IPV6 == 1)
+          {
+             log(testcasename(),": Received:    P-CSCF IPv6 address included");  
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv6 address included");
+          }   
+          else
+          {
+             log(testcasename(),": Received:    P-CSCF IPv6 address not included");  
+          }
+       }
+    }
+    else // No logging fot TC as validation is not required bt TC, but just failing TC in case ImsLess device sends P-CSCF address
+    {
+        if ((isImsPdn == false) and (P_CSCF_IPV6 == 1))
+        {
+           log(testcasename(),": P-CSCF IPv6 address included for non IMS PDN");
+           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "P-CSCF IPv6 address included for non IMS PDN");
+        }
+    }
+      
+    // IPV4 Link MTU  
+    if (v_ExpectedPdnInfo.ipv4_link_mtu == true)
+    {
+       if(ipv4_MTU != 1)
+       {
+          log(testcasename(),": Received:    IPv4 Link MTU:    Not Present"); 
+	      f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : Ipv4 Link MTU not present");         
+       }
+       else
+       {
+          log(testcasename(),": Received:    IPv4 Link MTU:    Present");    
+       }  
+    }
+      
+    // MSISDN  
+    if (v_ExpectedPdnInfo.msisdn == true)
+    {
+       if(MSISDN != 1)
+       {
+          log(testcasename(),": Received:    MSISDN:    Not Present"); 
+	      f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : MSISDN not present");  
+       }
+       else
+       {
+          log(testcasename(),": Received:    MSISDN:    Present"); 
+       } 
+    }
+      
+    if (v_ExpectedPdnInfo.operator_pco == true)
+    {
+       if(Operator_PCO != 1)
+       {
+          log(testcasename(),": Received:    Operator specific PCO:    Not Present");
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : Operator specific PCO not present");
+       }
+       else
+       {
+          if(ispresent(v_Contents_OpPCO))
+          {
+             if (v_Contents_OpPCO != tsc_contents_PLMN)
+             {
+                log(testcasename(),": Received:    Mcc and Mnc not set to 311 480");
+                f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : Operator reserved PCO container invalid");
+             }
+             else
+             {     
+                log(testcasename(),": Received:    Operator specific PCO container ID=FF00H:    Present. Mcc and Mnc set to 311 480");
+             }
+          }
+          else
+          {
+              log(testcasename(),": Received:    Operator specific PCO:    MCC and MNC are Not Present");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Fail : Operator reserved PCO, MCC and MNC are Not Present");
+          }
+        }
+     }
+  }  
+    
+    
+  function f_NBIOT_RRC_ConnEst_DefWithNas_Vz_PCO_Validation(NBIOT_CellId_Type p_CellId,
+                                          EUTRA_ASN1_RRC_TransactionIdentifier_Type p_RRC_TI,
+                                          template (present) EstablishmentCause_NB_r13 p_EstablishmentCause,
+                                          template (present) NAS_MSG_Indication_Type p_ExpectedNasMsg,
+                                          template (present) integer p_SelectedPlmnId := 1) runs on NBIOT_PTC return NAS_MSG_Indication_Type
+  { // @sic R5s110468: new parameter p_SelectedPlmnId sic@
+    var NAS_MSG_Indication_Type v_NasInd;
+    var NAS_UL_Message_Type v_PdnConnectivityRequest;
+    var ProcedureTransactionIdentifier v_EPS_TI := tsc_PTI_1;
+    var template (omit) ProtocolConfigOptions v_Pco := omit;
+    var boolean v_EIT_Flag := false;
+    var B3_Type v_Pdn_Type;
+    var B3_Type v_Request_Type;
+    var B3_Type v_attach_request_Type;
+    var charstring v_APN_Name := px_INTERNET_APN;
+      
+    // receive RRC Connection Request on SRB0 (CCCH):
+    f_NBIOT_RRC_ConnectionRequest_Def(p_CellId, p_EstablishmentCause);    // @sic R5-120721 change 3 sic@
+    
+    // send RRC Connection Setup on SRB0 (CCCH) and switch on UL grant assignments:
+    f_NBIOT_Modified_RRC_ConnectionSetup_Def (p_CellId);
+    
+    // UE shall establish SRB1 acc. to 36.331 cl. 5.3.3.4 and 5.3.9
+    // UE enters RRC_CONNECTED state
+    
+    // receive RRC Connection Setup Complete with piggy-backed NAS message on SRB1 (DCCH):
+      
+    
+    v_NasInd := f_NBIOT_RRCConnectionSetupComplete_Def(p_CellId,                                       // @sic R5s120121 MCC160 implementation sic@
+                                                       cr_508_RRCConnectionSetupComplete_NB(p_RRC_TI, p_SelectedPlmnId), // @sic R5s110468 sic@
+						       cr_NAS_IndicationWithPiggybacking(?,?,cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, ?)));
+    v_PdnConnectivityRequest := v_NasInd.Pdu.PiggybackedPduList[0].Msg;
+      
+    VZ_LOG(2,-,-,"RRC CONNECTION SETUPCOMPLETE");       
+    VZ_LOG(3,"EMM Message",-,"Attach Request");   
+   
+    if(ispresent(v_NasInd.Pdu.Msg.aTTACH_REQUEST))  
+    {
+        VZ_LOG(4,"EMM Message",-,"Attach Request");
+    }
+      
+    VZ_LOG(3,"ESM Message",-,"PDN Connectivity Request");  
+         
+    if(ispresent(v_PdnConnectivityRequest))  
+    {
+          VZ_LOG(4,"ESM Message",-,"PDN Connectivity Request");
+    }   
+    v_EPS_TI := v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.procedureTransactionIdentifier; // Use this value in SS responses
+    // Get the PCO to be used later (TS 36.508 v.8.2.2 Table 4.7.3-6)
+
+    VZ_LOG(5,-,-,"Does the EPS Attach type is EPS Attach or Combined EPS/IMSI Attach in the Attach Request message?");  
+              
+    //Check for Attach type in Attach request message
+    if(ispresent(v_NasInd.Pdu.Msg.aTTACH_REQUEST.epsAttachType.typeValue))
+    {
+         VZ_LOG(2,-,-,"ATTACH REQUEST");  
+        
+         VZ_LOG(3,"Attach Type",-,"EPS Attach/Combined Attach");
+        
+         v_attach_request_Type := v_NasInd.Pdu.Msg.aTTACH_REQUEST.epsAttachType.typeValue;
+         
+         if ( match(testcasename(), "TC_VZ_SUPLCONFIMSLESS_2_1") and ispresent(v_NasInd.Pdu.Msg.aTTACH_REQUEST.addUpdateType))
+         {
+             if(bit2int(v_NasInd.Pdu.Msg.aTTACH_REQUEST.addUpdateType.addUpdateTypeValue) == 1)
+             {
+                 VZ_LOG(3, "addUpdateTypeValue is 1 (SMS Only)");
+             }
+             else
+             {
+                 f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, testcasename() & ": Step 1c: addUpdateTypeValue is not 1");
+             }
+         }
+     
+         if(v_attach_request_Type == tsc_EAttachType_EpsOnly)
+         {
+                 VZ_LOG(4,"Attach Type",-,"EPS Attach");
+                 f_NBIOT_PreliminaryPass(__FILE__, __LINE__," Step 1b:Received attach type is EPS only attach"); 
+         }
+         else if(v_attach_request_Type == tsc_EAttachType_Combined)
+         {
+                 VZ_LOG(4,"Attach Type",-,"EPS Attach");
+                 f_NBIOT_PreliminaryPass(__FILE__, __LINE__, " Step 1b:Received attach type is Combined EPS/IMSI attach");
+         }
+         else
+         {
+                 VZ_LOG(4,"Attach Type",-," Is neither EPS Attach nor Combined Attach");
+                 f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " Step 1b:Received attach type is neither EPS atatch nor Combined attach");
+         }
+         
+         if(pc_IMS ==false) 
+         { 
+             VZ_LOG(1,-,-,"SMS over NAS capable devices, EPS Attach type must be set to Combined EPS/IMSI Attach?");
+            
+             VZ_LOG(3,"addUpdateTypeValue",-,"SMS Only/Omit");
+             
+             if(ispresent(v_NasInd.Pdu.Msg.aTTACH_REQUEST.addUpdateType.addUpdateTypeValue))
+             {
+                 if(v_NasInd.Pdu.Msg.aTTACH_REQUEST.addUpdateType.addUpdateTypeValue == '1'B)
+                 {
+                     VZ_LOG(4,"addUpdateTypeValue",-,"SMS Only (Device is SMS over NAS capable)");
+                     
+                     if(v_attach_request_Type == tsc_EAttachType_Combined)
+                     {
+                                                 
+                         f_NBIOT_PreliminaryPass(__FILE__, __LINE__, " Step 1b: SMS over NAS capable device as addUpdateTypeValue is set to 1 and Received attach type is Combined EPS/IMSI attach");
+                   
+                     } else if(v_attach_request_Type == tsc_EAttachType_EpsOnly)
+                     {
+                                                 
+                         f_NBIOT_PreliminaryPass(__FILE__, __LINE__, " Step 1b: SMS over NAS capable device as addUpdateTypeValue is set to 1 and Received attach type is EPS only attach");
+                   
+                     }
+                     
+                     else
+                     {   
+                         VZ_LOG(4,"Attach Type",-,"Is not Combined Attach");
+                         f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " Step 1b: SMS over NAS capable device as addUpdateTypeValue is set to 1 and Received attach type is not Combined attach");
+                     }
+                 }    
+             }
+             else
+             {
+                 VZ_LOG(4,"addUpdateTypeValue",-,"omit (Device is not a SMS over NAS capable device)");
+                 VZ_LOG(4,"Attach Type",-,"EPS Attach");
+                
+             }    
+             
+           
+         }
+    }       
+    else
+    {
+        VZ_LOG(4,"Attach Type",-,"Not present");
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Step 1b:Attach type is not present in Attach request message")
+    }
+    
+    // Check for Request type is "initial request"
+    VZ_LOG(5,-,-,"Is request type is Initial request");  
+      
+    VZ_LOG(2,-,-,"PDN CONNECTIVITY REQUEST"); 
+      
+    VZ_LOG(3,"Request type",-,"Initial request"); 
+      
+    v_Request_Type := v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.requestType.typeValue;
+    
+    if(v_Request_Type != tsc_PdnRequest_InitialAttach) 
+    {
+        VZ_LOG(4,"Request type",-,"Is not Initial request"); 
+        log("Expected Request Type is: ",tsc_PdnRequest_InitialAttach," Received Request Type is: ",v_Request_Type);//###
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " Received Request type is not a Initial request");
+    }
+    else
+    {
+       VZ_LOG(4,"Request type",-,"Initial request"); 
+       f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Received request type is an 'Initial Request'"); 
+    }
+     
+    
+    // Check for PDN type is "IPV4V6"
+    VZ_LOG(5,-,-,"whether PDN Type is IPv4v6 or not"); 
+      
+    v_Pdn_Type := v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.pdnType.typeValue;
+      
+    VZ_LOG(2,-,-,"PDN Connectivity Request");    
+      
+    VZ_LOG(3,"PDN type",-,"IPv4v6");   
+      
+    if(v_Pdn_Type != tsc_PdnType_IPv4v6)
+    {
+        if(v_Pdn_Type == tsc_PdnType_IPv4)
+        {
+            VZ_LOG(4,"PDN type",-,"IPv4"); 
+        }
+        else if(v_Pdn_Type == tsc_PdnType_IPv6)
+        {
+            VZ_LOG(4,"PDN type",-,"IPv6");
+        }    
+        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Step 1d:Received PDN type is not IPv4v6");        
+    }
+    else
+      {
+        VZ_LOG(4,"PDN type",-,"IPv4v6");  
+        f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Received PDN type is IPv4v6");
+      }
+    
+    
+     // Check for ESM flag is 1
+      VZ_LOG(5,-,-,"Is the ESM Information Transfer Flag not included in the ESM:PDN Connectivity Request message?");
+    
+      VZ_LOG(2,-,-,"PDN Connectivity Request"); 
+      
+      v_EIT_Flag := f_CheckEsmInfoTransferFlag(v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST);
+      if(pc_IMS)
+      {
+              VZ_LOG(3,"ESM flag",-,"Set"); 
+              if(v_EIT_Flag != true)
+              {
+                  VZ_LOG(4,"ESM flag",-,"Not Set"); 
+                  f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Received ESM flag is not set to 1");
+              } 
+             else
+              {
+                  VZ_LOG(4,"ESM flag",-,"Set");
+                  f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Received ESM flag is set to 1 as expected");
+              }
+      }
+      else
+      {
+              VZ_LOG(3,"ESM flag",-,"Not Set");
+              if(v_EIT_Flag != true)
+              {
+                  VZ_LOG(4,"ESM flag",-,"Not Set");
+                  f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Not Received ESM flag");
+              } 
+              else
+              {
+                  VZ_LOG(4,"ESM flag",-,"Set");
+                  f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Received ESM flag");
+              }
+      }
+    // Check APN name present or not
+    VZ_LOG(5,-,-,"Is APN Name Included?");   
+      
+    VZ_LOG(2,-,-,"PDN Connectivity Request");   
+      
+    VZ_LOG(3,"APN Name",-,"omit");  
+      
+    if(isvalue (v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.accessPointName))
+    {
+       VZ_LOG(4,"APN Name",-,"Is not omit");     
+       f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " step 1f: Received PDN connectivity request having APN name present which is not expected");
+    }
+    else
+    {
+       VZ_LOG(4,"APN Name",-,"omit");     
+    }
+      
+      
+    // Check for voice domain preference
+    if (match(testcasename(), "TC_VZ_MBAND_2_1"))
+   {
+     log(testcasename(),"Check for UE uses setting and Voice domain preferrences");
+    if(ispresent(v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref))
+    {
+        log("Voice Domain preferences:",v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref.voiceDomainPrefEUTRA);
+	    if(v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref.ueUsageSetting == '0'B)
+	    {
+            log("UE usage setting:",v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref.ueUsageSetting);
+	       if((v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref.voiceDomainPrefEUTRA == '11'B) or (v_NasInd.Pdu.Msg.aTTACH_REQUEST.voiceDomainPref.voiceDomainPrefEUTRA == '01'B))
+	       {
+	           setverdict(pass);
+	       }
+           else
+           {
+               
+	           f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "UE is not Voice Centric and IMS PS voice preferred and CS Voice as secondary");
+           }
+	    }
+	    else
+	    {
+	        
+	        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " UE is not Voice Centric and CS voice preferred");
+	    }
+     }
+   }   
+      
+    // Check for PCO Validation
+    VZ_LOG(5,-,-,"Is the Protocol Option (PCO) Present ?");  
+    log("v_PdnConnectivityRequest:", v_PdnConnectivityRequest);
+     
+    if (pc_IMS) // for IMS supported device it will be IMS during attach
+    {
+       v_APN_Name := px_IMS_APN; 
+    }
+      
+    if (ispresent( v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.protocolConfigurationOptions)) 
+    {
+          VZ_LOG(4,-,-,"    Protocol Option (PCO): Present");   
+          v_Pco := v_PdnConnectivityRequest.pDN_CONNECTIVITY_REQUEST.protocolConfigurationOptions;
+          ss_NAS_GetProtocolConfigOptionList_check_validation(valueof(v_Pco.pco), v_APN_Name);
+    }  
+    else
+    {
+          VZ_LOG(4,-,-,"   Protocol Option (PCO): Not Present");   
+          f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " Protocol configuration options in PDN connectivity request is not present");
+    }
+      
+      
+    return v_NasInd;
+  };  
+    
+  function f_NBIOT_IdleUpdated_Vz_2_1_Step1_4(NBIOT_CellId_Type p_CellId,
+                                       IDLEUPDATED_Type p_Type) runs on NBIOT_PTC return NAS_MSG_Indication_Type
+  { // @sic R5s100780 sic@ 
+    var EUTRA_ASN1_RRC_TransactionIdentifier_Type v_RRC_TI := tsc_RRC_TI_Def;
+    var template (present) B3_Type v_PDNType := (f_GetPdnType(), '101'B, '001'B);
+    var NAS_MSG_Indication_Type v_NAS_Ind;
+    var template (present) NAS_UL_Message_Type v_ESMMessage := cr_CIOT_PDN_CONNECTIVITY_REQUEST(tsc_PdnRequest_InitialAttach, v_PDNType);
+   
+    
+    VZ_LOG(-,-,-,"RRC connection establishment ?");  
+    
+   
+      
+    // Receive RRC Connection Setup Complete with
+    VZ_LOG(5,-,-,"Does the UE send the  EMM:Attach Request and ESM:PDN Connectivity Request messages together with the RRCConnectionSetupComplete message");    
+   
+    v_NAS_Ind := f_NBIOT_RRC_ConnEst_DefWithNas_Vz_PCO_Validation(p_CellId,
+                                                v_RRC_TI,
+                                                cr_EstablishmentCause_NB_Any,
+                                                cr_NAS_IndicationWithPiggybacking(tsc_SHT_IntegrityProtected,
+                                                                                  cr_CIOT_ATTACH_REQUEST(cr_AdditionalUpdateType_CIOT),
+                                                                               v_ESMMessage));
+    
+     
+    return v_NAS_Ind;
+  }
+   
+    
+ function f_vz_SS_NAS_Validate_PDN_Info(NAS_UL_Message_Type p_PDNConnectivityReq , 
+                                         octetstring p_APN_Value) runs on NBIOT_PTC
+  {    
+      var NAS_UL_Message_Type v_PDNConnectivityReq := p_PDNConnectivityReq;
+      var B3_Type v_PDN_RequestType := '001'B; 
+      var PDN_Index_Type p_PdnIndex := PDN_2;    
+      //var NAS_UL_Message_Type v_PdnConnectivityRequest;  
+      var boolean v_EIT_Flag := false;
+      var B3_Type v_Pdn_Type;
+      var B3_Type v_Request_Type;  
+      var octetstring v_Received_APN_Value;    
+      var charstring v_UpperCasePattern_apn;
+      var charstring v_apnUpper;
+      var ProcedureTransactionIdentifier v_PTId_UE;
+      var template (omit) ExtdProtocolConfigOptions v_Pco;
+      var  ExpectedPdnInfo v_ExpectedPdnInfo;
+      var charstring v_APN_Val :=  substr(f_StringToUpper(oct2char(p_APN_Value)),1,(lengthof(f_StringToUpper(oct2char(p_APN_Value)))-1));
+      log("inside f_vz_SS_NAS_Validate_PDN_Info");
+      v_ExpectedPdnInfo := f_vz_setExpectedPdnInfo(v_APN_Val);
+      log("v_ExpectedPdnInfo:",v_ExpectedPdnInfo);
+      if(v_ExpectedPdnInfo.initialInfoValidation == true)
+      {  
+         VZ_LOG(5,-,-,"Is the Request Type Initial Request?");
+         VZ_LOG(2,-,-,"PDN CONNECTIVITY REQUEST"); 
+         VZ_LOG(3,"Request type",-,"Initial request"); 
+         v_Request_Type :=  v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.requestType.typeValue;
+          
+         if(v_Request_Type != tsc_PdnRequest_InitialAttach) 
+         {
+             log("Expected Request Type is: ",tsc_PdnRequest_InitialAttach," Received Request Type is: ",v_Request_Type);//###
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, ": Received Request type is not a Initial request");
+         }
+         else
+         {
+             VZ_LOG(4,"Request type",-,"Initial request"); 
+             f_NBIOT_PreliminaryPass(__FILE__, __LINE__, ": Received request type is an 'Initial Request'"); 
+         }  
+              
+         VZ_LOG(5,-,-,"Is the PDN type = IPv4v6?");
+         VZ_LOG(2,-,-,"PDN CONNECTIVITY REQUEST"); 
+         VZ_LOG(3,"PDN type",-,"IPv4v6"); 
+         v_Pdn_Type :=   v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.pdnType.typeValue;
+            
+         if(v_Pdn_Type != tsc_PdnType_IPv4v6)
+         {
+             if(v_Pdn_Type == tsc_PdnType_IPv4)
+             {
+                  VZ_LOG(4,"PDN type",-,"IPv4"); 
+             }
+             else if(v_Pdn_Type == tsc_PdnType_IPv6)
+             {
+                  VZ_LOG(4,"PDN type",-,"IPv6");
+             }
+             log("Received PDN type is: ",v_Pdn_Type);
+             //f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "Step 1d:Received PDN type is not IPv4v6");        
+         }
+         else
+         {
+             VZ_LOG(4,"PDN type",-,"IPv4v6");  
+             f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "Received PDN type is IPv4v6");
+         }
+            
+         VZ_LOG(5,-,"-","Is the ESM Information Transfer Flag not included in the ESM:PDN Connectivity Request message?");
+         VZ_LOG(2,-,-,"PDN CONNECTIVITY REQUEST");   
+         v_EIT_Flag := f_CheckEsmInfoTransferFlag(v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST);
+         VZ_LOG(3,"ESM flag",-,"Not Set"); 
+         
+         if(v_EIT_Flag != true)
+         {
+             VZ_LOG(4,"ESM flag",-,"Not Set");
+             f_NBIOT_PreliminaryPass(__FILE__, __LINE__, "ESM flag is omitted as expected");
+         } 
+         else
+         {
+             VZ_LOG(4,"ESM flag",-,"Set");
+             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, "ESM flag is not omitted");  
+         }  
+               
+         if (ispresent(  v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.accessPointName.nameValue))
+         {  
+             v_Received_APN_Value := v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.accessPointName.nameValue; 
+             v_UpperCasePattern_apn := f_StringToUpper(oct2char(v_Received_APN_Value));
+             v_apnUpper := f_StringToUpper(oct2char(p_APN_Value)); 
+           //  log("v_apnUpper:=", v_apnUpper,"v_UpperCasePattern_apn", v_UpperCasePattern_apn );
+             if(substr(v_apnUpper,1,(lengthof(v_apnUpper)-1)) != substr(v_UpperCasePattern_apn,1,(lengthof(v_UpperCasePattern_apn)-1)))
+	         {
+                 log("Expected APN Value is: ",substr(v_apnUpper,1,(lengthof(v_apnUpper)-1))," Received APN Value is: ",substr(v_UpperCasePattern_apn,1,(lengthof(v_UpperCasePattern_apn)-1))); //###
+               //  f_VZ_Apn_LogPrint(v_apnUpper); 
+	             f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, testcasename() & ": Invalid APN Received");
+	         }
+             else
+             {
+                 VZ_LOG(4,"APN Name",-,"Present"); 
+             }    
+          } 
+          else 
+          {
+              log(testcasename(),": UE did not included APN name in the PDN Connectivity Req");
+              v_Received_APN_Value := p_APN_Value;
+          }      
+         
+          VZ_LOG(5,-,-,"Is the Protocol Option (PCO) Present ?");      
+          if (ispresent(  v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.extdProtocolConfigurationOptions )) 
+          {
+              VZ_LOG(4,-,-,"   Protocol Option (PCO):  Present");
+              v_Pco :=  v_PDNConnectivityReq.pDN_CONNECTIVITY_REQUEST.extdProtocolConfigurationOptions ;
+              ss_NAS_GetProtocolConfigOptionList_check_validation(valueof(v_Pco.pco), substr(v_apnUpper,1,(lengthof(v_apnUpper)-1)));
+          }  
+          else
+          {
+              VZ_LOG(4,-,-,"   Protocol Option (PCO):  Not Present");
+              f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__, " Protocol configuration options in PDN connectivity request is not present");
+          }
+       }    
+    }   
+    
+    
+    function f_VZ_Extract_SrcLinkLayer_Address(octetstring p_Data) return octetstring
+  {
+    /* Extracting 16 byte SrcLinkLayerAddress from IPv6 header starting from 8th byte */
+    var O16_Type v_SrcLinkLayerAddress := substr(p_Data, 8, 16);
+    return v_SrcLinkLayerAddress;
+  }
+    function f_VZ_NBIOT_Receive_Router_Solicit_Msg(
+                                                 charstring p_StepNmbr := "TestStep", 
+                                                 boolean isControlledRepeat := false,
+                                                 float v_MaxRcvdTime := 4.5 /* 0.5 buffer */) runs on NBIOT_PTC 
+  {
+      var ICMPv6Message v_Request;
+      var NB_SRB_COMMON_IND v_ReceivedAsp;
+      var charstring v_ClientIpAddress := px_IPv6_Address1_UE;
+      var charstring v_ServerAddr;
+      var O16_Type v_SrcLinkLocalAddress;
+      var charstring p_LocalAddress;  
+      var charstring v_TcName := testcasename() & ": ";
+      var template  AccessPointName v_ExpectedAccessPointName := cr_AccessPointName_Any;
+      var B3_Type v_PDN_RequestType := '001'B; 
+      var SrcLinkLayerAddress v_srcLinkAddress;      
+      var integer ipv6HdrLen;
+      var bitstring v_Bitstring;
+      var boolean b_TerminateContinuousAlt := true;
+      timer t_RcvdTimer;
+      var LinkedEpsBearerIdentity linkedEpsBearerId := {idValue := '0110'B};
+      var octetstring  v_DataReply;
+      var EPS_BearerIdentity v_BearerId;
+      var ProcedureTransactionIdentifier v_PTI;
+      var template (value) UserDataContainer v_DataContainer;
+      var NAS_MSG_Indication_Type v_NAS_Ind;
+     
+     
+      alt
+      {
+         []  SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+          
+          log(v_TcName, p_StepNmbr, ": Received IPv6 Router Solicitation Msg from the DUT");
+          /* Extract Source Link Layer Address from IPv6 header and store inside Rtr Solicit Msg */
+          v_srcLinkAddress.linkLayerAddr := f_VZ_Extract_SrcLinkLayer_Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer);
+          v_Request.routerSolMsg.rtSolOptions.srcLinkLayerAddr.linkLayerAddr := v_srcLinkAddress.linkLayerAddr;
+                
+          // changes for link local address starts//  
+	      v_ClientIpAddress := px_IPv6_Address1_UE; 
+          v_ServerAddr := f_IPv6AddrGetLinkLocalAddr(v_ClientIpAddress);
+                    
+                  
+          VZ_LOG(6,-,-,"Link local address From UE should be: ");  
+          log(v_ServerAddr);  
+                    
+          VZ_LOG(3,-,-,"UE sends out the Router Solicitations to P-GW, using the link-local address constructed using the interface id received in the PDN Address from network"); 
+   
+          v_SrcLinkLocalAddress := f_VZ_Extract_SrcLinkLayer_Address(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer); 
+          p_LocalAddress := f_Convert_OctString2IPv6Addr(v_SrcLinkLocalAddress);  
+                     
+                    if(match(v_ServerAddr, p_LocalAddress))
+                    {
+                         VZ_LOG(4,-,-,"link local address from UE is:");  
+                         log(p_LocalAddress);
+                    }    
+                    else
+                    {
+                        VZ_LOG(4,-,-,"link local address from UE is:");  
+                        log(p_LocalAddress);
+                        f_NBIOT_SetVerdictFailOrInconc(__FILE__, __LINE__,"Invalid Link local Address received");
+   
+                    }    
+                
+        v_DataReply := f_NBIOT_ProcessIPv6Address_2_3_SS(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer, 3*60, 5*60);
+        v_BearerId := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.epsBearerId;
+        v_PTI := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.procedureTransactionIdentifier;
+       
+        v_DataContainer := cs_UserDataContainer(v_DataReply);
+        SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                       tsc_SRB1bis,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_ESM_DATA_TRANSPORT(tsc_EpsDefaultBearerId, v_PTI, v_DataContainer))));
+         VZ_LOG(6,-,-,"Network simulator sends the router advertisement message with validLifetime value set to 3 minutes and the RouterLifetime value set to 5 minutes.");     
+          
+       VZ_LOG(5,-,"Step3a","Examine the source IP address of an IPv6 packet to verify the construction of an IPv6 address by appending an interface id  to the IPv6 prefix in the Router Advertisement message?");
+   
+       VZ_LOG(2,-,-,"IPV6 PACKET");
+       VZ_LOG(3,-,-,"The IPv6 address should be constructed by appending the interface id to the IPv6 prefix in the Router Advertisement message");
+       VZ_LOG(4,-,-,"This needs to validated manually");
+        
+       VZ_LOG(-,-,"Step4","After the first router advertisement is sent for 2 minutes, Network simulator sends another router advertisement with the same IPv6 prefix, the ValidLifetime value set to 8 minutes, and the RouterLifetime value set to 6 minutes.");  
+       VZ_LOG(2,-,-,"ROUTER ADVERTISEMENT");
+       VZ_LOG(-,-,-,"Timer started for 2 minutes");
+         t_RcvdTimer.start(120.0); 
+         alt{
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+        
+         
+         }[]t_RcvdTimer.timeout{VZ_LOG(-,-,-,"Timer for 2 mins timed out");log("v_ReceivedAsp:", v_ReceivedAsp);} 
+         [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }
+          []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+         }
+                                                
+        v_DataReply := f_NBIOT_ProcessIPv6Address_2_3_SS(v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.userDatacontainer.dataContainer, 8*60, 6*60);
+        v_BearerId := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.epsBearerId;
+        v_PTI := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.eSM_DATA_TRANSPORT.procedureTransactionIdentifier;
+       
+        v_DataContainer := cs_UserDataContainer(v_DataReply);
+        SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                       tsc_SRB1bis,
+                                       cs_TimingInfo_Now,
+                                       cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cs_ESM_DATA_TRANSPORT(tsc_EpsDefaultBearerId, v_PTI, v_DataContainer))));
+        VZ_LOG(6,-,-,"Network simulator sends the router advertisement message with ValidLifetime value set to 8 minutes and RouterLifetime value set to 6 minutes");
+    
+        VZ_LOG(-,-,"Step5","Wait for 5 minutes");  
+        VZ_LOG(5,-,"Step5a","Does the UE send a new Router Solicitation message?");  
+        VZ_LOG(3,-,-,"UE should not send a new Router Solicitation message for next 4.5 minutes");  
+        t_RcvdTimer.start(300.0); 
+         alt{
+          [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                            tsc_SRB1bis,
+                            cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                             cr_ESM_DATA_TRANSPORT (tsc_EpsDefaultBearerId, cr_UserDataContainer(?, ?), omit)))) -> value v_ReceivedAsp { // @sic R5s180192 sic@
+        
+         
+         }[]t_RcvdTimer.timeout{VZ_LOG(-,-,-,"Timer for 5 mins timed out");} 
+         [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }
+          []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+         }
+      }
+       []SRB.receive ( car_NB_SRB_NasPdu_IND ( nbiot_Cell1, tsc_SRB1bis,
+                                                cr_NAS_Indication ( tsc_SHT_IntegrityProtected_Ciphered,
+                                                                    cr_PDNConnReqAdditionalPDN(('001'B, '011'B), cr_AccessPointName_Any))))
+          {
+              repeat;
+           }
+         
+        [] SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1, tsc_SRB1bis, cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                                cr_PDNDisconnectReq(linkedEpsBearerId)))){
+                                                 
+                                                                   repeat;
+                                                                }  
+   }
+   
+ }
+    
+    //Added VZW NBIOT SS TC 2.5
+   function f_SMS_AT_CSMS(charstring p_MsgService) runs on NBIOT_PTC
+  {
+    var UT_COMMON_CNF v_Cnf;
+//    var UT_PTC_MTC_PORT p_Port := UT;
+    UT.send(cas_UT_Req(SELECT_MESSAGE_SERVICE,CNF_REQUIRED,
+                           cs_MessageService(p_MsgService)));
+    UT.receive(car_UT_COMMON_CNF) -> value v_Cnf;
+    if(not(f_CheckStringStartWith(v_Cnf.ResultString, "<CR><LF>+CSMS:")))
+      {
+        f_NBIOT_SetVerdictFailOrInconc (__FILE__, __LINE__, "The AT CMD results in an error.");
+      }
+  }
+    
+    function f_SMS_AT_CMGF(charstring p_Mode) runs on NBIOT_PTC
+  {
+    var UT_COMMON_CNF v_Cnf;
+    UT.send(cas_UT_Req(MESSAGE_FORMAT,CNF_REQUIRED,
+                            cs_MessageFormat(p_Mode)));
+    UT.receive(car_UT_COMMON_CNF) -> value v_Cnf;
+    if(not(f_CheckStringStartWith(v_Cnf.ResultString, tsc_AT_ResultOK)))
+      {
+        f_NBIOT_SetVerdictFailOrInconc (__FILE__, __LINE__, "The AT CMD results in an error.");
+      }
+  }
+    
+    
+      function f_SMS_AT_CSCS(charstring p_Chset) runs on NBIOT_PTC
+  {
+    var UT_COMMON_CNF v_Cnf;
+    UT.send(cas_UT_Req(SELECT_CHARACTER_SET,CNF_REQUIRED,
+                           cs_SelectCharacterSet(p_Chset)));
+    UT.receive(car_UT_COMMON_CNF) -> value v_Cnf;
+    if(not(f_CheckStringStartWith(v_Cnf.ResultString, tsc_AT_ResultOK)))
+      {
+        f_NBIOT_SetVerdictFailOrInconc (__FILE__, __LINE__, "The AT CMD results in an error.");
+      }
+  }
+    
+    
+    function f_SMS_AT_CMGD_ALL() runs on NBIOT_PTC
+  {
+    var UT_COMMON_CNF v_Cnf;
+     UT.send(cas_UT_Req(DELETE_MESSAGE_WITHFLAG,CNF_REQUIRED,
+                           ( cs_DeleteMessage_Withflag(int2str(1), int2str(4)))));
+    UT.receive(car_UT_COMMON_CNF) -> value v_Cnf;
+    if(not(f_CheckStringStartWith(v_Cnf.ResultString, tsc_AT_ResultOK)))
+      {
+        f_NBIOT_SetVerdictFailOrInconc (__FILE__, __LINE__, "The AT CMD results in an error.");
+      }
+   }
+    
+     function f_SMS_MMI_ChkMsgDisplayed(integer p_Length,
+                                     charstring p_Msg) runs on NBIOT_PTC
+  {
+    var UT_COMMON_CNF v_Cnf;
+    UT.send(cas_UT_Req(CHECK_MESSAGE_DISPLAYED,CNF_REQUIRED,
+                           (  cs_ChkMsgDisplayed(int2str(p_Length), p_Msg))));
+    UT.receive(car_UT_COMMON_CNF) -> value v_Cnf;
+    if (v_Cnf.Result == false) 
+      {
+        f_NBIOT_SetVerdictFailOrInconc (__FILE__, __LINE__, "The MMI CMD results in an error.");
+      }
+  }
+    
+    function fl_TC_IMSLESS_SendLteSMS(EUTRA_RRC_STATE_Type p_RRCState := RRC_IDLE, NBIOT_CellId_Type p_CellId := nbiot_Cell1) runs on NBIOT_PTC
+    {
+    var NBIOT_SecurityParams_Type v_SecurityParams := f_NBIOT_Security_Get(); // get current security parameters
+	var GutiParameters_Type v_GutiParams := f_NBIOT_CellInfo_GetGuti(p_CellId);
+	var NB_SRB_COMMON_IND v_ReceivedAsp, v_ReceivedAspRRC;
+	var NAS_MSG_Indication_Type v_NasInd, v_NasInd_Rxd;
+	var NAS_MessageContainer v_NAS_RcvMsgContainer_SMS;
+	var template (value) NAS_MessageContainer v_NAS_TxMessageContainer_SMS;
+	var template CP_PDU_Type v_ExpSMS_CP_PDU;
+	var bitstring v_NAS_RcvBitsMsgContainer_SMS;
+	var octetstring v_EncodedSMS;
+	var template (value) RP_DATA_dl_Type v_SMSdl;
+	var octetstring vz_UserData_1;
+	var integer UDL;  
+	var integer rp_PDU_length;
+	var O4_Type v_NasCountUL;
+	var template (value) EUTRA_FDD_TDD_CellInfo_Type  v_EUTRA_FDD_TDD_Info;
+	timer t_WaitForPdnConnReq := 15.0;
+    var boolean b_OptionalPdnRecd := false;
+    var charstring v_UpperCasePattern_apn;
+    var charstring v_apn;
+    var charstring v_TcName := testcasename() & ": ";      
+    var ProcedureTransactionIdentifier v_PTId_UE;
+    var template (omit) ProtocolConfigOptions v_Pco;
+    var PDN_Address v_PDN_Address2;
+    var   NAS_UL_Message_Type v_PDNConnReq;  
+    var charstring v_sApn := "?vzwadmin";
+    var integer v_SelectedPlmnIndex := f_NBIOT_CellInfo_GetSelectedPlmnIndex(nbiot_Cell1);
+    var template DeviceProperties v_DevicePropertiesEMM := cr_DeviceProperties('D'H) ifpresent;
+   
+        
+    t_WaitForPdnConnReq.start;  
+	
+           // Set message service as indicated in the PIXIT.
+			f_SMS_AT_CSMS("0");
+			f_SMS_AT_CMGF("MT");  // @sic R5s110750 sic@
+			// Set Character Set "GSM"
+			f_SMS_AT_CSCS("""IRA""");
+			// Set the UE to delete all messages from Preferred message store
+			f_SMS_AT_CMGD_ALL();
+
+		
+            log(testcasename(),": Network sends Package #0 SMS message to UE");
+			if (p_RRCState == RRC_IDLE)
+			{
+				log(testcasename(),": Paging the UE using S-TMSI");
+				f_NBIOT_UE_Page(p_CellId,
+						cs_NB_Paging_OneRecord(cs_PagingUE_Identity_S_TMSI(v_GutiParams.MME_Code,
+								v_GutiParams.M_TMSI)));
+				log(testcasename(),": Waiting for Service Request message from UE");
+				//@siclog "Step 2" siclog@
+				//The UE transmits a SERVICE REQUEST message.
+                 SRB.receive(car_NB_SRB0_RrcPdu_IND(nbiot_Cell1, cr_RRCConnectionRequest_NB ( cr_EstablishmentCause_NB_Any, ? ) ))->value v_ReceivedAspRRC;
+                if(ispresent(v_ReceivedAspRRC.Signalling.Rrc.Ccch.message_.c1.rrcConnectionRequest_r13.criticalExtensions.rrcConnectionRequest_r13.ue_Identity_r13.s_TMSI))
+                {
+                    //f_EUTRA_PreliminaryPass(__FILE__, __LINE__, "Received RRC Connection Request UE identity is S-TMSI");
+                    log("Received RRC Connection Request UE identity is S-TMSI");
+                }
+                else
+                {
+                    log("Received RRC Connection Request message UE Identity is not S-TMSI");
+                    f_NBIOT_SetVerdictFailOrInconc(__FILE__,__LINE__,"Received RRC Connection Request message UE Identity is not S-TMSI");
+                }
+        
+                f_NBIOT_Modified_RRC_ConnectionSetup_Def(nbiot_Cell1);
+       
+                v_NasInd_Rxd := f_NBIOT_RRCConnectionSetupComplete_Def(nbiot_Cell1,
+                                                           cr_508_RRCConnectionSetupComplete_NB(tsc_RRC_TI_Def, v_SelectedPlmnIndex),
+                                                            cr_NAS_Indication (tsc_SHT_IntegrityProtected,  // @sic R5s170962 sic@
+                                                                   cr_CONTROL_PLANE_SERVICE_REQUEST(?, -, -, -, v_DevicePropertiesEMM)));
+                                                                                          
+                SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request(tsc_SHT_IntegrityProtected_Ciphered,
+                                                  cs_SERVICE_ACCEPT)));
+                           
+                
+              // The SS transmits a CP-DATA containing an RP-DATA RPDU (SMS DELIVER TPDU)
+			// encapsulated in a Downlink NAS transport message to the UE.
+
+			//code changes for package#0 starts//
+            vz_UserData_1 := '0605040b84c002010603c4af87a4253147afd57951ce18806d1451940f02c800000000010f636f6d2e767a77646d736572766572'O;
+            UDL := lengthof(vz_UserData_1);  
+            
+            rp_PDU_length := 8 + lengthof('7788996655'O) + lengthof(vz_UserData_1);  
+            	       log(testcasename(),": Sending application directed SMS for the OTADM client inside the DUT");   
+           
+                
+            v_SMSdl := vz_RP_DATA_dl_DELIVER('7788996655'O,vz_UserData_1,rp_PDU_length,UDL,OTADM);
+            v_SMSdl.rP_UserData.tP_PDU.SMS_DELIVER.tP_StatusReportIndication := '1'B;
+            v_EncodedSMS := bit2oct(encvalue(v_SMSdl));
+            
+            v_NAS_TxMessageContainer_SMS := cs_NAS_MsgContainer_SMS(v_EncodedSMS);
+                
+	        SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request (tsc_SHT_IntegrityProtected_Ciphered,
+                                                   cs_SMS_DL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                            v_NAS_TxMessageContainer_SMS))));
+
+	        //code changes for package#0 starts//     
+	        //@siclog "Step 4" siclog@
+	        //Check: Does the UE transmit a CP-ACK encapsulated in an Uplink NAS transport message?  // Store procedure transaction id to be used in SS responses.
+	        SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                    tsc_SRB1bis,
+                                    cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cr_SMS_UL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                               cr_NAS_MsgContainer_SMS (?) )))) -> value v_ReceivedAsp;
+   
+            
+            v_NAS_RcvMsgContainer_SMS := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.ul_NAS_TRANSPORT.nasMessage;
+            v_NAS_RcvBitsMsgContainer_SMS := oct2bit(v_NAS_RcvMsgContainer_SMS.smsmessage);
+            			       log(testcasename(),": UL Info Transfer message received with CP-ACK encapsulated.");
+            v_ExpSMS_CP_PDU := cr_CP_ACK_PDU (cr_MT_TI0_FromUE);
+		    f_SMS_CP_PDU_DecodeAndMatch(v_NAS_RcvBitsMsgContainer_SMS, v_ExpSMS_CP_PDU, testcasename(), "");
+
+		    /// SEND PDN CONNECTIVY TO DO 
+		    //@siclog "Step 5" siclog@
+		    //Check: Does the UE transmit a CP-DATA containing an RP-ACK RPDU encapsulated in an Uplink NAS transport message?
+		    SRB.receive(car_NB_SRB_NasPdu_IND(nbiot_Cell1,
+                                    tsc_SRB1bis,
+                                    cr_NAS_Indication(tsc_SHT_IntegrityProtected_Ciphered,
+                                                      cr_SMS_UL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                               cr_NAS_MsgContainer_SMS (?) )))) -> value v_ReceivedAsp;
+            // Store procedure transaction id to be used in SS responses.
+		    // needs to be decoded with Decvalue !!
+            v_NAS_RcvMsgContainer_SMS := v_ReceivedAsp.Signalling.Nas[0].Pdu.Msg.ul_NAS_TRANSPORT.nasMessage;
+            v_NAS_RcvBitsMsgContainer_SMS := oct2bit(v_NAS_RcvMsgContainer_SMS.smsmessage);
+            v_ExpSMS_CP_PDU := cr_CP_DATA_PDU (cr_MT_TI0_FromUE, cr_CP_UserData_RP_ACK_ul); // @sic R5-110830 sic@
+
+		    f_SMS_CP_PDU_DecodeAndMatch(v_NAS_RcvBitsMsgContainer_SMS, v_ExpSMS_CP_PDU, testcasename(), "");
+             //@siclog "Step 6" siclog@
+		    //The SS transmits a CP-ACK encapsulated in a Downlink NAS transport message to the UE.
+            v_NAS_TxMessageContainer_SMS := cs_NAS_MsgContainer_SMS (f_SMS_PDU_Encvalue(cs_CP_ACK_PDU (cs_MT_TI0_FromSS)));
+			SRB.send(cas_NB_SRB_NasPdu_REQ(nbiot_Cell1,
+                                   tsc_SRB1bis,
+                                   cs_TimingInfo_Now,
+                                   cs_NAS_Request (tsc_SHT_IntegrityProtected_Ciphered,
+                                                   cs_SMS_DL_NAS_Transport (tsc_SHT_NoSecurityProtection,
+                                                                            v_NAS_TxMessageContainer_SMS))));
+        	// Check if UE triggers ADMIN PDN after it receives the SMS  
+			log(testcasename(),": Waiting for ADMIN PDN Connection Request from UE");
+           //----subs func for activate additonal pdn func-------
+          v_PDNConnReq := f_NBIOT_TriggerAdditionalPDN_Modified(nbiot_Cell1, CONTROL_PLANE, ?, cs_AccessPointName (tsc_Octet_Lower_ADMIN_APN), "vzwadmin");
+      
+			//f_NBIOT_ActivateAdditionalPDN(p_CellId, '6'H, tsc_Octet_ADMIN_APN, tsc_DRB2, RRC_CONNECTED);
+			log(testcasename(),": ADMIN PDN connection successful");
+			//@siclog "Step 7" siclog@
+			//Make the operator check an MT Short Message received.
+			/*--------cant find------*/
+            if (px_SMS_ChkMsgReceived == true) {
+			    f_SMS_MMI_ChkMsgDisplayed(160, tsc_Fox);
+			}
+                 f_vz_SS_NAS_Validate_PDN_Info(v_PDNConnReq,char2oct(v_sApn));     
+              
+		} // End of ALT []t_WaitForPdnConnReq.timeout   
+	} // End of alt 
+        
+     
+    
+}

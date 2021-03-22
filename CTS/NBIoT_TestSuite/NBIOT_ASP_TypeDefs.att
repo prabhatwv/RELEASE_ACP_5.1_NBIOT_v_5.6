@@ -1,0 +1,6 @@
+module NBIOT_ASP_TypeDefs
+{
+   type NB_SYSTEM_CTRL_REQ with { encode "TCI XML" }
+   type NB_SYSTEM_CTRL_CNF with { encode "TCI XML" }
+   type NB_SYSTEM_IND with { encode "TCI XML" }
+} with {}

@@ -1,0 +1,7 @@
+module EUTRA_CommonDefs
+{
+   // type CipheringAlgorithm_Type with { encode "Plain" variant "Int8" }
+  //  type IntegrityProtAlgorithm_Type with { encode "Plain" variant "Int8" }
+	type RRC_MSG_Indication_Type with { encode "TCI XML" variant "codec change allowed" }
+	type RRC_MSG_Request_Type with { encode "TCI XML" variant "codec change allowed" }
+} with {}

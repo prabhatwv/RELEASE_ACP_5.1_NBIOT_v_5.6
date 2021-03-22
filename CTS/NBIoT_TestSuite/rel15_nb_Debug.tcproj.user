@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<user_space>
+ <logs>
+  <items />
+ </logs>
+ <open>
+  <scripts>
+   <item>
+    <name>VZW_LTE_IMSLESS_DATA_RETRY_RRC</name>
+    <tab>
+     <pos>2</pos>
+     <ln>115</ln>
+     <crln>144</crln>
+     <crcl>7</crcl>
+    </tab>
+   </item>
+   <item>
+    <name>VZW_LTE_IMSLESS_DATA_RETRY_TESTCASES</name>
+    <tab>
+     <pos>1</pos>
+     <ln>2359</ln>
+     <crln>0</crln>
+     <crcl>0</crcl>
+    </tab>
+   </item>
+   <item>
+    <name>VZW_LTE_IOT_GSMA_TESTCASES</name>
+    <tab>
+     <pos>0</pos>
+     <ln>0</ln>
+     <crln>0</crln>
+     <crcl>0</crcl>
+    </tab>
+   </item>
+  </scripts>
+  <logs />
+ </open>
+ <campaigns />
+ <ext_att />
+ <ext_mp />
+ <tc_sel />
+ <session_reports />
+ <watches />
+ <set_breakpoints>
+  <scripts />
+ </set_breakpoints>
+</user_space>

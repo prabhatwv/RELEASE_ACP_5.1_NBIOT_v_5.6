@@ -1,0 +1,4 @@
+module IMS_CommonFunctions
+{
+    external function fx_MD5_Hex with { encode "Plain" variant "Int32" }
+} with {}

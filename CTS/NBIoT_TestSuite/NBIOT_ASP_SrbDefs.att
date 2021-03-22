@@ -1,0 +1,11 @@
+module NBIOT_ASP_SrbDefs
+{
+	group SRB_DATA_ASPs with {}
+	group Port_Definitions with {}
+	type NB_C_Plane_Request_Type with {}
+	type NB_C_Plane_Indication_Type with {}
+	type NB_SRB_COMMON_REQ with {encode "TCI XML" variant "codec change allowed"}
+	type NB_SRB_COMMON_IND with {encode "TCI XML" variant "codec change allowed"}
+	type NBIOT_SRB_PORT with {}
+	type NASEMU_NBIOT_SRB_PORT with {}
+} with {}

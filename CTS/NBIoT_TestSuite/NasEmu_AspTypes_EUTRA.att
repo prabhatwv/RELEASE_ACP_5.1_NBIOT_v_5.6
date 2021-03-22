@@ -1,0 +1,5 @@
+module NasEmu_AspTypes_EUTRA
+{
+	type EUTRA_RRC_PDU_REQ with {encode "TCI XML"  }
+	type EUTRA_RRC_PDU_IND with {encode "TCI XML"  }
+} with {}

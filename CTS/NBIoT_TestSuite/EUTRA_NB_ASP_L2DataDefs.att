@@ -1,0 +1,13 @@
+module EUTRA_NB_ASP_L2DataDefs
+{
+	type MAC_PDU_Type with { encode override "MAC_PDU_Type" }
+    type MAC_PDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+	
+	type RLC_PDU_Type with { encode override "RLC_PDU_Type" }
+	type RLC_PDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+	type PDCP_SDU_Type with { encode override "PDCP_SDU_Type" }
+	type PDCP_SDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+	
+	type PDCP_PDU_Type with { encode override "PDCP_PDU_Type" }
+	type PDCP_PDUList_Type with { encode "TCI XML" variant "codec change allowed" }
+} with {}

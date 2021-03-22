@@ -1,0 +1,141 @@
+/******************************************************************************/
+// AUTOMATICALLY GENERATED MODULE - DO NOT MODIFY
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2019-03-11 16:02:15 +0100 (Mon, 11 Mar 2019) $
+// $Rev: 23884 $
+/******************************************************************************/
+
+module Parameters {
+
+  import from CommonDefs all;
+  
+  modulepar integer                     px_load_count    := 20; //VZW NBIOT: FOR LOAD TESTING; 
+    
+  modulepar integer                    px_UE_ID  := 61;
+    
+    
+  modulepar boolean                     px_MILENAGE_enabled := true; // @desc  if true Milenage , if false XOR algo is used for NAS Authentication  
+ 
+  modulepar boolean                     px_OPc_configured := true;      // @desc if true "OPc key" ,if false "OP key" is used on SIM 
+
+  modulepar octetstring                 px_AccessPointName:='565a57494e5445524e4554'O;                            // @desc  Access Point Name
+
+  modulepar B48_Type                    px_AuthSQN := hex2bit('000000000133'H); // @desc SQN for AKA
+  
+  modulepar B128_Type                   px_OPKey := hex2bit('576FE92DC7B03D69F47801E3B02ED0D7'H);//hex2bit('5F1D289C5D354D0A140C2548F5F3E3BA'H);
+    
+  modulepar B16_Type                    px_AuthAMF:= /*'1000000100000001'B;*/ '1000000000000000'B; //'0001111110100101'B;                                    // @desc  Authentication Management Field (16 bits). The value shall be different from '1111 1111 1111 111'B (AMFresynch).
+
+  modulepar B128_Type                   px_AuthK                    := oct2bit('54484953204953204120534543524554'O);//oct2bit('465b5ce8b199b49faa5f0a2ee238a6bc'O);
+
+  modulepar hexstring                   px_IMEISV_Def;                                  // @desc  Default IMEISV value.  No default can be proposed as this is a manufacturer defined value
+
+  modulepar hexstring                   px_IMEI_Def:= '863423040010159'H;//'865235030101352'H;                                    // @desc  Default IMEI value transmitted by UE.  Digit 15 shall be set as a Spare Digit, i.e. shall be set to '0' (see TS 23.003)
+
+  modulepar hexstring                   px_IMSI_Def                 := /*'311480012345675'*/'311480000004600'H;//vzw_modified
+
+  modulepar charstring                  px_IPv4_Address1_NW := "192.168.2.140";                            // @desc  IPv4 Gateway Address in PDN1
+
+  modulepar charstring                  px_IPv4_Address1_RemoteUE  := "192.168.2.226";                      // @desc  IPv4 Address of remote UE connected to PDN1
+
+  modulepar charstring                  px_IPv4_Address1_UE :=        "192.168.2.226" ;                   // @desc  IPv4 Address connected to PDN1
+
+  modulepar charstring                  px_IPv4_Address2_NW := "192.168.2.139";                            // @desc  IPv4 Gateway Address in PDN2
+
+  modulepar charstring                  px_IPv4_Address2_RemoteUE :="1.1.1.2";                      // @desc  IPv4 Address of remote UE connected to PDN2
+
+  modulepar charstring                  px_IPv4_Address2_UE:= "1.1.1.2";                            // @desc  IPv4 Address connected to PDN2
+
+  modulepar charstring                  px_IPv4_Address2a_UE:= "1.1.1.1";                          // @desc  IPv4 Address connected to PDN2a
+
+  modulepar charstring                  px_IPv6_Address1_NW:= "5546:222:2259::210";                            // @desc  IPv6 Gateway Address in PDN1
+
+  modulepar charstring                  px_IPv6_Address1_RemoteUE:= "2000::1";                      // @desc  IPv6 Address of remote UE in PDN1
+
+  modulepar charstring                  px_IPv6_Address1_UE := "2000::1";                            // @desc  IPv6 Address in PDN1
+
+  modulepar charstring                  px_IPv6_Address2_NW := "5546:222:2259::209";                            // @desc  IPv6 Gateway Address in PDN2
+
+  modulepar charstring                  px_IPv6_Address2_RemoteUE := "2000::2";                     // @desc  IPv6 Address of remote UE in PDN2
+
+  modulepar charstring                  px_IPv6_Address2_UE := "2000::2";                            // @desc  IPv6 Address in PDN2
+
+  modulepar charstring                  px_IPv6_Address2a_UE := "2000::1";                           // @desc  IPv6 Address in PDN2a
+
+  modulepar B3_Type                     px_NAS_CipheringAlgorithm   := '001'B;          // @desc  NAS Ciphering Algorithm (eea1)
+
+  modulepar B3_Type                     px_NAS_IntegrityProtAlgorithm := '001'B;        // @desc  NAS Integrity Algorithm (eia1)
+
+  modulepar SinglePLMN_TestedType       px_SinglePLMN_Tested        := MultiPLMN;       // @desc  This parameter represents the network capability/preference to support multi PLMNs on the same test Band and indicates the preference of multi PLMNs or single PLMN test environment. This PIXIT shall be set to SinglePLMN when only one frequency is defined for the test band
+
+  modulepar B128_Type                   px_eAuthRAND                := /*oct2bit('00000000000000000000000002020102'O);*/oct2bit('A3DE0C6D363E30C364A4078F1BF8D577'O);
+
+  modulepar integer                     px_ePrimaryFrequencyBand    := 13; //VZW Change: 1;               // @desc  E-UTRAN primary frequency band
+
+  modulepar charstring                  px_INTERNET_APN       := "VZWINTERNET"; //VZW Internet APN String
+  modulepar charstring                  px_Lower_ADMIN_APN    := "vzwadmin";
+  modulepar charstring                  px_Lower_INTERNET_APN := "vzwinternet";  
+  modulepar charstring                  px_ADMIN_APN          := "VZWADMIN"; //Added VZW ADMIN APN
+    
+  modulepar charstring                  px_IMS_APN            := "VZWIMS"; //Added VZW IMS APN
+    
+  modulepar boolean                     pc_Automatic_EPS_Re_Attach  := false;           // @desc  Support of automatic re-activation of the EPS bearer(s)
+
+  modulepar boolean                     pc_Automatic_Re_Attach      := false;           // @desc  Support of automatic re-activation of the EPS bearer(s) during Network Initiated Detach with detach type set to re-attach required
+
+  modulepar boolean                     pc_ESM_MO_Bearer_Modification := false;         // @desc  Support of ESM UE requested bearer resource modification procedure
+
+  modulepar boolean              pc_AddActAdditionalPDN_EnableDisable := true;          //Default value is true
+    
+  modulepar boolean                     pc_FeatrGrp_3_F             := false;           // @desc  Support of Semi-persistent scheduling, TTI bundling, 5bit RLC UM SN, 7bit PDCP SN
+
+  modulepar boolean                     pc_FeatrGrp_3_T             := false;           // @desc  Support of Semi-persistent scheduling, TTI bundling, 5bit RLC UM SN, 7bit PDCP SN
+
+  modulepar boolean                     pc_FeatrGrp_7_F             := false;           // @desc  Support of RLC UM
+
+  modulepar boolean                     pc_FeatrGrp_7_T             := false;           // @desc  Support of RLC UM
+
+  modulepar boolean                     pc_GERAN                    := false;           // @desc  UE Supports GSM and/or GPRS
+
+  modulepar boolean                     pc_IMS                      := false;           // @desc  Support of IMS
+
+  modulepar boolean                     pc_IPv4                     := true;           // @desc  UE supports IPv4 (used IMS PICS as currently not defined in LTE)
+
+  modulepar boolean                     pc_IPv6                     := true;           // @desc  UE supports IPv6 (used IMS PICS as currently not defined in LTE)
+
+  modulepar boolean                     pc_LAP                      := false;           // @desc  Support of Low Access Priority Indication.
+
+  modulepar boolean                     pc_LAP_override             := false;           // @desc  Support of Low Access Prioirty Override
+
+  modulepar boolean                     pc_Multiple_PDN             := false;           // @desc  Support for multiple PDN connections
+
+  modulepar boolean                     pc_Provide_Internet_as_second_APN := false;     // @desc  Configured to provide Internet APN as the 2nd PDN connection
+
+  modulepar boolean                     pc_ROHC_profile0x0002       := false;           // @desc  Support for ROHC profile0x0002
+
+  modulepar boolean                     pc_SwitchOnOff              := true;           // @desc  switch on/off supported
+
+  modulepar boolean                     pc_USIM_Removal             := false;           // @desc  USIM removable without power down supported
+
+  modulepar boolean                     pc_UTRA                     := false;           // @desc  UE supports UTRA
+
+  modulepar boolean                     pc_ZUC                      := false;           // @desc  Support of ZUC algorithm
+
+  modulepar boolean                     pc_eFDD                     := false;           // @desc  UE supports EUTRA FDD
+
+  modulepar boolean                     pc_eTDD                     := false;           // @desc  UE supports EUTRA TDD
+
+  modulepar float                       px_Timer_RrcConnRel := 0.0; //VZW NBIOT GSMA
+  
+  modulepar charstring                  px_File_1_GB                := "RTPG.tgz";
+    
+  modulepar boolean pc_DebugPrint_Enable := false; 
+  modulepar boolean pc_SMS0_Enable := false;
+  modulepar boolean                     px_SMS_ChkMsgReceived       := true;            // @desc  Whether the operator can check an MT Short Message received
+
+}

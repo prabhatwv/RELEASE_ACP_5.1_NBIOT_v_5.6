@@ -1,0 +1,5 @@
+module EUTRA_ASP_SrbDefs
+{
+	type SRB_COMMON_REQ with { encode "TCI XML" }
+	type SRB_COMMON_IND with { encode "TCI XML" }
+} with {}

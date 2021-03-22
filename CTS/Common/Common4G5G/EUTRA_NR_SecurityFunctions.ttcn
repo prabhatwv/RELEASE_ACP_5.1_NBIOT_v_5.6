@@ -1,0 +1,24 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2019-03-17 11:24:36 +0100 (Sun, 17 Mar 2019) $
+// $Rev: 24096 $
+/******************************************************************************/
+module EUTRA_NR_SecurityFunctions {
+
+
+  const integer tsc_NAS_Enc_Alg := 1;           /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+  const integer tsc_NAS_Int_Alg := 2;           /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+  const integer tsc_RRC_Enc_Alg := 3;           /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+  const integer tsc_RRC_Int_Alg := 4;           /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+  const integer tsc_UP_Enc_Alg  := 5;           /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+}

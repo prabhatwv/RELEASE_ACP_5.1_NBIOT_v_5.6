@@ -1,0 +1,110 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2018-05-02 15:24:16 +0200 (Wed, 02 May 2018) $
+// $Rev: 21205 $
+/******************************************************************************/
+
+module NBIOT_RLC_Common {
+
+  import from CommonAspDefs all;
+  import from EUTRA_NB_ASP_L2DataDefs all;
+  import from EUTRA_NB_CommonL2 all;
+  import from NBIOT_ASP_L2DataDefs all;
+  import from NBIOT_AspCommon_Templates all;
+  import from NBIOT_CommonDefs all;
+  import from NBIOT_SRB_DRB_Templates all;
+
+  template (value) NB_L2_DATA_REQ cas_NB_SRB1bis_RLCAmDataReq (NBIOT_CellId_Type p_CellId,
+                                                               template (value) TimingInfo_Type p_TimingInfo,
+                                                               template (value) RLC_AMD_PDU_Type p_AMD_PDU) :=
+  { /* @status    APPROVED (NBIOT) */
+    Common := cs_NB_ReqAspCommonPart_SRB(p_CellId, tsc_SRB1bis, p_TimingInfo),
+    L2Data := {
+      SubframeDataList := {
+        {
+          SubframeOffset := tsc_SubframeOffset0,
+          HarqProcess := omit,
+          PduSduList   := {
+            RlcPdu := {
+              { AMD := p_AMD_PDU }
+            }
+          }
+        }
+      }
+    }
+  };
+
+  template (value) NB_L2_DATA_REQ cas_NB_SRB1bis_RLCStatusReq(NBIOT_CellId_Type p_CellId,
+                                                              template (value) TimingInfo_Type p_TimingInfo,
+                                                              template (value) RLC_AM_StatusPDU_Type p_STATUS_PDU) :=
+  { /* @status    APPROVED (NBIOT) */
+    Common := cs_NB_ReqAspCommonPart_SRB(p_CellId, tsc_SRB1bis, p_TimingInfo),
+    L2Data := {
+      SubframeDataList := {
+        {
+          SubframeOffset := tsc_SubframeOffset0,
+          HarqProcess := omit,
+          PduSduList   := {
+            RlcPdu := {
+              { Status := p_STATUS_PDU }
+            }
+          }
+        }
+      }
+    }
+  };
+
+  template (present) L2Data_Indication_Type cr_L2Data_Indication_RlcPdu(template (present) RLC_PDUList_Type p_PduList) :=
+  { /* @status    APPROVED (NBIOT) */
+    SubframeData := {
+      PduSduList := {
+        RlcPdu := p_PduList
+      },
+      NoOfTTIs := 1
+    }
+  };
+
+  template (present) NB_L2_DATA_IND car_NB_SRB1bis_RLC_DATA_IND(NBIOT_CellId_Type p_CellId,  // @sic R5s170242 sic@
+                                                                template (present) RLC_PDUList_Type p_PduList) :=
+  /* @status    APPROVED (NBIOT) */
+    car_NB_L2_DATA_IND(cr_NB_IndAspCommonPart_SRB(p_CellId, tsc_SRB1bis), cr_L2Data_Indication_RlcPdu(p_PduList));
+
+  template (present) RLC_PDUList_Type cr_RLC_PDUList_AmdPdu(template (present) RLC_AMD_PDU_Type p_AMD_PDU) :=
+  { /* @status    APPROVED (NBIOT) */
+    { AMD := p_AMD_PDU }
+  };
+
+  template (present) RLC_PDUList_Type cr_RLC_PDUList_Status(template (present) RLC_AM_StatusPDU_Type p_STATUS_PDU) :=
+  { /* @status    APPROVED (NBIOT) */
+    { Status := p_STATUS_PDU }
+  };
+
+  template (present) RLC_PDUList_Type cr_RLC_PDUList_AmdPdu_Status(template (present) RLC_AMD_PDU_Type p_AMD_PDU,
+                                                                   template (present) RLC_AM_StatusPDU_Type p_STATUS_PDU) :=
+  { /* @status    APPROVED (NBIOT) */
+    { Status := p_STATUS_PDU },
+    { AMD := p_AMD_PDU }
+  };
+
+  template (present) NB_L2_DATA_IND car_NB_SRB1bis_RLCAmDataInd(NBIOT_CellId_Type p_CellId,
+                                                                template (present) RLC_AMD_PDU_Type p_AMD_PDU) :=
+  /* @status    APPROVED (NBIOT) */
+    car_NB_SRB1bis_RLC_DATA_IND(p_CellId, cr_RLC_PDUList_AmdPdu(p_AMD_PDU));
+
+  template (present) NB_L2_DATA_IND car_NB_SRB1bis_RLCStatusInd(NBIOT_CellId_Type p_CellId,
+                                                                template (present) RLC_AM_StatusPDU_Type p_STATUS_PDU) :=
+  /* @status    APPROVED (NBIOT) */
+    car_NB_SRB1bis_RLC_DATA_IND(p_CellId, cr_RLC_PDUList_Status(p_STATUS_PDU));
+
+  template (present) NB_L2_DATA_IND car_NB_SRB1bis_RLCAmDataStatusInd(NBIOT_CellId_Type p_CellId,  // @sic R5s170242 sic@
+                                                                      template (present) RLC_AMD_PDU_Type p_AMD_PDU,
+                                                                      template (present) RLC_AM_StatusPDU_Type p_STATUS_PDU) :=
+  /* @status    APPROVED (NBIOT) */
+    car_NB_SRB1bis_RLC_DATA_IND(p_CellId, cr_RLC_PDUList_AmdPdu_Status(p_AMD_PDU, p_STATUS_PDU));
+
+}

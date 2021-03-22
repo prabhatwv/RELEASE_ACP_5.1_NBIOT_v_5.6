@@ -1,0 +1,5 @@
+module EUTRA_ASP_DrbDefs
+{
+	type DRB_COMMON_REQ with { encode "TCI XML" /*variant "codec change allowed"*/ }
+	type DRB_COMMON_IND with { encode "TCI XML" /*variant "codec change allowed"*/ }
+} with {}

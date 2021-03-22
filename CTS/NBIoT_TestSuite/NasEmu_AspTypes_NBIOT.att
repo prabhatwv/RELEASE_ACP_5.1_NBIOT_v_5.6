@@ -1,0 +1,7 @@
+module NasEmu_AspTypes_NBIOT
+{
+	group System_Interface with {encode "TCI XML" variant "codec change allowed"}
+	type NBIOT_RRC_PDU_REQ with {encode "TCI XML" variant "codec change allowed"}
+	type NBIOT_RRC_PDU_IND with {encode "TCI XML" variant "codec change allowed"}
+	type NASEMU_NBIOT_SYSTEM_PORT with {encode "TCI XML" variant "codec change allowed"}
+} with {}

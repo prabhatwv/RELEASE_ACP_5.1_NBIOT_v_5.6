@@ -1,0 +1,377 @@
+/******************************************************************************/
+// @copyright   Copyright Notification
+//   No part may be reproduced except as authorized by written permission.
+//   The copyright and the foregoing restriction extend to reproduction in all media.
+//   Trademark 2019, 3GPP Organizational Partners (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).
+//   All rights reserved.
+// @version: 36.523-3 v15.3.0
+// $Date: 2019-01-29 18:31:21 +0100 (Tue, 29 Jan 2019) $
+// $Rev: 23621 $
+/******************************************************************************/
+
+module EUTRA_NB_NASSteps {
+
+  import from EUTRA_RRC_ASN1_Definitions language "ASN.1:2002" all with {encode "UNALIGNED_PER_OctetAligned"};
+  import from CommonDefs all;
+  import from CommonIP all;
+  import from EPS_NAS_MessageTemplates all;
+  import from EPS_NAS_TypeDefs all;
+  import from EUTRA_NB_CommonDefs all;
+  import from EUTRA_NR_Parameters all;
+  import from NAS_AuxiliaryDefsAndFunctions all;
+  import from NAS_CommonTemplates all;
+  import from NAS_CommonTypeDefs all;
+  import from Parameters all;
+
+  type enumerated UE_NetworkCap_ToBeTested {DEFAULT, PROSE_D2D_DISCOVERY, PROSE_D2D_COMMUNICATION, CIOT_CP, CIOT_UP, V2X, CP_Backoff}; /* @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS) */
+
+  /*
+   * @desc      Check pc_IPv6/pc_IPv4 and return corresponding PDN Type.
+   * @return    PdnTypeValue
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS)
+   */
+  function f_GetPdnType() return PdnTypeValue
+  {
+    var PdnTypeValue v_PdnType := tsc_PdnType_IPv4;
+    if (pc_IPv6) {
+      if (pc_IPv4) {
+        v_PdnType := tsc_PdnType_IPv4v6;
+      } else {
+        v_PdnType := tsc_PdnType_IPv6;
+      }
+    }
+    return v_PdnType;
+  }
+
+  /*----------------------------------------------------------------------------
+   * @desc      Extract UE security capabilities from Attach Request message and store for use later
+   * @param     p_ATTACH_REQUEST
+   * @return    UE_SecurityCapability
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS)
+   */
+  function f_EUTRA_NB_FillNAS_SecurityCapability(ATTACH_REQUEST p_ATTACH_REQUEST) return UE_SecurityCapability
+  { /* @sic R5s110014 sic@ */
+    var UE_SecurityCapability v_SecurityCapability;
+    var template (omit) MS_NetworkCap v_MS_NetworkCap := omit;
+    
+    v_SecurityCapability.eiaCap := bit2oct(p_ATTACH_REQUEST.ueNetworkCapability.eiaCap); // @sic R5s180271 Baseline Moving 2018 Phase 1 sic@
+    
+    if (ispresent(p_ATTACH_REQUEST.msNetworkCapability)) {
+      v_MS_NetworkCap := p_ATTACH_REQUEST.msNetworkCapability;
+    }
+    v_SecurityCapability := f_EPS_FillNAS_SecurityCapability_Common (p_ATTACH_REQUEST.ueNetworkCapability, v_MS_NetworkCap);
+    
+    return v_SecurityCapability;
+  }
+
+  /*
+   * @desc      PDN Address TS 24.301 clause 9.9.4.9 (TV version IEI is omit)
+   *            Default value according to TS 36.508 table 6.6.1-1 (which requires a 'static' value) and table 4.7.3-6
+   *            NOTE: Acc. to table 4.7.3-6 conditions IPv4 and IPv6 are corresponding to the PDN type sent in the previous PDN CONNECTIVITY REQUEST;
+   *                  but this is checked against f_GetPdnType what evaluates pc_IPv4 and pc_IPv6 i.e. the UE shall send the PDN type as expected acc. to pc_IPv4 and pc_IPv6
+   * @param     p_IPv4AllocationViaNas
+   * @param     p_PdnIndex          (default value: PDN_1)
+   * @param     p_PDN_TypeToBeUsed  (default value: pdnTypeAsSupportedByUE)
+   * @return    PDN_Address
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT, POS)
+   */
+  function f_EUTRA_NB_GetPDNAddress(boolean p_IPv4AllocationViaNas,
+                                    PDN_Index_Type p_PdnIndex := PDN_1,
+                                    PDN_TypeToBeUsed_Type p_PDN_TypeToBeUsed := pdnTypeAsSupportedByUE) return PDN_Address
+  { /* @sic R5-112600: Clarification to conditions for IP address configuration over user plane sic@ */
+    /* @sic R5s130362 - MCC160 Implementation: tsc_PDN_AddressInfo; p_UseSecondAddress changed to p_PDN_Index sic@ */
+    var PDN_AddressInfo_Type v_PDN_AddressInfo := f_PDN_AddressInfo_Get(p_PdnIndex);
+    var O4_Type v_Addr4 := f_Convert_IPv4Addr2OctString(v_PDN_AddressInfo.UE_IPAddressIPv4);    // @sic R5-113734, R5s130362sic@
+    var octetstring v_Addr6:= f_Convert_IPv6Addr2OctString(v_PDN_AddressInfo.UE_IPAddressIPv6); // @sic R5-113734, R5s130362 sic@
+    var Type4Length_Type v_IeLength;
+    var B3_Type v_TypeValue;
+    var octetstring v_AddressInfo;
+    var PDN_Address v_PDN_Address;
+    
+    // set IP addresses
+    v_Addr6 := substr(v_Addr6, 8, 8);  // Use only the IPv6 interface identifier, which are the 8 least significant octets of theIPv6 address
+
+    if (not p_IPv4AllocationViaNas) {       // => IPv4 address via DHCP signalling (if IPv4)
+      v_Addr4 := '00000000'O;
+    }
+
+    // set PDN TypeValue
+    select (p_PDN_TypeToBeUsed) {           /* @sic R5-120234, R5-120541, R5-120542 sic@ */
+      case (forceIPv4only) {
+        v_TypeValue := tsc_PdnType_IPv4;
+      }
+      case (forceIPv6only) {
+        v_TypeValue := tsc_PdnType_IPv6;
+      }
+      case (pdnTypeAsSupportedByUE) {
+        if (pc_IPv4 and pc_IPv6) {
+          v_TypeValue := tsc_PdnType_IPv4v6;
+        }
+        else if (pc_IPv4) {
+          v_TypeValue := tsc_PdnType_IPv4;
+        }
+        else if (pc_IPv6) {
+          v_TypeValue := tsc_PdnType_IPv6;
+        }
+        else {
+          FatalError(__FILE__, __LINE__, "neither IPv4 nor IPv6 are supported");
+        }
+      }
+    }
+
+    // set IE
+    select (v_TypeValue) {
+      case (tsc_PdnType_IPv4) {
+        v_IeLength := '05'O;
+        v_AddressInfo := v_Addr4;
+      }
+      case (tsc_PdnType_IPv6) {
+        v_IeLength := '09'O;
+        v_AddressInfo := v_Addr6;
+      }
+      case (tsc_PdnType_IPv4v6) {
+        v_IeLength := '0D'O;
+        v_AddressInfo := v_Addr6 & v_Addr4;
+      }
+    }
+
+    v_PDN_Address := {
+      iei := omit, // '59'O,
+      iel := v_IeLength,
+      spare := tsc_Spare5,
+      typeValue := v_TypeValue,
+      adressInfo := v_AddressInfo
+    };
+
+    return v_PDN_Address;
+  }
+
+  /*
+   * @desc      Get the Dedicated TFT according to 36.508 clause 6.6.2
+   * @param     p_PacketFilterByRef (by reference)
+   * @param     p_PacketFilterLengthByRef (by reference)
+   * @param     p_PacketFilterNumber ... is the reference packet filter in Table 6.6.2-x
+   * @param     p_EPS_BearerId
+   * @param     p_PdnTypeValue
+   * @param     p_PdnIndex
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT)
+   */
+  function fl_Get_508_PacketFilter(out template (value) PacketFilter p_PacketFilterByRef,
+                                   out integer p_PacketFilterLengthByRef,
+                                   integer p_PacketFilterNumber,
+                                   HalfOctet_Type p_EPS_BearerId,
+                                   B3_Type p_PdnTypeValue,
+                                   PDN_Index_Type p_PdnIndex)
+  { /* @sic R5-112600 new parameter p_PdnTypeValue to determine whether IPv4 or IPv6 address to be used sic@ */
+    /* @sic R5s130362 - MCC160 Implementation: tsc_PDN_AddressInfo; new parameter p_PdnIndex sic@ */
+    var integer v_ContentsLength := 0;
+    var template (value) PacketFilter v_Filter;
+    var PDN_AddressInfo_Type v_PDN_AddressInfo := f_PDN_AddressInfo_Get(p_PdnIndex);
+    var charstring v_NetworkIpAddrv4 := v_PDN_AddressInfo.PCSCF_IPAddressIPv4;
+    var charstring v_NetworkIpAddrv6 := v_PDN_AddressInfo.PCSCF_IPAddressIPv6;
+
+
+    if ((p_PacketFilterNumber != 4) and (p_PacketFilterNumber != 5)) {   // @sic R5-132085 sic@ in case (4, 5) no addresses used @sic R5s130495 sic@
+      if (p_PdnTypeValue == tsc_PdnType_IPv4) {  // IPv4 only; @sic R5s110168 change 8.3; R5-112600 sic@
+        v_Filter.contents[0] := cs_PktFilterCompIPv4RemoteAddress(v_NetworkIpAddrv4);
+        v_ContentsLength := v_ContentsLength + 9;
+      }
+      else { // IPv4v6 or IPv6 only
+        v_Filter.contents[0] := cs_PktFilterCompIPv6RemoteAddress(v_NetworkIpAddrv6);
+        v_ContentsLength := v_ContentsLength + 33;
+      }
+    }
+    
+    select (p_PacketFilterNumber){
+      case (1, 6) { // @sic R5-183239 sic@
+        v_Filter.spare       := '00'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.direction   := '01'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.iei         := '0'H;  //  @sic R5s130195 Baseline Moving sic@
+        if (hex2int(p_EPS_BearerId)>5)
+        {
+          v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6), 8); // @sic R5-174469 sic@
+        } else {
+          v_Filter.precedence  := int2bit(0, 8);
+        }
+        v_Filter.contents[1] := cs_PktFilterCompSingleRemotePort31160(p_EPS_BearerId);
+        v_ContentsLength := v_ContentsLength + 3;
+        if (p_PacketFilterNumber == 6 and pc_IP_Ping) {// @sic R5-183239 sic@
+          if (p_PdnTypeValue == tsc_PdnType_IPv4) {  // IPv4 only
+            v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderICMP;
+          } else {
+            v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderICMPv6;
+          }
+        } else {
+          v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderUDP;
+        }
+        v_ContentsLength := v_ContentsLength + 2;
+      }
+      case (2, 7) { // @sic R5-183239 sic@
+        // Update to values in Reference packet filter #2
+        // UL only filter, ID=1          @sic R5-104702 sic@
+        v_Filter.spare       := '00'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.direction   := '10'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.iei         := '1'H;  //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6+8), 8); // @sic R5-104702 sic@
+        v_Filter.contents[1] := cs_PktFilterCompSingleRemotePort61000(p_EPS_BearerId);
+        v_ContentsLength := v_ContentsLength + 3;
+        if (p_PacketFilterNumber == 7 and pc_IP_Ping) {// @sic R5-183239 sic@
+          if (p_PdnTypeValue == tsc_PdnType_IPv4) {  // IPv4 only
+            v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderICMP;
+          } else {
+            v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderICMPv6;
+          }
+        } else {
+          v_Filter.contents[2] := cs_PktFilterCompProtocolIdNextHeaderUDP;
+        }
+        v_ContentsLength := v_ContentsLength + 2;
+      }
+      case (3){
+        // Update to values in Reference packet filter #3
+        // Bidirectional filter, ID=2  @sic R5-104702 sic@
+        v_Filter.spare       := '00'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.direction   := '11'B; //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.iei         := '2'H;  //  @sic R5s130195 Baseline Moving sic@
+        v_Filter.precedence  := '00001111'B;
+      }
+      case (4){  // @sic R5-132085 sic@
+        // Update to values in Reference packet filter #4
+        // Bidirectional filter, ID=3
+        v_Filter.spare       := '00'B;
+        v_Filter.direction   := '11'B;
+        v_Filter.iei         := '3'H;
+        if (hex2int(p_EPS_BearerId)>5)
+        {
+          v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6), 8); // @sic R5-174469 sic@
+        } else {
+          v_Filter.precedence  := int2bit(0, 8);
+        }
+        v_Filter.contents[0] := cs_PktFilterCompRemotePortRange(tsc_IMS_MediaPort_M1, tsc_IMS_MediaPort_M1+1);  // @sic R5s130495 sic@
+        v_ContentsLength := v_ContentsLength + 5;
+        v_Filter.contents[1] := cs_PktFilterCompProtocolIdNextHeaderUDP;
+        v_ContentsLength := v_ContentsLength + 2;
+      }
+      case (5){  // @sic R5-132085 sic@
+        // Update to values in Reference packet filter #5
+        // Bidirectional filter, ID=3
+        v_Filter.spare       := '00'B;
+        v_Filter.direction   := '11'B;
+        v_Filter.iei         := '4'H;
+        if (hex2int(p_EPS_BearerId)>5)
+        {
+          v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6), 8); // @sic R5-174469 sic@
+        } else {
+          v_Filter.precedence  := int2bit(0, 8);
+        }
+        v_Filter.contents[0] := cs_PktFilterCompRemotePortRange(tsc_IMS_MediaPort_M2, tsc_IMS_MediaPort_M2+1);  // @sic R5s130495 sic@
+        v_ContentsLength := v_ContentsLength + 5;
+        v_Filter.contents[1] := cs_PktFilterCompProtocolIdNextHeaderUDP;
+        v_ContentsLength := v_ContentsLength + 2;
+      }
+      case (8) { // @sic R5-187765 sic@
+        // Update to values in Reference packet filter #8
+        // UL only filter, ID=1
+        v_Filter.spare       := '00'B;
+        v_Filter.direction   := '10'B;
+        v_Filter.iei         := '1'H;
+        v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6+8), 8);
+      }
+      case (9) { // @sic R5-187765 sic@
+        // Update to values in Reference packet filter #9
+        // Bidirectional filter, ID=5
+        v_Filter.spare       := '00'B;
+        v_Filter.direction   := '11'B;
+        v_Filter.iei         := '5'H;
+        if (hex2int(p_EPS_BearerId)>5)
+        {
+          v_Filter.precedence  := int2bit((hex2int(p_EPS_BearerId)-6), 8);
+        } else {
+          v_Filter.precedence  := int2bit(0, 8);
+        }
+        v_Filter.contents[0] := cs_PktFilterCompRemotePortRange(tsc_IMS_MediaPort_M2, tsc_IMS_MediaPort_M2+1);
+        v_ContentsLength := v_ContentsLength + 5;
+        v_Filter.contents[1] := cs_PktFilterCompProtocolIdNextHeaderUDP;
+        v_ContentsLength := v_ContentsLength + 2;
+      }
+    }
+    v_Filter.iel := int2oct(v_ContentsLength, 1);
+    
+    p_PacketFilterByRef := v_Filter;
+    p_PacketFilterLengthByRef := v_ContentsLength + 3; // length of the filter contents + 3 octets for iei, precedence and iel
+  }
+
+  /*
+   * @desc      Create TFT acc. to 36.508 Table 6.6.2-1
+   * @param     p_BearerContext   .. Reference dedicated EPS bearer context #1, #2
+   * @param     p_EPS_BearerId
+   * @param     p_PdnTypeValue
+   * @param     p_PdnIndex
+   * @return    template (value) TrafficFlowTemplate
+   * @status    APPROVED (ENDC, IMS, IMS_IRAT, LTE, LTE_A_IRAT, LTE_A_PRO, LTE_A_R10_R11, LTE_A_R12, LTE_IRAT, NBIOT)
+   */
+  function f_EUTRA_NB_Get_508_TrafficFlowTemplate(integer p_BearerContext,
+                                                  EPS_BearerIdentity p_EPS_BearerId,
+                                                  B3_Type p_PdnTypeValue,
+                                                  PDN_Index_Type p_PdnIndex := PDN_1) return template (value) TrafficFlowTemplate
+  { /* @sic R5-112600: to replace cs_508_Tft_Dedicated_1 and cs_508_Tft_Dedicated_2 sic@ */
+    var integer v_PacketFilterLen1ByRef;
+    var integer v_PacketFilterLen2ByRef;
+    var template (value) PacketFilter v_PacketFilter1ByRef;
+    var template (value) PacketFilter v_PacketFilter2ByRef;
+    var template (value) TrafficFlowTemplate.packetFilterList v_PacketFilterList;
+    var integer v_IeLength;
+
+    select (p_BearerContext) {
+      case (1) {        // @sic R5-123632 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 1, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #1 acc. to 36.508 Table 6.6.2-2 @sic R5s130495 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter2ByRef, v_PacketFilterLen2ByRef, 2, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #2 acc. to 36.508 Table 6.6.2-3 @sic R5s130495 sic@
+        
+        v_IeLength := v_PacketFilterLen1ByRef + v_PacketFilterLen2ByRef + 1;  // packet filter 1 + packet filter 2 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef, v_PacketFilter2ByRef};
+      }
+      case (2) {        // @sic R5-123632, R5-132085 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 3, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #3 acc. to 36.508 Table 6.6.2-4 @sic R5s130495 sic@
+
+        v_IeLength := v_PacketFilterLen1ByRef + 1;                           // packet filter 1 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef};
+      }
+      case (3) {        // @sic R5-132085 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 5, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #3 acc. to 36.508 Table 6.6.2-4 @sic R5s130495 sic@
+
+        v_IeLength := v_PacketFilterLen1ByRef + 1;                           // packet filter 1 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef};
+      }
+      case (4) {        // @sic R5-132085 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 4, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #4 acc. to 36.508 Table 6.6.2-4 @sic R5s130495 sic@
+
+        v_IeLength := v_PacketFilterLen1ByRef + 1;                           // packet filter 1 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef};
+      }
+      case (6) { // @sic R5-183239 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 6, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #6 acc. to 36.508 Table 6.6.2-1A
+        fl_Get_508_PacketFilter(v_PacketFilter2ByRef, v_PacketFilterLen2ByRef, 7, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #7 acc. to 36.508 Table 6.6.2-1A
+
+        v_IeLength := v_PacketFilterLen1ByRef + v_PacketFilterLen2ByRef + 1;  // packet filter 1 + packet filter 2 + one octet for tftOperationCode, eBit and noOfPktFilter @sic R5s180640 sic@
+        v_PacketFilterList := {v_PacketFilter1ByRef, v_PacketFilter2ByRef}; // @sic R5s180640 sic@
+      }
+      case (7) {        // @sic R5-187765 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 8, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #8 acc. to 36.508 Table 6.6.2-1A
+
+        v_IeLength := v_PacketFilterLen1ByRef + 1;  // packet filter 1 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef};
+      }
+      case (8) {        // @sic R5-187765 sic@
+        fl_Get_508_PacketFilter(v_PacketFilter1ByRef, v_PacketFilterLen1ByRef, 9, p_EPS_BearerId, p_PdnTypeValue, p_PdnIndex);  // get packet filter #9 acc. to 36.508 Table 6.6.2-1A
+
+        v_IeLength := v_PacketFilterLen1ByRef + 1;    // packet filter 1 + one octet for tftOperationCode, eBit and noOfPktFilter
+        v_PacketFilterList := {v_PacketFilter1ByRef};
+      }
+      
+      case else {
+        FatalError(__FILE__, __LINE__, "invalid bearer context");
+      }
+    }
+    return cs_TrafficFlowTemplate(v_IeLength, v_PacketFilterList);
+  }
+
+}

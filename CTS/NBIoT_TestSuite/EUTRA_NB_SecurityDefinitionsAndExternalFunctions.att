@@ -1,0 +1,10 @@
+module EUTRA_NB_SecurityDefinitionsAndExternalFunctions
+{
+	//external function fx_NasIntegrityAlgorithmBitstring with { encode "Plain" variant "Int32" }
+   	external function fx_NasCiphering with { encode "Plain" variant "Int32" }
+	external function fx_NasDeciphering with { encode "Plain" variant "Int32" }
+	//external function fx_AsCiphering with { encode "Plain" variant "Int32" }
+	//external function fx_AsDeciphering with { encode "Plain" variant "Int32" }
+	external function fx_NasIntegrityAlgorithm with { encode "Plain" variant "Int32" }
+	external function fx_AsIntegrityAlgorithm with { encode "Plain" variant "Int32" }
+} with {}
